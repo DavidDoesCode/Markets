@@ -44,6 +44,7 @@ public final class Settings extends FlightSettings {
 	public static ConfigEntry DEFAULT_MAX_ALLOWED_MARKET_ITEMS = create("settings.max allowed market items", 64).withComment("The maximum # of items a player can add to their market before special permissions.");
 	public static ConfigEntry DEFAULT_MAX_ALLOWED_MARKET_CATEGORIES = create("settings.max allowed market categories", 20).withComment("The maximum # of categories a player can add to their market before special permissions.");
 	public static ConfigEntry DEFAULT_MAX_ALLOWED_REQUESTS = create("settings.max allowed requests", 64).withComment("The maximum # of requests a player can make without further permission");
+	public static ConfigEntry DEFAULT_LAYOUT_BACKGROUND_ITEM = create("settings.default layout background", CompMaterial.BLACK_STAINED_GLASS_PANE.name()).withComment("The default background item for the market / category");
 	public static ConfigEntry TAX_ENABLED = create("settings.tax.enabled", false).withComment("If true, will apply sales tax to the total when a user is buying an item");
 	public static ConfigEntry TAX_AMOUNT = create("settings.tax.percentage", 13.0).withComment("The tax percentage. By default it's 13%");
 
@@ -63,6 +64,10 @@ public final class Settings extends FlightSettings {
 	public static ConfigEntry CURRENCY_ICONS = create("settings.currency.icon", "EMERALD").withComment("The item/texture to be used instead of the provided one use :# for model data ex. PAPER:4");
 	public static ConfigEntry CURRENCY_ICONS_OVERRIDE = create("settings.currency.override icon", false).withComment("If true, markets will use override the icon provided by the currency plugin");
 	public static ConfigEntry CURRENCY_HIDE_VAULT_AND_VAULT_HOOKED = create("settings.currency.hide vault and vault hooked", false).withComment("If true, markets will just hide the vault currency option and any other currency that is set as the default vault one.");
+
+	public static ConfigEntry MARKET_SORT_FILTER_NAME_ENABLED = create("settings.market sort filter.name", true).withComment("Should this sort filter be enabled");
+	public static ConfigEntry MARKET_SORT_FILTER_LAST_UPDATED_ENABLED = create("settings.market sort filter.last updated", true).withComment("Should this sort filter be enabled");
+	public static ConfigEntry MARKET_SORT_FILTER_ITEMS_ENABLED = create("settings.market sort filter.items", true).withComment("Should this sort filter be enabled");
 
 	public static ConfigEntry TIME_BETWEEN_RATINGS = create("settings.time between ratings", 86400).withComment("How many seconds must a player wait before they can rate the same market?");
 	public static ConfigEntry OPEN_CATEGORY_SETTINGS_AFTER_ITEM_ADD = create("settings.open category after item add", false).withComment("If true, when adding an item using the command, it will open the category after");
@@ -116,6 +121,7 @@ public final class Settings extends FlightSettings {
 	========================= CLICKS =========================
 	 */
 	public static ConfigEntry CLICK_LAYOUT_BG_APPLY = create("settings.clicks.layout change background", "RIGHT").withComment("https://hub.spigotmc.org/javadocs/spigot/org/bukkit/event/inventory/ClickType.html");
+	public static ConfigEntry CLICK_DELETE_ITEM = create("settings.clicks.delete item", "DROP").withComment("https://hub.spigotmc.org/javadocs/spigot/org/bukkit/event/inventory/ClickType.html");
 
 
 	/*
@@ -143,6 +149,10 @@ public final class Settings extends FlightSettings {
 	public static ConfigEntry GUI_CONFIRM_ACTION_BACKGROUND = create("gui.confirm action.background", CompMaterial.BLACK_STAINED_GLASS_PANE.name());
 	public static ConfigEntry GUI_CONFIRM_ACTION_ITEMS_YES = create("gui.confirm action.items.confirm", CompMaterial.LIME_STAINED_GLASS_PANE.name());
 	public static ConfigEntry GUI_CONFIRM_ACTION_ITEMS_NO = create("gui.confirm action.items.cancel", CompMaterial.RED_STAINED_GLASS_PANE.name());
+
+	public static ConfigEntry GUI_MATERIAL_PICKER_ITEMS_SEARCH = create("gui.material picker.items.search.item", CompMaterial.DARK_OAK_SIGN.name());
+	public static ConfigEntry GUI_MATERIAL_PICKER_ITEMS_RESET = create("gui.material picker.items.reset.item", CompMaterial.LAVA_BUCKET.name());
+	public static ConfigEntry GUI_MATERIAL_PICKER_ITEMS_AIR = create("gui.material picker.items.air.item", CompMaterial.WHITE_DYE.name());
 
 
 	public static ConfigEntry GUI_MAIN_VIEW_BACKGROUND = create("gui.main view.items.background", CompMaterial.BLACK_STAINED_GLASS_PANE.name());
