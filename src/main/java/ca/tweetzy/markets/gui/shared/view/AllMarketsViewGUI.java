@@ -19,6 +19,7 @@ import ca.tweetzy.markets.settings.Translations;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
@@ -76,7 +77,8 @@ public final class AllMarketsViewGUI extends MarketsPagedGUI<Market> {
 				.of(Settings.SERVER_MARKET_TEXTURE.getString())
 				.fallbackTexture(Settings.SERVER_MARKET_TEXTURE.getString())
 				: QuickItem
-				.of(Bukkit.getOfflinePlayer(market.getOwnerUUID()))
+//				.of(Bukkit.getOfflinePlayer(market.getOwnerUUID()))
+				.of(new ItemStack(Material.PLAYER_HEAD))
 				.fallbackTexture(Settings.SERVER_MARKET_TEXTURE.getString());
 
 		return item
