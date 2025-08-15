@@ -170,8 +170,12 @@ public final class CategoryNewItemGUI extends MarketsBaseGUI {
 				this.marketItem.setIsAcceptingOffers(false);
 			}
 
+			// todo this is where its fixed. but we've already generated multple async functions of this.....
+			// todo honey pot!! create one.....
+			setItem(1, 4, CompMaterial.AIR.parseItem());
+
 			// create the item
-			Bukkit.getScheduler().runTaskLater(Markets.getInstance(), () -> {
+			Bukkit.getScheduler().runTaskLaterAsynchronously(Markets.getInstance(), () -> {
 				if (!click.gui.isOpen()) {
 					Common.log(String.format("&7Strange activity detected from %s, closing inv & pressing add item btn simultaneously. This could just be lag.", click.player.getName()));
 					return;
@@ -181,8 +185,6 @@ public final class CategoryNewItemGUI extends MarketsBaseGUI {
 				// todo and sync its async..... that might not even help??
 				Markets.getCategoryItemManager().create(this.category, this.marketItem.getItem(), this.marketItem.getCurrency(), this.marketItem.getCurrencyItem(), this.marketItem.getPrice(), this.marketItem.isPriceForAll(), this.marketItem.isAcceptingOffers(), this.marketItem.isInfinite(), created -> {
 					if (created) {
-						// todo this is where its fixed. but we've already generated multple async functions of this.....
-						setItem(1, 4, CompMaterial.AIR.parseItem());
 						click.manager.showGUI(click.player, new MarketCategoryEditGUI(this.player, this.market, this.category));
 					}
 				});
