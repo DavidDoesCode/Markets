@@ -171,14 +171,17 @@ public final class CategoryNewItemGUI extends MarketsBaseGUI {
 			}
 
 			// create the item
-			Bukkit.getScheduler().runTaskLaterAsynchronously(Markets.getInstance(), () -> {
+			Bukkit.getScheduler().runTaskLater(Markets.getInstance(), () -> {
 				if (!click.gui.isOpen()) {
 					Common.log(String.format("&7Strange activity detected from %s, closing inv & pressing add item btn simultaneously. This could just be lag.", click.player.getName()));
 					return;
 				}
 
+				// todo so we create this item, great. WHEN ARE WE CHECKING IF THE PLAYER HAS 1 IN THEIR INVENTORY??
+				// todo and sync its async..... that might not even help??
 				Markets.getCategoryItemManager().create(this.category, this.marketItem.getItem(), this.marketItem.getCurrency(), this.marketItem.getCurrencyItem(), this.marketItem.getPrice(), this.marketItem.isPriceForAll(), this.marketItem.isAcceptingOffers(), this.marketItem.isInfinite(), created -> {
 					if (created) {
+						// todo this is where its fixed. but we've already generated multple async functions of this.....
 						setItem(1, 4, CompMaterial.AIR.parseItem());
 						click.manager.showGUI(click.player, new MarketCategoryEditGUI(this.player, this.market, this.category));
 					}
