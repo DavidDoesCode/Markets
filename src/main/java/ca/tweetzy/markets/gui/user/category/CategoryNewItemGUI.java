@@ -170,6 +170,10 @@ public final class CategoryNewItemGUI extends MarketsBaseGUI {
 				this.marketItem.setIsAcceptingOffers(false);
 			}
 
+			// todo this is where its fixed. but we've already generated multple async functions of this.....
+			// todo honey pot!! create one.....
+			setItem(1, 4, CompMaterial.AIR.parseItem());
+
 			// create the item
 			Bukkit.getScheduler().runTaskLaterAsynchronously(Markets.getInstance(), () -> {
 				if (!click.gui.isOpen()) {
@@ -177,9 +181,10 @@ public final class CategoryNewItemGUI extends MarketsBaseGUI {
 					return;
 				}
 
+				// todo so we create this item, great. WHEN ARE WE CHECKING IF THE PLAYER HAS 1 IN THEIR INVENTORY??
+				// todo and sync its async..... that might not even help??
 				Markets.getCategoryItemManager().create(this.category, this.marketItem.getItem(), this.marketItem.getCurrency(), this.marketItem.getCurrencyItem(), this.marketItem.getPrice(), this.marketItem.isPriceForAll(), this.marketItem.isAcceptingOffers(), this.marketItem.isInfinite(), created -> {
 					if (created) {
-						setItem(1, 4, CompMaterial.AIR.parseItem());
 						click.manager.showGUI(click.player, new MarketCategoryEditGUI(this.player, this.market, this.category));
 					}
 				});
