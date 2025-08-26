@@ -81,13 +81,17 @@ public final class MarketItemEditGUI extends MarketsBaseGUI {
 					if (!this.marketItem.getItem().isSimilar(cursor)) return;
 
 					this.marketItem.addStock(cursor, result -> {
-						if (result == SynchronizeResult.FAILURE) return;
+						if (result == SynchronizeResult.FAILURE) {
+							playerLock = false;
+							return;
+						}
 
 						click.player.setItemOnCursor(CompMaterial.AIR.parseItem());
 						drawStockButton();
 						playerLock = false;
 					});
-				}
+				} else
+					playerLock = false;
 			}
 
 			if (click.clickType == ClickType.SHIFT_LEFT) {
@@ -161,11 +165,10 @@ public final class MarketItemEditGUI extends MarketsBaseGUI {
 						});
 
 						marketItem.sync(result -> {
+							inputLock = false;
+							playerLock = false;
 							click.manager.showGUI(click.player, new MarketItemEditGUI(click.player, MarketItemEditGUI.this.market, MarketItemEditGUI.this.category, MarketItemEditGUI.this.marketItem));
 						});
-
-						inputLock = false;
-						playerLock = false;
 						return true;
 					}
 				};
