@@ -92,6 +92,8 @@ public final class MarketItemEditGUI extends MarketsBaseGUI {
 
 			if (click.clickType == ClickType.RIGHT) {
 				new TitleInput(Markets.getInstance(), click.player, TranslationManager.string(click.player, Translations.PROMPT_STOCK_WITHDRAW_TITLE), TranslationManager.string(click.player, Translations.PROMPT_STOCK_WITHDRAW_SUBTITLE)) {
+					Boolean duplicate = false;
+
 					@Override
 					public void onExit(Player player) {
 						click.manager.showGUI(click.player, MarketItemEditGUI.this);
@@ -99,6 +101,12 @@ public final class MarketItemEditGUI extends MarketsBaseGUI {
 
 					@Override
 					public boolean onResult(String string) {
+						if(duplicate) {
+							Bukkit.getLogger().severe(click.player.getName() + " potentially attempting to cheat");
+							return false;
+						} else
+							duplicate = true;
+
 						string = ChatColor.stripColor(string);
 
 						if (!MathUtil.isInt(string)) {
