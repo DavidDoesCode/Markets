@@ -31,7 +31,7 @@ public final class MarketItemEditGUI extends MarketsBaseGUI {
 	private final Market market;
 	private final Category category;
 	private final MarketItem marketItem;
-	private Boolean playerLock;
+	private Boolean playerLock = false;
 
 	public MarketItemEditGUI(@NonNull final Player player, @NonNull final Market market, @NonNull final Category category, @NonNull final MarketItem marketItem) {
 		super(new MarketCategoryEditGUI(player, market, category), player, TranslationManager.string(player, Translations.GUI_EDIT_ITEM_TITLE), 6);
