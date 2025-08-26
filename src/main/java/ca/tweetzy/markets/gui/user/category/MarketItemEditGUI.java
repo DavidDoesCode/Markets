@@ -57,7 +57,7 @@ public final class MarketItemEditGUI extends MarketsBaseGUI {
 		applyBackExit();
 	}
 
-	private void drawStockButton() {
+	private synchronized void drawStockButton() {
 		setButton(3, 7, QuickItem.of(Settings.GUI_EDIT_ITEM_ITEMS_STOCK_ITEM.getItemStack())
 				.name(TranslationManager.string(this.player, Translations.GUI_EDIT_ITEM_ITEMS_STOCK_NAME))
 				.lore(TranslationManager.list(this.player, Translations.GUI_EDIT_ITEM_ITEMS_STOCK_LORE,
