@@ -66,12 +66,6 @@ public final class MarketItemEditGUI extends MarketsBaseGUI {
 				))
 				.make(), click -> {
 
-			if(playerLock) {
-				Bukkit.getLogger().severe(this.player.getName() + " attempting to click in MarketItemEditGUI multiple times");
-				return;
-			} else
-				playerLock = true;
-
 			if (click.clickType == ClickType.LEFT) {
 				final ItemStack cursor = click.cursor;
 				if (cursor != null && cursor.getType() != CompMaterial.AIR.get()) {
@@ -100,9 +94,13 @@ public final class MarketItemEditGUI extends MarketsBaseGUI {
 			}
 
 			if (click.clickType == ClickType.RIGHT) {
-				new TitleInput(Markets.getInstance(), click.player, TranslationManager.string(click.player, Translations.PROMPT_STOCK_WITHDRAW_TITLE), TranslationManager.string(click.player, Translations.PROMPT_STOCK_WITHDRAW_SUBTITLE)) {
-					Boolean withdrawDuplicate = false;
+				if(playerLock) {
+					Bukkit.getLogger().severe(click.player.getName() + " attempting to deposit twice.");
+					return;
+				} else
+					playerLock = true;
 
+				new TitleInput(Markets.getInstance(), click.player, TranslationManager.string(click.player, Translations.PROMPT_STOCK_WITHDRAW_TITLE), TranslationManager.string(click.player, Translations.PROMPT_STOCK_WITHDRAW_SUBTITLE)) {
 					@Override
 					public void onExit(Player player) {
 						click.manager.showGUI(click.player, MarketItemEditGUI.this);
@@ -110,12 +108,6 @@ public final class MarketItemEditGUI extends MarketsBaseGUI {
 
 					@Override
 					public boolean onResult(String string) {
-						if(withdrawDuplicate) {
-							Bukkit.getLogger().severe(click.player.getName() + " attempting to deposit twice.");
-							return false;
-						}
-							withdrawDuplicate = true;
-
 						string = ChatColor.stripColor(string);
 
 						if (!MathUtil.isInt(string)) {
@@ -143,6 +135,7 @@ public final class MarketItemEditGUI extends MarketsBaseGUI {
 							click.manager.showGUI(click.player, new MarketItemEditGUI(click.player, MarketItemEditGUI.this.market, MarketItemEditGUI.this.category, MarketItemEditGUI.this.marketItem));
 						});
 
+						playerLock = false;
 						return true;
 					}
 				};
