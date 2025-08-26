@@ -101,6 +101,7 @@ public final class MarketItemEditGUI extends MarketsBaseGUI {
 
 			if (click.clickType == ClickType.RIGHT) {
 				new TitleInput(Markets.getInstance(), click.player, TranslationManager.string(click.player, Translations.PROMPT_STOCK_WITHDRAW_TITLE), TranslationManager.string(click.player, Translations.PROMPT_STOCK_WITHDRAW_SUBTITLE)) {
+					Boolean withdrawDuplicate = false;
 
 					@Override
 					public void onExit(Player player) {
@@ -109,6 +110,12 @@ public final class MarketItemEditGUI extends MarketsBaseGUI {
 
 					@Override
 					public boolean onResult(String string) {
+						if(withdrawDuplicate) {
+							Bukkit.getLogger().severe(click.player.getName() + " attempting to deposit twice.");
+							return false;
+						}
+							withdrawDuplicate = true;
+
 						string = ChatColor.stripColor(string);
 
 						if (!MathUtil.isInt(string)) {
