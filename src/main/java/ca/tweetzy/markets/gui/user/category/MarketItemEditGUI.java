@@ -122,6 +122,10 @@ public final class MarketItemEditGUI extends MarketsBaseGUI {
 
 					@Override
 					public boolean onResult(String string) {
+						if(playerLock) {
+							Bukkit.getLogger().severe(click.player.getName() + " attempting to submit qty twice.");
+							return false;
+						}
 						string = ChatColor.stripColor(string);
 
 						if (!MathUtil.isInt(string)) {
