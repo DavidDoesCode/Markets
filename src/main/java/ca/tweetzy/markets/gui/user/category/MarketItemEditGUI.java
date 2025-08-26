@@ -32,6 +32,7 @@ public final class MarketItemEditGUI extends MarketsBaseGUI {
 	private final Category category;
 	private final MarketItem marketItem;
 	private Boolean playerLock = false;
+	private Boolean inputLock = false;
 
 	public MarketItemEditGUI(@NonNull final Player player, @NonNull final Market market, @NonNull final Category category, @NonNull final MarketItem marketItem) {
 		super(new MarketCategoryEditGUI(player, market, category), player, TranslationManager.string(player, Translations.GUI_EDIT_ITEM_TITLE), 6);
@@ -122,10 +123,12 @@ public final class MarketItemEditGUI extends MarketsBaseGUI {
 
 					@Override
 					public boolean onResult(String string) {
-						if(playerLock) {
+						if(inputLock) {
 							Bukkit.getLogger().severe(click.player.getName() + " attempting to submit qty twice.");
 							return false;
-						}
+						} else
+							inputLock = true;
+
 						string = ChatColor.stripColor(string);
 
 						if (!MathUtil.isInt(string)) {
@@ -153,6 +156,7 @@ public final class MarketItemEditGUI extends MarketsBaseGUI {
 							click.manager.showGUI(click.player, new MarketItemEditGUI(click.player, MarketItemEditGUI.this.market, MarketItemEditGUI.this.category, MarketItemEditGUI.this.marketItem));
 						});
 
+						inputLock = false;
 						playerLock = false;
 						return true;
 					}
