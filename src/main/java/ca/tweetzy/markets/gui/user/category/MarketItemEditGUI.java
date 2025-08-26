@@ -68,11 +68,13 @@ public final class MarketItemEditGUI extends MarketsBaseGUI {
 				.make(), click -> {
 
 			if (click.clickType == ClickType.LEFT) {
-				if(playerLock) {
-					Bukkit.getLogger().severe(click.player.getName() + " attempting to deposit twice.");
-					return;
-				} else
-					playerLock = true;
+				synchronized (this) {
+					if (playerLock) {
+						Bukkit.getLogger().severe(click.player.getName() + " attempting to deposit twice.");
+						return;
+					} else
+						playerLock = true;
+				}
 
 				final ItemStack cursor = click.cursor;
 				if (cursor != null && cursor.getType() != CompMaterial.AIR.get()) {
@@ -89,11 +91,13 @@ public final class MarketItemEditGUI extends MarketsBaseGUI {
 			}
 
 			if (click.clickType == ClickType.SHIFT_LEFT) {
-				if(playerLock) {
-					Bukkit.getLogger().severe(click.player.getName() + " attempting to bulk deposit twice.");
-					return;
-				} else
-					playerLock = true;
+				synchronized (this) {
+					if (playerLock) {
+						Bukkit.getLogger().severe(click.player.getName() + " attempting to bulk deposit twice.");
+						return;
+					} else
+						playerLock = true;
+				}
 
 				int itemCount = PlayerUtil.getItemCountInPlayerInventory(click.player, this.marketItem.getItem());
 				if (itemCount == 0) return;
@@ -109,11 +113,13 @@ public final class MarketItemEditGUI extends MarketsBaseGUI {
 			}
 
 			if (click.clickType == ClickType.RIGHT) {
-				if(playerLock) {
-					Bukkit.getLogger().severe(click.player.getName() + " attempting to withdraw twice.");
-					return;
-				} else
-					playerLock = true;
+				synchronized (this) {
+					if (playerLock) {
+						Bukkit.getLogger().severe(click.player.getName() + " attempting to withdraw twice.");
+						return;
+					} else
+						playerLock = true;
+				}
 
 				new TitleInput(Markets.getInstance(), click.player, TranslationManager.string(click.player, Translations.PROMPT_STOCK_WITHDRAW_TITLE), TranslationManager.string(click.player, Translations.PROMPT_STOCK_WITHDRAW_SUBTITLE)) {
 					@Override
@@ -123,11 +129,13 @@ public final class MarketItemEditGUI extends MarketsBaseGUI {
 
 					@Override
 					public boolean onResult(String string) {
-						if(inputLock) {
-							Bukkit.getLogger().severe(click.player.getName() + " attempting to submit qty twice.");
-							return false;
-						} else
-							inputLock = true;
+						synchronized (this) {
+							if (inputLock) {
+								Bukkit.getLogger().severe(click.player.getName() + " attempting to submit qty twice.");
+								return false;
+							} else
+								inputLock = true;
+						}
 
 						string = ChatColor.stripColor(string);
 
