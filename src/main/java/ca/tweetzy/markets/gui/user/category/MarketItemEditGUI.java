@@ -104,7 +104,10 @@ public final class MarketItemEditGUI extends MarketsBaseGUI {
 				}
 
 				int itemCount = PlayerUtil.getItemCountInPlayerInventory(click.player, this.marketItem.getItem());
-				if (itemCount == 0) return;
+				if (itemCount == 0) {
+					playerLock = false;
+					return;
+				}
 
 				this.marketItem.setStock(this.marketItem.getStock() + itemCount);
 				PlayerUtil.removeSpecificItemQuantityFromPlayer(click.player, this.marketItem.getItem(), itemCount);
@@ -145,12 +148,14 @@ public final class MarketItemEditGUI extends MarketsBaseGUI {
 
 						if (!MathUtil.isInt(string)) {
 							Common.tell(click.player, TranslationManager.string(click.player, Translations.NOT_A_NUMBER, "value", string));
+							playerLock = false;
 							return false;
 						}
 
 						int qty = Integer.parseInt(string);
 						if (marketItem.getStock() < qty) {
 							Common.tell(click.player, TranslationManager.string(click.player, Translations.NOT_ENOUGH_STOCK));
+							playerLock = false;
 							return false;
 						}
 
