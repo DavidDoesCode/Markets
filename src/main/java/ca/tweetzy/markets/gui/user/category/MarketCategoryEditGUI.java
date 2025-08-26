@@ -28,6 +28,7 @@ import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class MarketCategoryEditGUI extends MarketsPagedGUI<MarketItem> {
 
@@ -277,6 +278,13 @@ public final class MarketCategoryEditGUI extends MarketsPagedGUI<MarketItem> {
 		}
 
 		if (click.clickType == Enum.valueOf(ClickType.class, Settings.CLICK_DELETE_ITEM.getString().toUpperCase())) {
+
+			if(marketItem.getStock() > 0) {
+				click.gui.exit();
+				Common.tell(click.player, "You cannot remove an item that is stocked.");
+				return;
+			}
+
 			if (Settings.USE_ADDITIONAL_CONFIRMS.getBoolean()) {
 				click.manager.showGUI(click.player, new ConfirmGUI(this, click.player, confirmed -> {
 					if (!confirmed) {
