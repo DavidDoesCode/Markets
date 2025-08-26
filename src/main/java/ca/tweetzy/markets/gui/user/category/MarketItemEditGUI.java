@@ -24,11 +24,14 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.HashMap;
+
 public final class MarketItemEditGUI extends MarketsBaseGUI {
 
 	private final Market market;
 	private final Category category;
 	private final MarketItem marketItem;
+	private Boolean playerLock;
 
 	public MarketItemEditGUI(@NonNull final Player player, @NonNull final Market market, @NonNull final Category category, @NonNull final MarketItem marketItem) {
 		super(new MarketCategoryEditGUI(player, market, category), player, TranslationManager.string(player, Translations.GUI_EDIT_ITEM_TITLE), 6);
@@ -63,6 +66,12 @@ public final class MarketItemEditGUI extends MarketsBaseGUI {
 				))
 				.make(), click -> {
 
+			if(playerLock) {
+				Bukkit.getLogger().severe(this.player.getName() + " attempting to click in MarketItemEditGUI multiple times");
+				return;
+			} else
+				playerLock = true;
+
 			if (click.clickType == ClickType.LEFT) {
 				final ItemStack cursor = click.cursor;
 				if (cursor != null && cursor.getType() != CompMaterial.AIR.get()) {
@@ -92,7 +101,6 @@ public final class MarketItemEditGUI extends MarketsBaseGUI {
 
 			if (click.clickType == ClickType.RIGHT) {
 				new TitleInput(Markets.getInstance(), click.player, TranslationManager.string(click.player, Translations.PROMPT_STOCK_WITHDRAW_TITLE), TranslationManager.string(click.player, Translations.PROMPT_STOCK_WITHDRAW_SUBTITLE)) {
-					Boolean duplicate = false;
 
 					@Override
 					public void onExit(Player player) {
@@ -101,12 +109,6 @@ public final class MarketItemEditGUI extends MarketsBaseGUI {
 
 					@Override
 					public boolean onResult(String string) {
-						if(duplicate) {
-							Bukkit.getLogger().severe(click.player.getName() + " potentially attempting to cheat");
-							return false;
-						} else
-							duplicate = true;
-
 						string = ChatColor.stripColor(string);
 
 						if (!MathUtil.isInt(string)) {
