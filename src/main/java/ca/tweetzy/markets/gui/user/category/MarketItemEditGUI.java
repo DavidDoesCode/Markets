@@ -67,6 +67,12 @@ public final class MarketItemEditGUI extends MarketsBaseGUI {
 				.make(), click -> {
 
 			if (click.clickType == ClickType.LEFT) {
+				if(playerLock) {
+					Bukkit.getLogger().severe(click.player.getName() + " attempting to deposit twice.");
+					return;
+				} else
+					playerLock = true;
+
 				final ItemStack cursor = click.cursor;
 				if (cursor != null && cursor.getType() != CompMaterial.AIR.get()) {
 					if (!this.marketItem.getItem().isSimilar(cursor)) return;
@@ -76,11 +82,18 @@ public final class MarketItemEditGUI extends MarketsBaseGUI {
 
 						click.player.setItemOnCursor(CompMaterial.AIR.parseItem());
 						drawStockButton();
+						playerLock = false;
 					});
 				}
 			}
 
 			if (click.clickType == ClickType.SHIFT_LEFT) {
+				if(playerLock) {
+					Bukkit.getLogger().severe(click.player.getName() + " attempting to bulk deposit twice.");
+					return;
+				} else
+					playerLock = true;
+
 				int itemCount = PlayerUtil.getItemCountInPlayerInventory(click.player, this.marketItem.getItem());
 				if (itemCount == 0) return;
 
@@ -90,12 +103,13 @@ public final class MarketItemEditGUI extends MarketsBaseGUI {
 				this.marketItem.sync(result -> {
 					if (result == SynchronizeResult.FAILURE) return;
 					drawStockButton();
+					playerLock = false;
 				});
 			}
 
 			if (click.clickType == ClickType.RIGHT) {
 				if(playerLock) {
-					Bukkit.getLogger().severe(click.player.getName() + " attempting to deposit twice.");
+					Bukkit.getLogger().severe(click.player.getName() + " attempting to withdraw twice.");
 					return;
 				} else
 					playerLock = true;
