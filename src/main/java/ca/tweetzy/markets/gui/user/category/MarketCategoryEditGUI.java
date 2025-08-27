@@ -277,6 +277,11 @@ public final class MarketCategoryEditGUI extends MarketsPagedGUI<MarketItem> {
 		}
 
 		if (click.clickType == Enum.valueOf(ClickType.class, Settings.CLICK_DELETE_ITEM.getString().toUpperCase())) {
+			if (marketItem.getStock() > 0) {
+				Common.tell(click.player, "You must first unstock your item before deleting.");
+				return;
+			}
+
 			if (Settings.USE_ADDITIONAL_CONFIRMS.getBoolean()) {
 				click.manager.showGUI(click.player, new ConfirmGUI(this, click.player, confirmed -> {
 					if (!confirmed) {

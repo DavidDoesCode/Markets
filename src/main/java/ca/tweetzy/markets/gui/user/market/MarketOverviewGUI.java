@@ -213,26 +213,28 @@ public final class MarketOverviewGUI extends MarketsPagedGUI<Category> {
 						return;
 					}
 
-					// loop through categories with items
-					market.getCategories().forEach(category -> {
-						category.getItems().forEach(item -> item.getViewingPlayers().clear());
+					Common.tell(click.player, "You must first delete your categories.");
 
-						Markets.getDataManager().deleteMarketItems(category, (error, itemResult) -> {
-							if (error == null && itemResult) {
-								category.getItems().forEach(item -> {
-									giveBackMarketItem(item);
-									Markets.getCategoryItemManager().remove(item);
-								});
-							}
-						});
-					});
-
-					// kill categories
-					market.getCategories().forEach(category -> category.unStore(categoryRemoveResult -> {
-					}));
-
-					// remove market
-					yeetMarket(click);
+//					// loop through categories with items
+//					market.getCategories().forEach(category -> {
+//						category.getItems().forEach(item -> item.getViewingPlayers().clear());
+//
+//						Markets.getDataManager().deleteMarketItems(category, (error, itemResult) -> {
+//							if (error == null && itemResult) {
+//								category.getItems().forEach(item -> {
+//									giveBackMarketItem(item);
+//									Markets.getCategoryItemManager().remove(item);
+//								});
+//							}
+//						});
+//					});
+//
+//					// kill categories
+//					market.getCategories().forEach(category -> category.unStore(categoryRemoveResult -> {
+//					}));
+//
+//					// remove market
+//					yeetMarket(click);
 				}
 			});
 		}
