@@ -30,6 +30,8 @@ public final class CategoryNewItemGUI extends MarketsBaseGUI {
 	private final Category category;
 	private final MarketItem marketItem;
 
+	private Boolean clickLock = false;
+
 	public CategoryNewItemGUI(@NonNull final Player player, @NonNull final Market market, @NonNull final Category category, final MarketItem marketItem) {
 		super(new MarketCategoryEditGUI(player, market, category), player, TranslationManager.string(Translations.GUI_CATEGORY_ADD_ITEM_TITLE, "category_name", category.getName()), 6);
 		this.player = player;
@@ -152,19 +154,31 @@ public final class CategoryNewItemGUI extends MarketsBaseGUI {
 
 		// new item button
 		setButton(getRows() - 1, 4, QuickItem.of(Settings.GUI_CATEGORY_ADD_ITEM_ITEMS_NEW_ITEM_ITEM.getItemStack()).name(TranslationManager.string(this.player, Translations.GUI_CATEGORY_ADD_ITEM_ITEMS_NEW_ITEM_NAME)).lore(TranslationManager.list(this.player, Translations.GUI_CATEGORY_ADD_ITEM_ITEMS_NEW_ITEM_LORE, "left_click", TranslationManager.string(this.player, Translations.MOUSE_LEFT_CLICK))).make(), click -> {
+			if (clickLock) {
+				Bukkit.getLogger().severe(click.player.getName() + " sent duplicate add item clicks");
+				return;
+			} else
+				clickLock = true;
 
 			final ItemStack placedItem = getItem(1, 4);
 			if (placedItem == null) {
 				Common.tell(click.player, TranslationManager.string(click.player, Translations.PLACE_ITEM_TO_ADD));
+				clickLock = false;
 				return;
 			}
 
 			// check blacklist
-			if (!BlacklistChecker.passesChecks(click.player, placedItem)) return;
+			if (!BlacklistChecker.passesChecks(click.player, placedItem)) {
+				clickLock = false;
+				return;
+			}
 
 			this.marketItem.setItem(placedItem.clone());
 			this.marketItem.setStock(placedItem.clone().getAmount());
-			if (this.marketItem.getPrice() <= 0) return;
+			if (this.marketItem.getPrice() <= 0) {
+				clickLock = false;
+				return;
+			}
 
 			if (this.market.isServerMarket()) {
 				this.marketItem.setIsAcceptingOffers(false);
@@ -183,6 +197,7 @@ public final class CategoryNewItemGUI extends MarketsBaseGUI {
 					if (created) {
 						click.manager.showGUI(click.player, new MarketCategoryEditGUI(this.player, this.market, this.category));
 					}
+					clickLock = false;
 				});
 			}, Settings.INTERNAL_ADD_ITEM_DELAY.getInt());
 
