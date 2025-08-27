@@ -28,7 +28,6 @@ import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class MarketCategoryEditGUI extends MarketsPagedGUI<MarketItem> {
 

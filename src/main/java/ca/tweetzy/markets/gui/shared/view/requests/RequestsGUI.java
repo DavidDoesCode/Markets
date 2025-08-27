@@ -29,6 +29,7 @@ import java.util.List;
 public final class RequestsGUI extends MarketsPagedGUI<Request> {
 
 	private final boolean viewOwnRequests;
+	private boolean clickLock = false;
 
 	public RequestsGUI(Gui parent, @NonNull Player player, final boolean viewOwnRequests) {
 		super(parent, player, TranslationManager.string(player, viewOwnRequests ? Translations.GUI_REQUEST_TITLE_YOURS : Translations.GUI_REQUEST_TITLE_ALL), 6, viewOwnRequests ? Markets.getRequestManager().getRequestsBy(player) : Markets.getRequestManager().getRequestsExclude(player));
@@ -76,6 +77,12 @@ public final class RequestsGUI extends MarketsPagedGUI<Request> {
 			return;
 		}
 
+		if(clickLock) {
+			Bukkit.getLogger().severe(click.player.getName() + " sending duplicate request fulfillment.");
+			return;
+		} else
+			clickLock = true;
+
 		// ================================== FULFILL THE REQUEST ================================== //
 
 		final Player fulfiller = click.player;
@@ -84,6 +91,7 @@ public final class RequestsGUI extends MarketsPagedGUI<Request> {
 		// do they even have enough items
 		if (PlayerUtil.getItemCountInPlayerInventory(fulfiller, request.getRequestItem()) < request.getRequestedAmount()) {
 			Common.tell(fulfiller, TranslationManager.string(fulfiller, Translations.NOT_ENOUGH_ITEMS));
+			clickLock = false;
 			return;
 		}
 
@@ -96,6 +104,7 @@ public final class RequestsGUI extends MarketsPagedGUI<Request> {
 
 		if (!hasEnoughMoney) {
 			Common.tell(fulfiller, TranslationManager.string(fulfiller, Translations.REQUESTER_CANT_PAY, "requester_name", request.getOwnerName()));
+			clickLock = false;
 			return;
 		}
 
