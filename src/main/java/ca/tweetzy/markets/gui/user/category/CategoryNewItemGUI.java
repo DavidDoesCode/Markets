@@ -47,6 +47,7 @@ public final class CategoryNewItemGUI extends MarketsBaseGUI {
 		setAcceptsItems(true);
 		setUnlocked(1, 4);
 
+		// todo this causes items to get lost when player dc/gets kicked/closes menu weirdly
 		setOnClose(close -> {
 			final ItemStack placedItem = getItem(1, 4);
 			if (placedItem != null) PlayerUtil.giveItem(close.player, placedItem);
