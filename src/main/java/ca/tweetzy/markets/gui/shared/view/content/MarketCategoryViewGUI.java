@@ -36,6 +36,8 @@ public final class MarketCategoryViewGUI extends MarketsPagedGUI<MarketItem> {
 	private final boolean viewAsCustomer;
 	private final boolean fromAdminCommand;
 
+	private boolean clickLock = false;
+
 	public MarketCategoryViewGUI(Gui parent, @NonNull final Player player, @NonNull final Market market, @NonNull final Category category, boolean viewAsCustomer, boolean fromAdminCommand) {
 		super(fromAdminCommand ? null : parent, player, TranslationManager.string(player, Translations.GUI_MARKET_CATEGORY_VIEW_TITLE,
 				"market_display_name", market.getDisplayName(),
@@ -181,6 +183,12 @@ public final class MarketCategoryViewGUI extends MarketsPagedGUI<MarketItem> {
 			return;
 		}
 
+		if(clickLock){
+			Bukkit.getLogger().info("MarketCategoryViewGUI Click Lock: " + click.clickType.toString());
+			return;
+		} else
+			clickLock = true;
+
 		if (Markets.getCategoryItemManager().getByUUID(marketItem.getId()) == null) {
 			click.manager.showGUI(click.player, new MarketCategoryViewGUI(this.player, this.market, this.category, this.viewAsCustomer));
 			Common.tell(click.player, TranslationManager.string(click.player, Translations.ITEM_NO_LONGER_AVAILABLE));
@@ -198,7 +206,10 @@ public final class MarketCategoryViewGUI extends MarketsPagedGUI<MarketItem> {
 			click.manager.showGUI(click.player, new OfferCreateGUI(this, this.player, this.market, marketItem, new MarketOffer(this.player, this.market, marketItem)));
 			this.category.getViewingPlayers().remove(player);
 			marketItem.getViewingPlayers().add(player);
+			return;
 		}
+
+		clickLock = false;
 	}
 
 	@Override

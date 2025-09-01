@@ -17,6 +17,7 @@ import ca.tweetzy.markets.impl.MarketOffer;
 import ca.tweetzy.markets.settings.Settings;
 import ca.tweetzy.markets.settings.Translations;
 import lombok.NonNull;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.ItemStack;
@@ -26,6 +27,7 @@ import java.util.List;
 public final class MarketSearchGUI extends MarketsPagedGUI<MarketItem> {
 
 	private final String keywords;
+	private boolean clickLock = false;
 
 	public MarketSearchGUI(Gui parent, @NonNull Player player, @NonNull String keywords) {
 		super(parent, player, TranslationManager.string(player, Translations.GUI_SEARCH_TITLE, "search_keywords", keywords), 6, Markets.getMarketManager().getSearchResults(player, keywords));
@@ -81,6 +83,12 @@ public final class MarketSearchGUI extends MarketsPagedGUI<MarketItem> {
 			return;
 		}
 
+		if(clickLock){
+			Bukkit.getLogger().info("MarketSearchGUI Click Lock: " + click.clickType.toString());
+			return;
+		} else
+			clickLock = true;
+
 		final Category category = Markets.getCategoryManager().getByUUID(marketItem.getOwningCategory());
 		final Market market = Markets.getMarketManager().getByUUID(category.getOwningMarket());
 
@@ -95,7 +103,10 @@ public final class MarketSearchGUI extends MarketsPagedGUI<MarketItem> {
 			click.manager.showGUI(click.player, new OfferCreateGUI(this, this.player, market, marketItem, new MarketOffer(this.player, market, marketItem)));
 			category.getViewingPlayers().remove(player);
 			marketItem.getViewingPlayers().add(player);
+			return;
 		}
+
+		clickLock = false;
 	}
 
 	@Override
