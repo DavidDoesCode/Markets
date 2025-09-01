@@ -88,6 +88,7 @@ public final class MarketSearchGUI extends MarketsPagedGUI<MarketItem> {
 			click.manager.showGUI(click.player, new MarketItemPurchaseGUI(this.player, market, marketItem));
 			category.getViewingPlayers().remove(player);
 			marketItem.getViewingPlayers().add(player);
+			return;
 		}
 
 		if (click.clickType == ClickType.RIGHT && marketItem.isAcceptingOffers()) {

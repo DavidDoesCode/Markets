@@ -84,8 +84,10 @@ public final class MarketViewGUI extends MarketsPagedGUI<Category> {
 					return;
 				}
 
-				if (click.clickType == ClickType.LEFT)
+				if (click.clickType == ClickType.LEFT) {
 					click.manager.showGUI(click.player, new NewMarketRatingGUI(this, click.player, this.market));
+					return;
+				}
 
 				if (click.clickType == ClickType.RIGHT)
 					click.manager.showGUI(click.player, new MarketRatingsViewGUI(this, click.player, this.market));

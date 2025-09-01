@@ -129,8 +129,10 @@ public final class MarketCategoryViewGUI extends MarketsPagedGUI<MarketItem> {
 					return;
 				}
 
-				if (click.clickType == ClickType.LEFT)
+				if (click.clickType == ClickType.LEFT) {
 					click.manager.showGUI(click.player, new NewMarketRatingGUI(this, click.player, this.market));
+					return;
+				}
 
 				if (click.clickType == ClickType.RIGHT)
 					click.manager.showGUI(click.player, new MarketRatingsViewGUI(this, click.player, this.market));
@@ -189,6 +191,7 @@ public final class MarketCategoryViewGUI extends MarketsPagedGUI<MarketItem> {
 			click.manager.showGUI(click.player, new MarketItemPurchaseGUI(this.player, this.market, marketItem));
 			this.category.getViewingPlayers().remove(player);
 			marketItem.getViewingPlayers().add(player);
+			return;
 		}
 
 		if (click.clickType == ClickType.RIGHT && !Settings.DISABLE_OFFERS.getBoolean() && marketItem.isAcceptingOffers()) {
