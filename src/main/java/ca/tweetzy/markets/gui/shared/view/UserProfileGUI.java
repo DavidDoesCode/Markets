@@ -32,10 +32,10 @@ public final class UserProfileGUI extends MarketsPagedGUI<Rating> {
 		super(parent, player, TranslationManager.string(player, Translations.GUI_USER_PROFILE_TITLE,
 				"player_name", profileUser.getUniqueId().equals(UUID.fromString(Settings.SERVER_MARKET_UUID.getString()))
 					? TranslationManager.string(Translations.SERVER_MARKET_NAME)
-					: Markets.getPlayerManager().get(profileUser.getUniqueId()).getName()
+					: Markets.getPlayerManager().get(profileUser.getUniqueId()).getLastKnownName()
 		), 6, Markets.getRatingManager().getRatingsByOrFor(profileUser));
 		this.profileUser = profileUser;
-		this.profileUserName = Markets.getPlayerManager().get(profileUser.getUniqueId()).getName();
+		this.profileUserName = Markets.getPlayerManager().get(profileUser.getUniqueId()).getLastKnownName();
 		this.serverProfile = profileUser.getUniqueId().equals(UUID.fromString(Settings.SERVER_MARKET_UUID.getString()));
 		setAsync(true);
 		setDefaultItem(QuickItem.bg(Settings.GUI_USER_PROFILE_BACKGROUND.getItemStack()));
