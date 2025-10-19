@@ -77,8 +77,8 @@ public final class AllMarketsViewGUI extends MarketsPagedGUI<Market> {
 				.of(Settings.SERVER_MARKET_TEXTURE.getString())
 				.fallbackTexture(Settings.SERVER_MARKET_TEXTURE.getString())
 				: QuickItem
-//				.of(Bukkit.getOfflinePlayer(market.getOwnerUUID()))
-				.of(new ItemStack(Material.PLAYER_HEAD))
+				.of(Bukkit.getOfflinePlayer(market.getOwnerUUID()))
+//				.of(new ItemStack(Material.PLAYER_HEAD))
 				.fallbackTexture(Settings.SERVER_MARKET_TEXTURE.getString());
 
 		return item
