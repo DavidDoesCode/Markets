@@ -57,6 +57,7 @@ public abstract class MarketsPagedGUI<T> extends BaseGUI {
 		if (this.items != null) {
 			if (!this.async) {
 				renderItems();
+				onPopulateComplete();
 			} else {
 				Markets.newChain().asyncFirst(() -> {
 					this.fillSlots().forEach(slot -> setItem(slot, getDefaultItem()));
@@ -76,9 +77,14 @@ public abstract class MarketsPagedGUI<T> extends BaseGUI {
 							setButton(i, this.makeDisplayItem(object), click -> this.onClick(object, click));
 						}
 					}
+
+					onPopulateComplete();
 				}).execute();
 			}
 		}
+	}
+
+	protected void onPopulateComplete() {
 	}
 
 	private void renderItems() {

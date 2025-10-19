@@ -1,5 +1,6 @@
 package ca.tweetzy.markets.gui.shared.view;
 
+import ca.tweetzy.flight.comp.enums.CompMaterial;
 import ca.tweetzy.flight.gui.Gui;
 import ca.tweetzy.flight.gui.events.GuiClickEvent;
 import ca.tweetzy.flight.gui.helper.InventoryBorder;
@@ -19,7 +20,7 @@ import ca.tweetzy.markets.settings.Translations;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.bukkit.Bukkit;
-import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
@@ -37,6 +38,13 @@ public final class AllMarketsViewGUI extends MarketsPagedGUI<Market> {
 		setAsync(true);
 		setDefaultItem(QuickItem.bg(Settings.GUI_ALL_MARKETS_BACKGROUND.getItemStack()));
 		draw();
+	}
+
+	@Override
+	protected void onPopulateComplete() {
+		// This is called after the async population is complete
+		// Now we can safely load player heads asynchronously
+		loadPlayerHeadsAsync();
 	}
 
 	@Override
@@ -73,15 +81,24 @@ public final class AllMarketsViewGUI extends MarketsPagedGUI<Market> {
 
 	@Override
 	protected ItemStack makeDisplayItem(Market market) {
-		QuickItem item = market.isServerMarket() ? QuickItem
-				.of(Settings.SERVER_MARKET_TEXTURE.getString())
-				.fallbackTexture(Settings.SERVER_MARKET_TEXTURE.getString())
-				: QuickItem
-				.of(Bukkit.getOfflinePlayer(market.getOwnerUUID()))
-//				.of(new ItemStack(Material.PLAYER_HEAD))
-				.fallbackTexture(Settings.SERVER_MARKET_TEXTURE.getString());
+		// For server markets, use the texture directly (no async needed)
+		if (market.isServerMarket()) {
+			return QuickItem
+					.of(Settings.SERVER_MARKET_TEXTURE.getString())
+					.fallbackTexture(Settings.SERVER_MARKET_TEXTURE.getString())
+					.name(market.getDisplayName())
+					.lore(market.getDescription())
+					.lore(TranslationManager.list(this.player, Translations.GUI_ALL_MARKETS_ITEMS_MARKET_LORE,
+							"left_click", TranslationManager.string(this.player, Translations.MOUSE_LEFT_CLICK),
+							"market_ratings_total", market.getRatings().size(),
+							"market_ratings_stars", StringUtils.repeat("★", (int) market.getReviewAvg())
+					)).make();
+		}
 
-		return item
+		// For player markets, return a placeholder head immediately
+		// The actual player head will be loaded asynchronously in drawFixed()
+		return QuickItem
+				.of(CompMaterial.PLAYER_HEAD)
 				.name(market.getDisplayName())
 				.lore(market.getDescription())
 				.lore(TranslationManager.list(this.player, Translations.GUI_ALL_MARKETS_ITEMS_MARKET_LORE,
@@ -120,6 +137,44 @@ public final class AllMarketsViewGUI extends MarketsPagedGUI<Market> {
 				return true;
 			}
 		});
+	}
+
+	private void loadPlayerHeadsAsync() {
+		// Get the current page items
+		final List<Market> itemsToDisplay = this.items.stream()
+				.skip((page - 1) * (long) fillSlots().size())
+				.limit(fillSlots().size())
+				.toList();
+
+		// Load player heads asynchronously for player markets
+		for (int i = 0; i < itemsToDisplay.size(); i++) {
+			final Market market = itemsToDisplay.get(i);
+			final int slotIndex = fillSlots().get(i);
+
+			// Skip server markets (they already have their texture)
+			if (market.isServerMarket()) {
+				continue;
+			}
+
+			// Load the player head asynchronously
+			final OfflinePlayer owner = Bukkit.getOfflinePlayer(market.getOwnerUUID());
+			QuickItem.asyncPlayerHead(owner).thenAccept(skull -> {
+				// Build the final item with the loaded skull
+				ItemStack finalItem = QuickItem.of(skull)
+						.name(market.getDisplayName())
+						.lore(market.getDescription())
+						.lore(TranslationManager.list(this.player, Translations.GUI_ALL_MARKETS_ITEMS_MARKET_LORE,
+								"left_click", TranslationManager.string(this.player, Translations.MOUSE_LEFT_CLICK),
+								"market_ratings_total", market.getRatings().size(),
+								"market_ratings_stars", StringUtils.repeat("★", (int) market.getReviewAvg())
+						)).make();
+
+				// Update the slot on the main thread
+				Bukkit.getScheduler().runTask(Markets.getInstance(), () -> {
+					setItem(slotIndex, finalItem);
+				});
+			});
+		}
 	}
 
 	@Override
