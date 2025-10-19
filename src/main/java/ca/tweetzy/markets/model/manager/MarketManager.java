@@ -15,11 +15,17 @@ import ca.tweetzy.markets.impl.layout.HomeLayout;
 import ca.tweetzy.markets.settings.Settings;
 import ca.tweetzy.markets.settings.Translations;
 import lombok.NonNull;
+import org.bukkit.NamespacedKey;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.EnchantmentStorageMeta;
+import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -30,6 +36,56 @@ public final class MarketManager extends ListManager<Market> {
 		super("Market");
 	}
 
+	/**
+	 * Enhanced search that includes enchantment names for enchanted books
+	 *
+	 * @param keywords the search keywords
+	 * @param item     the item to search
+	 * @return true if the item matches the search criteria
+	 */
+	private boolean matchesSearch(@NonNull final String keywords, @NonNull final ItemStack item) {
+		// First try the standard item info search
+		if (Filterer.searchByItemInfo(keywords, item)) {
+			return true;
+		}
+
+		// Check for enchantments on the item
+		ItemMeta meta = item.getItemMeta();
+		if (meta != null) {
+			String lowerKeywords = keywords.toLowerCase();
+
+			// Check enchantments on enchanted books
+			if (meta instanceof EnchantmentStorageMeta) {
+				EnchantmentStorageMeta bookMeta = (EnchantmentStorageMeta) meta;
+				Map<Enchantment, Integer> storedEnchants = bookMeta.getStoredEnchants();
+
+				for (Enchantment enchantment : storedEnchants.keySet()) {
+					NamespacedKey key = enchantment.getKey();
+					String enchantmentName = key.getKey().toLowerCase();
+
+					// Match by enchantment name (e.g., "unbreaking", "sharpness")
+					if (enchantmentName.contains(lowerKeywords)) {
+						return true;
+					}
+				}
+			}
+
+			// Check regular enchantments on tools/armor
+			Map<Enchantment, Integer> enchants = meta.getEnchants();
+			for (Enchantment enchantment : enchants.keySet()) {
+				NamespacedKey key = enchantment.getKey();
+				String enchantmentName = key.getKey().toLowerCase();
+
+				// Match by enchantment name
+				if (enchantmentName.contains(lowerKeywords)) {
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
+
 	public List<MarketItem> getSearchResults(@NonNull final Player searcher, @NonNull final String keywords) {
 		final List<MarketItem> marketItems = new ArrayList<>();
 		final List<Market> possibleSearchMarkets = getOpenMarketsExclusive(searcher).stream().filter(market -> !market.getBannedUsers().contains(searcher.getUniqueId())).toList();
@@ -37,17 +93,17 @@ public final class MarketManager extends ListManager<Market> {
 
 		// populate items into search list
 		possibleSearchMarkets.forEach(market -> market.getCategories().forEach(category -> marketItems.addAll(category.getInStockItems())));
-		return marketItems.stream().filter(marketItem -> Filterer.searchByItemInfo(keywords, marketItem.getItem())).collect(Collectors.toList());
+		return marketItems.stream().filter(marketItem -> matchesSearch(keywords, marketItem.getItem())).collect(Collectors.toList());
 	}
 
 	public List<MarketItem> getSearchResults(@NonNull final Player searcher, @NonNull final Market market, @NonNull final String keywords) {
 		final List<MarketItem> marketItems = new ArrayList<>();
 		market.getCategories().forEach(category -> marketItems.addAll(category.getInStockItems()));
-		return marketItems.stream().filter(marketItem -> Filterer.searchByItemInfo(keywords, marketItem.getItem())).collect(Collectors.toList());
+		return marketItems.stream().filter(marketItem -> matchesSearch(keywords, marketItem.getItem())).collect(Collectors.toList());
 	}
 
 	public List<MarketItem> getSearchResults(@NonNull final Category category, @NonNull final String keywords) {
-		return category.getInStockItems().stream().filter(marketItem -> Filterer.searchByItemInfo(keywords, marketItem.getItem())).collect(Collectors.toList());
+		return category.getInStockItems().stream().filter(marketItem -> matchesSearch(keywords, marketItem.getItem())).collect(Collectors.toList());
 	}
 
 	public List<Market> getOpenMarketsExclusive(@NonNull final OfflinePlayer ignoredUser) {
