@@ -23,6 +23,10 @@ public final class TransactionManager extends ListManager<Transaction> {
 	public List<Transaction> getOfflineTransactionsFor(@NonNull final UUID sellerUUID) {
 		final MarketUser user = Markets.getPlayerManager().get(sellerUUID);
 
+		return getManagerContent().stream().filter(transaction -> transaction.getSeller().equals(sellerUUID) && transaction.getTimeCreated() >= user.getLastSeenAt()).collect(Collectors.toList());
+	}
+
+	public List<Transaction> getTransactionsFor(@NonNull final UUID sellerUUID) {
 		return getManagerContent().stream().filter(transaction -> transaction.getSeller().equals(sellerUUID)).collect(Collectors.toList());
 	}
 

@@ -38,7 +38,7 @@ public final class TransactionsGUI extends MarketsPagedGUI<Transaction> {
 		if (this.viewAll) {
 			this.items = new ArrayList<>(Markets.getTransactionManager().getManagerContent());
 		} else {
-			this.items = new ArrayList<>(Markets.getTransactionManager().getOfflineTransactionsFor(this.player.getUniqueId()));
+			this.items = new ArrayList<>(Markets.getTransactionManager().getTransactionsFor(this.player.getUniqueId()));
 		}
 
 		this.items.sort(Comparator.comparing(Transaction::getTimeCreated).reversed());
