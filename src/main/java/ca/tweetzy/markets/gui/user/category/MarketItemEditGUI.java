@@ -154,8 +154,8 @@ public final class MarketItemEditGUI extends MarketsBaseGUI {
 
 						int qty = Integer.parseInt(string);
 
-						if (qty > 64) {
-							Common.tell(click.player, "You may only withdraw a stack at a time.");
+						if (qty > 640) {
+							Common.tell(click.player, "You may only withdraw 10 stacks at a time.");
 							return false;
 						}
 
