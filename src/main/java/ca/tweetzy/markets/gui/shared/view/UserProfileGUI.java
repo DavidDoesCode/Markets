@@ -25,15 +25,17 @@ import java.util.UUID;
 public final class UserProfileGUI extends MarketsPagedGUI<Rating> {
 
 	private final OfflinePlayer profileUser;
+	private final String profileUserName;
 	private boolean serverProfile = false;
 
 	public UserProfileGUI(Gui parent, @NonNull Player player, @NonNull final OfflinePlayer profileUser) {
 		super(parent, player, TranslationManager.string(player, Translations.GUI_USER_PROFILE_TITLE,
 				"player_name", profileUser.getUniqueId().equals(UUID.fromString(Settings.SERVER_MARKET_UUID.getString()))
 					? TranslationManager.string(Translations.SERVER_MARKET_NAME)
-					: (profileUser.getName() != null ? profileUser.getName() : "Unknown Player")
+					: Markets.getPlayerManager().get(profileUser.getUniqueId()).getName()
 		), 6, Markets.getRatingManager().getRatingsByOrFor(profileUser));
 		this.profileUser = profileUser;
+		this.profileUserName = Markets.getPlayerManager().get(profileUser.getUniqueId()).getName();
 		this.serverProfile = profileUser.getUniqueId().equals(UUID.fromString(Settings.SERVER_MARKET_UUID.getString()));
 		setAsync(true);
 		setDefaultItem(QuickItem.bg(Settings.GUI_USER_PROFILE_BACKGROUND.getItemStack()));
@@ -59,7 +61,7 @@ public final class UserProfileGUI extends MarketsPagedGUI<Rating> {
 			// For player profile, show placeholder first, then load async
 			setItem(1, 4, QuickItem
 					.of(CompMaterial.PLAYER_HEAD)
-					.name(TranslationManager.string(this.player, Translations.GUI_USER_PROFILE_ITEMS_USER_NAME, "player_name", "Loading..."))
+					.name(TranslationManager.string(this.player, Translations.GUI_USER_PROFILE_ITEMS_USER_NAME, "player_name", this.profileUserName))
 					.lore(TranslationManager.list(this.player, Translations.GUI_USER_PROFILE_ITEMS_USER_LORE,
 							"user_last_seen", TimeUtil.convertToReadableDate(user.getLastSeenAt(), Settings.DATETIME_FORMAT.getString()),
 							"true", TranslationManager.string(this.player, this.profileUser.isOnline() ? Translations.TRUE : Translations.FALSE)
@@ -70,7 +72,7 @@ public final class UserProfileGUI extends MarketsPagedGUI<Rating> {
 			// Load player head asynchronously
 			QuickItem.asyncPlayerHead(this.profileUser).thenAccept(skull -> {
 				ItemStack finalItem = QuickItem.of(skull)
-						.name(TranslationManager.string(this.player, Translations.GUI_USER_PROFILE_ITEMS_USER_NAME, "player_name", this.profileUser.getName()))
+						.name(TranslationManager.string(this.player, Translations.GUI_USER_PROFILE_ITEMS_USER_NAME, "player_name", this.profileUserName))
 						.lore(TranslationManager.list(this.player, Translations.GUI_USER_PROFILE_ITEMS_USER_LORE,
 								"user_last_seen", TimeUtil.convertToReadableDate(user.getLastSeenAt(), Settings.DATETIME_FORMAT.getString()),
 								"true", TranslationManager.string(this.player, this.profileUser.isOnline() ? Translations.TRUE : Translations.FALSE)
