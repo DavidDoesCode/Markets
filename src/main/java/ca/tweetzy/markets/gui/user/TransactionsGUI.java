@@ -11,6 +11,7 @@ import ca.tweetzy.markets.gui.MarketsPagedGUI;
 import ca.tweetzy.markets.settings.Settings;
 import ca.tweetzy.markets.settings.Translations;
 import lombok.NonNull;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
@@ -22,6 +23,11 @@ public final class TransactionsGUI extends MarketsPagedGUI<Transaction> {
 
 	private final Player player;
 	private boolean viewAll;
+	private PlayerRole filterType = PlayerRole.SELLER;
+
+	private enum PlayerRole {
+		BUYER, SELLER
+	}
 
 	public TransactionsGUI(Gui parent, @NonNull final Player player, boolean viewAll) {
 		super(parent, player, TranslationManager.string(player, Translations.GUI_TRANSACTIONS_TITLE), 6, new ArrayList<>());
@@ -38,7 +44,12 @@ public final class TransactionsGUI extends MarketsPagedGUI<Transaction> {
 		if (this.viewAll) {
 			this.items = new ArrayList<>(Markets.getTransactionManager().getManagerContent());
 		} else {
-			this.items = new ArrayList<>(Markets.getTransactionManager().getTransactionsFor(this.player.getUniqueId()));
+			// Filter by transaction type if a filter is set
+			if (this.filterType == PlayerRole.SELLER) {
+				this.items = new ArrayList<>(Markets.getTransactionManager().getSalesTransactionsFor((this.player.getUniqueId())));
+			} else {
+				this.items = new ArrayList<>(Markets.getTransactionManager().getPurchaseTransactionsFor((this.player.getUniqueId())));
+			}
 		}
 
 		this.items.sort(Comparator.comparing(Transaction::getTimeCreated).reversed());
@@ -52,6 +63,8 @@ public final class TransactionsGUI extends MarketsPagedGUI<Transaction> {
 			if (this.player.hasPermission("markets.viewalltransactions"))
 				setTransactionViewButton();
 		}
+
+		setTransactionTypeToggle();
 	}
 
 	private void setTransactionViewButton() {
@@ -62,6 +75,27 @@ public final class TransactionsGUI extends MarketsPagedGUI<Transaction> {
 				.make(), click -> {
 
 			this.viewAll = !this.viewAll;
+			draw();
+		});
+	}
+
+	private void setTransactionTypeToggle() {
+		final String currentFilter = this.filterType == PlayerRole.SELLER ? "Sales" : "Purchases";
+
+		setButton(5, 4, QuickItem
+				.of(new ItemStack(Material.LEVER))
+				.name(TranslationManager.string(Translations.GUI_TRANSACTIONS_ITEMS_TYPE_TOGGLE_NAME))
+				.lore(TranslationManager.list(Translations.GUI_TRANSACTIONS_ITEMS_TYPE_TOGGLE_LORE,
+					"current_filter", currentFilter,
+					"left_click", TranslationManager.string(Translations.MOUSE_LEFT_CLICK)))
+				.make(), click -> {
+
+			// Cycle through: null (all) -> ITEM_PURCHASE -> REQUEST_FULFILLMENT -> null
+			if (this.filterType == PlayerRole.SELLER) {
+				this.filterType = PlayerRole.BUYER;
+			} else {
+				this.filterType = PlayerRole.SELLER;
+			}
 			draw();
 		});
 	}
@@ -78,6 +112,7 @@ public final class TransactionsGUI extends MarketsPagedGUI<Transaction> {
 						"market_item_price", transaction.getPrice(),
 						"market_item_currency", transaction.getCurrency(),
 						"buyer_name", transaction.getBuyerName(),
+						"seller_name", transaction.getSellerName(),
 						"transaction_date", transaction.getFormattedDate()
 				)).make();
 	}

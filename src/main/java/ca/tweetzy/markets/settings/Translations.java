@@ -224,6 +224,13 @@ public final class Translations extends TranslationManager {
 			"&e&l%left_click% &7to collect payments"
 	);
 
+	public static TranslationEntry GUI_MAIN_VIEW_ITEMS_TRANSACTIONS_NAME = create("gui.main view.items.transactions.name", "<GRADIENT:65B1B4>&LView Transactions</GRADIENT:2B6F8A>");
+	public static TranslationEntry GUI_MAIN_VIEW_ITEMS_TRANSACTIONS_LORE = create("gui.main view.items.transactions.lore",
+			"&7View your transactions",
+			"",
+			"&e&l%left_click% &7to view transactions"
+	);
+
 	public static TranslationEntry GUI_MAIN_VIEW_ITEMS_REQUESTS_NAME = create("gui.main view.items.requests.name", "<GRADIENT:65B1B4>&LRequests</GRADIENT:2B6F8A>");
 	public static TranslationEntry GUI_MAIN_VIEW_ITEMS_REQUESTS_LORE = create("gui.main view.items.requests.lore",
 			"&7Used to view all open player",
@@ -867,8 +874,19 @@ public final class Translations extends TranslationManager {
 			"&7Currency&f: &a%market_item_currency%",
 			"",
 			"&7Buyer&f: &e%buyer_name%",
+			"&7Seller&f: &e%seller_name%",
 			"&7Date&f: &e%transaction_date%",
 			""
+	);
+
+	public static TranslationEntry GUI_TRANSACTIONS_ITEMS_TYPE_TOGGLE_NAME = create("gui.transactions.items.type toggle.name", "<GRADIENT:65B1B4>&lTransaction Type Filter</GRADIENT:2B6F8A>");
+	public static TranslationEntry GUI_TRANSACTIONS_ITEMS_TYPE_TOGGLE_LORE = create("gui.transactions.items.type toggle.lore",
+			"&7Toggle between viewing all transactions,",
+			"&7purchases only, or sales only.",
+			"",
+			"&7Current Filter&f: %current_filter%",
+			"",
+			"&e&l%left_click% &7to cycle filter"
 	);
 
 	public static TranslationEntry GUI_BANK_TAX_TITLE = create("gui.tax bank.title", "&eMarkets &f- &7Tax Collection");
