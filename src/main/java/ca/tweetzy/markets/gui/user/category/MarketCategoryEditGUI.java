@@ -242,6 +242,13 @@ public final class MarketCategoryEditGUI extends MarketsPagedGUI<MarketItem> {
 	protected void onClick(MarketItem marketItem, GuiClickEvent click) {
 		final Player player = click.player;
 
+		if(player.getLocation().getWorld().getName().contains("the_end") ||
+				player.getLocation().getWorld().getName().contains("nether")) {
+			click.gui.exit();
+			Common.tell(click.player, "You can only manage your store in the overworld.");
+			return;
+		}
+
 		final MarketItem locate = Markets.getCategoryItemManager().getByUUID(marketItem.getId());
 		if (locate == null || locate.getStock() != marketItem.getStock()) {
 			reopen(click);
@@ -249,6 +256,10 @@ public final class MarketCategoryEditGUI extends MarketsPagedGUI<MarketItem> {
 		}
 
 		if (click.clickType == ClickType.LEFT) {
+			click.manager.showGUI(click.player, new MarketItemEditGUI(this.player, this.market, this.category, marketItem));
+		}
+
+		if (click.clickType == ClickType.RIGHT) {
 			new TitleInput(Markets.getInstance(), click.player, TranslationManager.string(click.player, Translations.PROMPT_ITEM_PRICE_TITLE), TranslationManager.string(click.player, Translations.PROMPT_ITEM_PRICE_SUBTITLE)) {
 				@Override
 				public void onExit(Player player) {
@@ -270,10 +281,6 @@ public final class MarketCategoryEditGUI extends MarketsPagedGUI<MarketItem> {
 					return true;
 				}
 			};
-		}
-
-		if (click.clickType == ClickType.RIGHT) {
-			click.manager.showGUI(click.player, new MarketItemEditGUI(this.player, this.market, this.category, marketItem));
 		}
 
 		if (click.clickType == Enum.valueOf(ClickType.class, Settings.CLICK_DELETE_ITEM.getString().toUpperCase())) {

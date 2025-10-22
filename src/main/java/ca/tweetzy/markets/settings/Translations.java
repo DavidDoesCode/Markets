@@ -333,8 +333,8 @@ public final class Translations extends TranslationManager {
 			"&7Wholesale&f: &e%market_item_wholesale%",
 			"&7Accept Offers&f: &e%market_item_accepting_offers%",
 			"",
-			"&e&l%left_click% &7to edit price",
-			"&b&l%right_click% &7to edit settings",
+			"&e&l%left_click% &7to edit settings",
+			"&b&l%right_click% &7to edit price",
 			"&c&l%drop_button% &7to remove item",
 			"&7----------------------------"
 	);
@@ -964,10 +964,11 @@ public final class Translations extends TranslationManager {
 			"&7If you have any of this item in your",
 			"&7inventory you can &edrop &7it here to add to stock.",
 			"",
-			"&7Current Stock&F: &e%market_item_stock%",
+			"&7%shift_left_click% to deposit all items.",
 			"",
-			"&e&l%shift_left_click% &7to deposit all items from inventory",
-			"&b&l%right_click% &7to withdraw from stock"
+			"&7%right_click% or %drop_button% to withdraw",
+			"",
+			"&7Current Stock&F: &e%market_item_stock%"
 	);
 
 	public static TranslationEntry GUI_EDIT_ITEM_ITEMS_CURRENCY_NAME = create("gui.edit market item.items.currency.name", "<GRADIENT:65B1B4>&lSwitch Currency</GRADIENT:2B6F8A>");

@@ -63,7 +63,8 @@ public final class MarketItemEditGUI extends MarketsBaseGUI {
 				.lore(TranslationManager.list(this.player, Translations.GUI_EDIT_ITEM_ITEMS_STOCK_LORE,
 						"market_item_stock", this.marketItem.getStock(),
 						"right_click", TranslationManager.string(this.player, Translations.MOUSE_RIGHT_CLICK),
-						"shift_left_click", TranslationManager.string(this.player, Translations.MOUSE_SHIFT_LEFT_CLICK)
+						"shift_left_click", TranslationManager.string(this.player, Translations.MOUSE_SHIFT_LEFT_CLICK),
+						"drop_button", TranslationManager.string(this.player, Translations.DROP_KEY)
 				))
 				.make(), click -> {
 
@@ -119,7 +120,7 @@ public final class MarketItemEditGUI extends MarketsBaseGUI {
 				});
 			}
 
-			if (click.clickType == ClickType.RIGHT) {
+			if (click.clickType == ClickType.RIGHT || click.clickType == ClickType.DROP) {
 				synchronized (this) {
 					if (playerLock) {
 						Bukkit.getLogger().severe(click.player.getName() + " attempting to withdraw twice.");
