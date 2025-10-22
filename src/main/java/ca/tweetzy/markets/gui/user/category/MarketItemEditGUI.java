@@ -1,6 +1,7 @@
 package ca.tweetzy.markets.gui.user.category;
 
 import ca.tweetzy.flight.comp.enums.CompMaterial;
+import ca.tweetzy.flight.gui.events.GuiClickEvent;
 import ca.tweetzy.flight.settings.TranslationManager;
 import ca.tweetzy.flight.utils.Common;
 import ca.tweetzy.flight.utils.MathUtil;
@@ -52,9 +53,48 @@ public final class MarketItemEditGUI extends MarketsBaseGUI {
 		drawWholesaleButton();
 		drawOffersButton();
 		drawStockButton();
+		drawPriceButton();
 		drawCurrencyButton();
 
 		applyBackExit();
+	}
+
+	private synchronized  void drawPriceButton() {
+		setButton(3, 6, QuickItem
+				.of(Settings.GUI_CATEGORY_ADD_ITEM_ITEMS_PRICE_ITEM.getItemStack())
+				.name(Translations.string(this.player, Translations.GUI_EDIT_ITEM_ITEMS_PRICE_NAME))
+				.lore(Translations.list(this.player, Translations.GUI_EDIT_ITEM_ITEMS_PRICE_LORE,
+						"left_click", Translations.string(this.player, Translations.MOUSE_LEFT_CLICK),
+						"market_item_price", this.marketItem.getPrice()))
+				.make(), click -> {
+
+			new TitleInput(Markets.getInstance(), click.player, TranslationManager.string(click.player, Translations.PROMPT_ITEM_PRICE_TITLE), TranslationManager.string(click.player, Translations.PROMPT_ITEM_PRICE_SUBTITLE)) {
+				@Override
+				public void onExit(Player player) {
+					click.manager.showGUI(click.player, MarketItemEditGUI.this);
+				}
+
+				@Override
+				public boolean onResult(String string) {
+					string = ChatColor.stripColor(string);
+
+					if (!NumberUtils.isNumber(string)) {
+						Common.tell(click.player, TranslationManager.string(click.player, Translations.NOT_A_NUMBER, "value", string));
+						return false;
+					}
+
+					final double price = Double.parseDouble(string);
+					marketItem.setPrice(price);
+					marketItem.sync(result -> reopen(click));
+					return true;
+				}
+			};
+
+		});
+	}
+
+	private void reopen(@NonNull GuiClickEvent click) {
+		click.manager.showGUI(click.player, new MarketItemEditGUI(click.player, MarketItemEditGUI.this.market, MarketItemEditGUI.this.category, MarketItemEditGUI.this.marketItem));
 	}
 
 	private synchronized void drawStockButton() {

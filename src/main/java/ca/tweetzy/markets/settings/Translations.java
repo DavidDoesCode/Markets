@@ -981,6 +981,12 @@ public final class Translations extends TranslationManager {
 			"&e&l%left_click% &7to edit currency"
 	);
 
+	public static TranslationEntry GUI_EDIT_ITEM_ITEMS_PRICE_NAME = create("gui.edit market item.items.price.name", "<GRADIENT:65B1B4>&LItem Price</GRADIENT:2B6F8A>");
+	public static TranslationEntry GUI_EDIT_ITEM_ITEMS_PRICE_LORE = create("gui.edit market item.items.price.lore",
+			"&7The current price is&f: &a%market_item_price%",
+			"",
+			"&e%left_click% &7to edit price");
+
 	public static TranslationEntry GUI_NEW_RATING_TITLE = create("gui.new rating.title", "%market_display_name% &f- &7Review");
 	public static TranslationEntry GUI_NEW_RATING_ITEMS_CREATE_NAME = create("gui.new rating.items.create.name", "<GRADIENT:65B1B4>&lLeave Review</GRADIENT:2B6F8A>");
 	public static TranslationEntry GUI_NEW_RATING_ITEMS_CREATE_LORE = create("gui.new rating.items.create.lore",
