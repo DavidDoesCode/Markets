@@ -881,8 +881,8 @@ public final class Translations extends TranslationManager {
 
 	public static TranslationEntry GUI_TRANSACTIONS_ITEMS_TYPE_TOGGLE_NAME = create("gui.transactions.items.type toggle.name", "<GRADIENT:65B1B4>&lTransaction Type Filter</GRADIENT:2B6F8A>");
 	public static TranslationEntry GUI_TRANSACTIONS_ITEMS_TYPE_TOGGLE_LORE = create("gui.transactions.items.type toggle.lore",
-			"&7Toggle between viewing all transactions,",
-			"&7purchases only, or sales only.",
+			"&7Toggle between viewing,",
+			"&7purchases or sales.",
 			"",
 			"&7Current Filter&f: %current_filter%",
 			"",
