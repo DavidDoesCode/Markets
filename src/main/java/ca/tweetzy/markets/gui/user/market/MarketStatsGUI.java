@@ -67,9 +67,9 @@ public final class MarketStatsGUI extends MarketsBaseGUI {
 
 		setButton(1, 2, QuickItem
 				.of(levelIcon)
-				.name(TranslationManager.string(this.player, Translations.GUI_MARKET_STATS_ITEMS_LEVEL_NAME))
+				.name(TranslationManager.string(this.player, Translations.GUI_MARKET_STATS_ITEMS_LEVEL_NAME,
+						"store_level", level))
 				.lore(TranslationManager.list(this.player, Translations.GUI_MARKET_STATS_ITEMS_LEVEL_LORE,
-						"store_level", level,
 						"store_tier", levelTier,
 						"total_sales", totalSales,
 						"total_listings", totalListings,
@@ -84,7 +84,7 @@ public final class MarketStatsGUI extends MarketsBaseGUI {
 		int totalQuantity = sales.stream().mapToInt(Transaction::getQuantity).sum();
 		double totalRevenue = sales.stream().mapToDouble(Transaction::getPrice).sum();
 
-		setButton(2, 2, QuickItem
+		setButton(3, 2, QuickItem
 				.of(new ItemStack(Material.GOLD_INGOT))
 				.name(TranslationManager.string(this.player, Translations.GUI_MARKET_STATS_ITEMS_SALES_NAME))
 				.lore(TranslationManager.list(this.player, Translations.GUI_MARKET_STATS_ITEMS_SALES_LORE,
@@ -121,7 +121,7 @@ public final class MarketStatsGUI extends MarketsBaseGUI {
 		int outOfStock = getOutOfStockCount();
 		int totalCategories = this.market.getCategories().size();
 
-		setButton(3, 2, QuickItem
+		setButton(4, 2, QuickItem
 				.of(new ItemStack(Material.CHEST))
 				.name(TranslationManager.string(this.player, Translations.GUI_MARKET_STATS_ITEMS_INVENTORY_NAME))
 				.lore(TranslationManager.list(this.player, Translations.GUI_MARKET_STATS_ITEMS_INVENTORY_LORE,
@@ -139,7 +139,7 @@ public final class MarketStatsGUI extends MarketsBaseGUI {
 		double avgRating = this.market.getRatings().isEmpty() ? 0 : this.market.getReviewAvg();
 		int activeBans = this.market.getBannedUsers().size();
 
-		setButton(3, 6, QuickItem
+		setButton(3, 3, QuickItem
 				.of(new ItemStack(Material.PLAYER_HEAD))
 				.name(TranslationManager.string(this.player, Translations.GUI_MARKET_STATS_ITEMS_CUSTOMERS_NAME))
 				.lore(TranslationManager.list(this.player, Translations.GUI_MARKET_STATS_ITEMS_CUSTOMERS_LORE,
