@@ -15,6 +15,7 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+import java.text.DecimalFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -94,7 +95,7 @@ public final class MarketStatsGUI extends MarketsBaseGUI {
 				.lore(TranslationManager.list(this.player, Translations.GUI_MARKET_STATS_ITEMS_SALES_LORE,
 						"total_sales", totalSales,
 						"total_quantity", totalQuantity,
-						"total_revenue", String.format("%.2f", totalRevenue),
+						"total_revenue", formatCurrency(totalRevenue),
 						"top_item_1", topSoldItems.size() > 0 ? topSoldItems.get(0) : "None",
 						"top_item_2", topSoldItems.size() > 1 ? topSoldItems.get(1) : "None",
 						"top_item_3", topSoldItems.size() > 2 ? topSoldItems.get(2) : "None"
@@ -120,7 +121,7 @@ public final class MarketStatsGUI extends MarketsBaseGUI {
 				.lore(TranslationManager.list(this.player, Translations.GUI_MARKET_STATS_ITEMS_PURCHASES_LORE,
 						"total_purchases", totalPurchases,
 						"total_quantity", totalQuantity,
-						"total_spent", String.format("%.2f", totalSpent),
+						"total_spent", formatCurrency(totalSpent),
 						"top_item_1", topBoughtItems.size() > 0 ? topBoughtItems.get(0) : "None",
 						"top_item_2", topBoughtItems.size() > 1 ? topBoughtItems.get(1) : "None",
 						"top_item_3", topBoughtItems.size() > 2 ? topBoughtItems.get(2) : "None"
@@ -266,5 +267,10 @@ public final class MarketStatsGUI extends MarketsBaseGUI {
 				.limit(limit)
 				.map(entry -> entry.getKey() + " (" + entry.getValue() + ")")
 				.collect(Collectors.toList());
+	}
+
+	private String formatCurrency(double amount) {
+		DecimalFormat formatter = new DecimalFormat("#,##0.00");
+		return formatter.format(amount);
 	}
 }
