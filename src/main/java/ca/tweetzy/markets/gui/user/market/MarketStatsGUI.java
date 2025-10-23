@@ -22,11 +22,16 @@ public final class MarketStatsGUI extends MarketsBaseGUI {
 	private final Player player;
 	private final Market market;
 
+	private final List<Transaction> sales;
+
 	public MarketStatsGUI(@NonNull final Player player, @NonNull final Market market) {
 		super(new MarketOverviewGUI(player, market), player, TranslationManager.string(player, Translations.GUI_MARKET_STATS_TITLE), 6);
 		this.player = player;
 		this.market = market;
 		setDefaultItem(QuickItem.bg(Settings.GUI_MARKET_STATS_BACKGROUND.getItemStack()));
+
+		this.sales = Markets.getTransactionManager().getManagerContent().stream()
+				.filter(t -> t.getSeller().equals(this.market.getOwnerUUID())).toList();
 
 		draw();
 	}
@@ -60,7 +65,7 @@ public final class MarketStatsGUI extends MarketsBaseGUI {
 		String levelTier = getStoreLevelTier(level);
 		CompMaterial levelIcon = getStoreLevelIcon(level);
 
-		setButton(1, 4, QuickItem
+		setButton(1, 2, QuickItem
 				.of(levelIcon)
 				.name(TranslationManager.string(this.player, Translations.GUI_MARKET_STATS_ITEMS_LEVEL_NAME))
 				.lore(TranslationManager.list(this.player, Translations.GUI_MARKET_STATS_ITEMS_LEVEL_LORE,
@@ -75,11 +80,6 @@ public final class MarketStatsGUI extends MarketsBaseGUI {
 	}
 
 	private void drawSalesStats() {
-		List<Transaction> sales = Markets.getTransactionManager().getManagerContent().stream()
-				.filter(t -> t.getType() == TransactionType.REQUEST_FULFILLMENT)
-				.filter(t -> t.getSeller().equals(this.market.getOwnerUUID()))
-				.toList();
-
 		int totalSales = sales.size();
 		int totalQuantity = sales.stream().mapToInt(Transaction::getQuantity).sum();
 		double totalRevenue = sales.stream().mapToDouble(Transaction::getPrice).sum();
@@ -97,7 +97,6 @@ public final class MarketStatsGUI extends MarketsBaseGUI {
 
 	private void drawPurchaseStats() {
 		List<Transaction> purchases = Markets.getTransactionManager().getManagerContent().stream()
-				.filter(t -> t.getType() == TransactionType.ITEM_PURCHASE)
 				.filter(t -> t.getBuyer().equals(this.market.getOwnerUUID()))
 				.toList();
 
@@ -176,17 +175,13 @@ public final class MarketStatsGUI extends MarketsBaseGUI {
 	}
 
 	private int getSalesTotalQuantity() {
-		return Markets.getTransactionManager().getManagerContent().stream()
-				.filter(t -> t.getType() == TransactionType.REQUEST_FULFILLMENT)
-				.filter(t -> t.getSeller().equals(this.market.getOwnerUUID()))
+		return sales.stream()
 				.mapToInt(Transaction::getQuantity)
 				.sum();
 	}
 
 	private int getUniqueCustomers() {
-		return (int) Markets.getTransactionManager().getManagerContent().stream()
-				.filter(t -> t.getType() == TransactionType.REQUEST_FULFILLMENT)
-				.filter(t -> t.getSeller().equals(this.market.getOwnerUUID()))
+		return (int) sales.stream()
 				.map(Transaction::getBuyer)
 				.distinct()
 				.count();
