@@ -111,13 +111,19 @@ public final class MarketStatsGUI extends MarketsBaseGUI {
 		int totalQuantity = purchases.stream().mapToInt(Transaction::getQuantity).sum();
 		double totalSpent = purchases.stream().mapToDouble(Transaction::getPrice).sum();
 
+		// Get top 3 bought items
+		List<String> topBoughtItems = getTopBoughtItems(purchases, 3);
+
 		setButton(2, 6, QuickItem
 				.of(new ItemStack(Material.EMERALD))
 				.name(TranslationManager.string(this.player, Translations.GUI_MARKET_STATS_ITEMS_PURCHASES_NAME))
 				.lore(TranslationManager.list(this.player, Translations.GUI_MARKET_STATS_ITEMS_PURCHASES_LORE,
 						"total_purchases", totalPurchases,
 						"total_quantity", totalQuantity,
-						"total_spent", String.format("%.2f", totalSpent)
+						"total_spent", String.format("%.2f", totalSpent),
+						"top_item_1", topBoughtItems.size() > 0 ? topBoughtItems.get(0) : "None",
+						"top_item_2", topBoughtItems.size() > 1 ? topBoughtItems.get(1) : "None",
+						"top_item_3", topBoughtItems.size() > 2 ? topBoughtItems.get(2) : "None"
 				))
 				.make(), click -> {});
 	}
@@ -236,6 +242,26 @@ public final class MarketStatsGUI extends MarketsBaseGUI {
 
 		// Sort by quantity and get top items
 		return itemSales.entrySet().stream()
+				.sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
+				.limit(limit)
+				.map(entry -> entry.getKey() + " (" + entry.getValue() + ")")
+				.collect(Collectors.toList());
+	}
+
+	private List<String> getTopBoughtItems(List<Transaction> purchases, int limit) {
+		// Group transactions by item name and sum quantities
+		Map<String, Integer> itemPurchases = new HashMap<>();
+
+		for (Transaction transaction : purchases) {
+			String itemName = transaction.getItem().getType().name();
+			if (transaction.getItem().hasItemMeta() && transaction.getItem().getItemMeta().hasDisplayName()) {
+				itemName = transaction.getItem().getItemMeta().getDisplayName();
+			}
+			itemPurchases.merge(itemName, transaction.getQuantity(), Integer::sum);
+		}
+
+		// Sort by quantity and get top items
+		return itemPurchases.entrySet().stream()
 				.sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
 				.limit(limit)
 				.map(entry -> entry.getKey() + " (" + entry.getValue() + ")")

@@ -595,6 +595,11 @@ public final class Translations extends TranslationManager {
 			"&7Items Bought&f: &e%total_quantity%",
 			"&7Total Spent&f: &c$%total_spent%",
 			"",
+			"&6&lTop 3 Bought Items:",
+			"&e1. &f%top_item_1%",
+			"&e2. &f%top_item_2%",
+			"&e3. &f%top_item_3%",
+			"",
 			"&7These are all the purchases you've made",
 			"&7from other markets."
 	);
