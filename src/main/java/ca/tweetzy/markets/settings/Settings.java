@@ -162,7 +162,9 @@ public final class Settings extends FlightSettings {
 	public static ConfigEntry GUI_MAIN_VIEW_ITEMS_ALL_MARKETS_SLOT = create("gui.main view.items.global.slot", 13, "Set to -1 to disable icon");
 	public static ConfigEntry GUI_MAIN_VIEW_ITEMS_YOUR_MARKET_SLOT = create("gui.main view.items.your market.slot", 20, "Set to -1 to disable icon");
 	public static ConfigEntry GUI_MAIN_VIEW_ITEMS_TRANSACTIONS = create("gui.main view.items.transactions.item", CompMaterial.WRITABLE_BOOK);
-	public static ConfigEntry GUI_MAIN_VIEW_ITEMS_TRANSACTIONS_SLOT = create("gui.main view.items.transactions.slot", 40, "Set to -1 to disable icon");
+	public static ConfigEntry GUI_MAIN_VIEW_ITEMS_TRANSACTIONS_SLOT = create("gui.main view.items.transactions.slot", 39, "Set to -1 to disable icon");
+	public static ConfigEntry GUI_MAIN_VIEW_ITEMS_STATS = create("gui.main view.items.statistics.item", CompMaterial.PAINTING);
+	public static ConfigEntry GUI_MAIN_VIEW_ITEMS_STATS_SLOT = create("gui.main view.items.statistics.slot", 41, "Set to -1 to disable icon");
 	public static ConfigEntry GUI_MAIN_VIEW_ITEMS_PAYMENTS = create("gui.main view.items.payments.item", CompMaterial.GOLD_INGOT.name());
 	public static ConfigEntry GUI_MAIN_VIEW_ITEMS_PAYMENTS_SLOT = create("gui.main view.items.payments.slot", 37, "Set to -1 to disable icon");
 	public static ConfigEntry GUI_MAIN_VIEW_ITEMS_REQUESTS = create("gui.main view.items.requests.item", CompMaterial.PAPER.name());

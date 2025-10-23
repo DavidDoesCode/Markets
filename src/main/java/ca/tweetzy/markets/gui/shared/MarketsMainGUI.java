@@ -14,6 +14,7 @@ import ca.tweetzy.markets.gui.user.OffersGUI;
 import ca.tweetzy.markets.gui.user.OfflinePaymentsGUI;
 import ca.tweetzy.markets.gui.user.TransactionsGUI;
 import ca.tweetzy.markets.gui.user.market.MarketOverviewGUI;
+import ca.tweetzy.markets.gui.user.market.MarketStatsGUI;
 import ca.tweetzy.markets.settings.Settings;
 import ca.tweetzy.markets.settings.Translations;
 import lombok.NonNull;
@@ -107,6 +108,14 @@ public final class MarketsMainGUI extends MarketsBaseGUI {
 						.hideTags(true).name(TranslationManager.string(this.player, Translations.GUI_MAIN_VIEW_ITEMS_TRANSACTIONS_NAME))
 						.lore(TranslationManager.list(this.player, Translations.GUI_MAIN_VIEW_ITEMS_TRANSACTIONS_LORE, "left_click", TranslationManager.string(this.player, Translations.MOUSE_LEFT_CLICK)))
 						.make(), click -> click.manager.showGUI(click.player, new TransactionsGUI(new MarketsMainGUI(click.player), click.player, false)));
+
+		// stats
+		setButton(Settings.GUI_MAIN_VIEW_ITEMS_STATS_SLOT.getInt(),
+				QuickItem
+						.of(Settings.GUI_MAIN_VIEW_ITEMS_STATS.getItemStack())
+						.hideTags(true).name(TranslationManager.string(this.player, Translations.GUI_MAIN_VIEW_ITEMS_STATS_NAME))
+						.lore(TranslationManager.list(this.player, Translations.GUI_MAIN_VIEW_ITEMS_STATS_LORE, "left_click", TranslationManager.string(this.player, Translations.MOUSE_LEFT_CLICK)))
+						.make(), click -> click.manager.showGUI(click.player, new MarketStatsGUI(click.player, playerMarket)));
 
 		// bank
 		setButton(Settings.ALLOW_BANK.getBoolean() ? Settings.GUI_MAIN_VIEW_ITEMS_BANK_SLOT.getInt() : -1,

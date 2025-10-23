@@ -232,6 +232,13 @@ public final class Translations extends TranslationManager {
 			"&e&l%left_click% &7to view transactions"
 	);
 
+	public static TranslationEntry GUI_MAIN_VIEW_ITEMS_STATS_NAME = create("gui.main view.items.statistics.name", "<GRADIENT:65B1B4>&LView Statistics</GRADIENT:2B6F8A>");
+	public static TranslationEntry GUI_MAIN_VIEW_ITEMS_STATS_LORE = create("gui.main view.items.statistics.lore",
+			"&7View your statistics",
+			"",
+			"&e&l%left_click% &7to view statistics"
+	);
+
 	public static TranslationEntry GUI_MAIN_VIEW_ITEMS_REQUESTS_NAME = create("gui.main view.items.requests.name", "<GRADIENT:65B1B4>&LRequests</GRADIENT:2B6F8A>");
 	public static TranslationEntry GUI_MAIN_VIEW_ITEMS_REQUESTS_LORE = create("gui.main view.items.requests.lore",
 			"&7Used to view all open player",
