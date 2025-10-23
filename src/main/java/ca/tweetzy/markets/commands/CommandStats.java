@@ -10,6 +10,8 @@ import ca.tweetzy.markets.api.market.core.Market;
 import ca.tweetzy.markets.gui.user.market.MarketStatsGUI;
 import ca.tweetzy.markets.settings.Settings;
 import ca.tweetzy.markets.settings.Translations;
+import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -24,8 +26,39 @@ public final class CommandStats extends Command {
 	@Override
 	protected ReturnType execute(CommandSender sender, String... args) {
 		if (sender instanceof final Player player) {
-			// Get the player's market
-			final Market market = Markets.getMarketManager().getByOwner(player.getUniqueId());
+			Market market;
+
+			// Admin usage: /markets stats <player>
+			if (args.length >= 1) {
+				// Check if player has admin permission
+				if (!player.hasPermission("markets.admin.stats")) {
+					Common.tell(player, TranslationManager.string(player, Translations.NO_PERMISSION));
+					return ReturnType.FAIL;
+				}
+
+				// Get target player
+				final OfflinePlayer target = Bukkit.getOfflinePlayer(args[0]);
+
+				if (target == null || !target.hasPlayedBefore()) {
+					Common.tell(player, TranslationManager.string(player, Translations.PLAYER_OFFLINE, "value", args[0]));
+					return ReturnType.FAIL;
+				}
+
+				// Get target player's market
+				market = Markets.getMarketManager().getByOwner(target.getUniqueId());
+
+				if (market == null) {
+					Common.tell(player, TranslationManager.string(player, Translations.NO_MARKET_FOUND, "player_name", args[0]));
+					return ReturnType.FAIL;
+				}
+
+				// Open the stats GUI for target player
+				Markets.getGuiManager().showGUI(player, new MarketStatsGUI(player, market));
+				return ReturnType.SUCCESS;
+			}
+
+			// Normal usage: show own stats
+			market = Markets.getMarketManager().getByOwner(player.getUniqueId());
 
 			if (market == null) {
 				Common.tell(player, TranslationManager.string(player, Translations.NO_MARKET_FOUND_SELF));
@@ -40,7 +73,10 @@ public final class CommandStats extends Command {
 
 	@Override
 	protected List<String> tab(CommandSender sender, String... args) {
-		return null;
+		if (args.length == 1 && sender.hasPermission("markets.admin.stats")) {
+			return null; // Return null to use default online player tab completion
+		}
+		return List.of();
 	}
 
 	@Override
@@ -50,11 +86,11 @@ public final class CommandStats extends Command {
 
 	@Override
 	public String getSyntax() {
-		return "stats";
+		return "stats [player]";
 	}
 
 	@Override
 	public String getDescription() {
-		return "View your market statistics";
+		return "View market statistics (admin: view any player)";
 	}
 }

@@ -25,3 +25,6 @@ permissions:
   markets.admin.transactions:
     description: Allows viewing any player's transactions with /markets transactions <player>
     default: op
+  markets.admin.stats:
+    description: Allows viewing any player's market statistics with /markets stats <player>
+    default: op
