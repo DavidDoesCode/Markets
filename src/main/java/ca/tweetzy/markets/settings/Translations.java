@@ -556,6 +556,72 @@ public final class Translations extends TranslationManager {
 			"&e&l%left_click% &7to ban a player"
 	);
 
+	public static TranslationEntry GUI_MARKET_STATS_TITLE = create("gui.market stats.title", "&eMarkets &f- &7Statistics");
+	public static TranslationEntry GUI_MARKET_STATS_ITEMS_LEVEL_NAME = create("gui.market stats.items.level.name", "<GRADIENT:FFD700>&lStore Level %store_level%</GRADIENT:FFA500>");
+	public static TranslationEntry GUI_MARKET_STATS_ITEMS_LEVEL_LORE = create("gui.market stats.items.level.lore",
+			"&7Your store has been rated as&f: &e%store_tier%",
+			"",
+			"&7Store Performance:",
+			"&8▪ &7Total Sales&f: &e%total_sales%",
+			"&8▪ &7Active Listings&f: &e%total_listings%",
+			"&8▪ &7Average Rating&f: &e%avg_rating% ★",
+			"&8▪ &7Unique Customers&f: &e%total_customers%",
+			"",
+			"&7Keep improving your store to reach",
+			"&7the legendary tier!"
+	);
+
+	public static TranslationEntry GUI_MARKET_STATS_ITEMS_SALES_NAME = create("gui.market stats.items.sales.name", "<GRADIENT:65B1B4>&lStore Sales Stats</GRADIENT:2B6F8A>");
+	public static TranslationEntry GUI_MARKET_STATS_ITEMS_SALES_LORE = create("gui.market stats.items.sales.lore",
+			"&7----------------------------",
+			"&7Total Sales&f: &e%total_sales%",
+			"&7Items Sold&f: &e%total_quantity%",
+			"&7Total Revenue&f: &a$%total_revenue%",
+			"",
+			"&7These are all the sales you've made",
+			"&7through your market."
+	);
+
+	public static TranslationEntry GUI_MARKET_STATS_ITEMS_PURCHASES_NAME = create("gui.market stats.items.purchases.name", "<GRADIENT:65B1B4>&lPurchase Stats</GRADIENT:2B6F8A>");
+	public static TranslationEntry GUI_MARKET_STATS_ITEMS_PURCHASES_LORE = create("gui.market stats.items.purchases.lore",
+			"&7----------------------------",
+			"&7Total Purchases&f: &e%total_purchases%",
+			"&7Items Bought&f: &e%total_quantity%",
+			"&7Total Spent&f: &c$%total_spent%",
+			"",
+			"&7These are all the purchases you've made",
+			"&7from other markets."
+	);
+
+	public static TranslationEntry GUI_MARKET_STATS_ITEMS_INVENTORY_NAME = create("gui.market stats.items.inventory.name", "<GRADIENT:65B1B4>&lInventory Stats</GRADIENT:2B6F8A>");
+	public static TranslationEntry GUI_MARKET_STATS_ITEMS_INVENTORY_LORE = create("gui.market stats.items.inventory.lore",
+			"&7----------------------------",
+			"&7Categories&f: &e%total_categories%",
+			"&7Total Listings&f: &e%total_listings%",
+			"&7In Stock&f: &a%in_stock%",
+			"&7Out of Stock&f: &c%out_of_stock%",
+			"",
+			"&7Keep your inventory stocked to",
+			"&7maintain customer satisfaction!"
+	);
+
+	public static TranslationEntry GUI_MARKET_STATS_ITEMS_CUSTOMERS_NAME = create("gui.market stats.items.customers.name", "<GRADIENT:65B1B4>&lCustomer Stats</GRADIENT:2B6F8A>");
+	public static TranslationEntry GUI_MARKET_STATS_ITEMS_CUSTOMERS_LORE = create("gui.market stats.items.customers.lore",
+			"&7----------------------------",
+			"&7Unique Customers&f: &e%unique_customers%",
+			"&7Total Reviews&f: &e%total_reviews%",
+			"&7Average Rating&f: &e%avg_rating% ★",
+			"&7Active Bans&f: &c%active_bans%",
+			"",
+			"&7Great reviews lead to more customers!"
+	);
+
+	public static TranslationEntry STORE_TIER_LEGENDARY = create("store.tier.legendary", "&6&lLEGENDARY");
+	public static TranslationEntry STORE_TIER_MASTER = create("store.tier.master", "&5&lMASTER");
+	public static TranslationEntry STORE_TIER_EXPERT = create("store.tier.expert", "&b&lEXPERT");
+	public static TranslationEntry STORE_TIER_ESTABLISHED = create("store.tier.established", "&a&lESTABLISHED");
+	public static TranslationEntry STORE_TIER_NOVICE = create("store.tier.novice", "&e&lNOVICE");
+	public static TranslationEntry STORE_TIER_BEGINNER = create("store.tier.beginner", "&7&lBEGINNER");
 
 	public static TranslationEntry GUI_LAYOUT_CONTROL_PICKER_TITLE = create("gui.layout control picker.title", "&eMarkets &f- &7Select Layout Control");
 	public static TranslationEntry GUI_LAYOUT_CONTROL_PICKER_ITEMS_EXIT_NAME = create("gui.layout control picker.items.exit.name", "<GRADIENT:65B1B4>&lExit Button</GRADIENT:2B6F8A>");

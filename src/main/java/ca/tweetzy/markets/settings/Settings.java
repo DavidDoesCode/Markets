@@ -208,6 +208,8 @@ public final class Settings extends FlightSettings {
 	public static ConfigEntry GUI_MARKET_BANNED_USERS_BACKGROUND = create("gui.market banned users.items.background", CompMaterial.BLACK_STAINED_GLASS_PANE.name());
 	public static ConfigEntry GUI_MARKET_BANNED_USERS_ITEMS_NEW_BAN = create("gui.market banned users.items.new ban.item", CompMaterial.LIME_DYE.name());
 
+	public static ConfigEntry GUI_MARKET_STATS_BACKGROUND = create("gui.market stats.items.background", CompMaterial.BLACK_STAINED_GLASS_PANE.name());
+
 	public static ConfigEntry GUI_LAYOUT_CONTROL_PICKER_BACKGROUND = create("gui.layout control picker.items.background", CompMaterial.BLACK_STAINED_GLASS_PANE.name());
 	public static ConfigEntry GUI_LAYOUT_CONTROL_PICKER_ITEMS_EXIT = create("gui.layout control picker.items.exit.item", CompMaterial.BARRIER.name());
 	public static ConfigEntry GUI_LAYOUT_CONTROL_PICKER_ITEMS_PREV_PAGE = create("gui.layout control picker.items.prev page.item", CompMaterial.ARROW.name());
