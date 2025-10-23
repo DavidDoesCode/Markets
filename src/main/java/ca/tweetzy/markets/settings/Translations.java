@@ -1168,6 +1168,10 @@ public final class Translations extends TranslationManager {
 			""
 	);
 
+	public static TranslationEntry GUI_SEARCH_ITEMS_SORT_NAME = create("gui.search.items.sort.name", "<GRADIENT:65B1B4>&lSort By</GRADIENT:2B6F8A>");
+	public static TranslationEntry GUI_SEARCH_ITEMS_SORT_LORE_HEADER = create("gui.search.items.sort.lore.header", "&7Sort Options:");
+	public static TranslationEntry GUI_SEARCH_ITEMS_SORT_LORE_FOOTER = create("gui.search.items.sort.lore.footer", "&eClick to cycle through options");
+
 	public static TranslationEntry GUI_REQUEST_TITLE_ALL = create("gui.request.title.all", "&eMarkets &f- &7All Requests");
 	public static TranslationEntry GUI_REQUEST_TITLE_YOURS = create("gui.request.title.yours", "&eMarkets &f- &7Your Requests");
 

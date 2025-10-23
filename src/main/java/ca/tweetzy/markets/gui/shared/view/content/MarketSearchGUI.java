@@ -7,6 +7,7 @@ import ca.tweetzy.flight.settings.TranslationManager;
 import ca.tweetzy.flight.utils.Common;
 import ca.tweetzy.flight.utils.QuickItem;
 import ca.tweetzy.markets.Markets;
+import ca.tweetzy.markets.api.market.SearchSortType;
 import ca.tweetzy.markets.api.market.core.Category;
 import ca.tweetzy.markets.api.market.core.Market;
 import ca.tweetzy.markets.api.market.core.MarketItem;
@@ -18,33 +19,100 @@ import ca.tweetzy.markets.settings.Settings;
 import ca.tweetzy.markets.settings.Translations;
 import lombok.NonNull;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public final class MarketSearchGUI extends MarketsPagedGUI<MarketItem> {
 
 	private final String keywords;
+	private final Market market;
+	private final Category category;
+	private SearchSortType currentSort = SearchSortType.PRICE_HIGHEST;
 	private boolean clickLock = false;
 
 	public MarketSearchGUI(Gui parent, @NonNull Player player, @NonNull String keywords) {
-		super(parent, player, TranslationManager.string(player, Translations.GUI_SEARCH_TITLE, "search_keywords", keywords), 6, Markets.getMarketManager().getSearchResults(player, keywords));
+		super(parent, player, TranslationManager.string(player, Translations.GUI_SEARCH_TITLE, "search_keywords", keywords), 6, new ArrayList<>());
 		this.keywords = keywords;
+		this.market = null;
+		this.category = null;
+		this.items = getSortedResults(Markets.getMarketManager().getSearchResults(player, keywords));
 		setDefaultItem(QuickItem.bg(Settings.GUI_SEARCH_BACKGROUND.getItemStack()));
 		draw();
 	}
 
 	public MarketSearchGUI(Gui parent, @NonNull Player player, @NonNull final Market market, @NonNull String keywords) {
-		super(parent, player, TranslationManager.string(player, Translations.GUI_SEARCH_TITLE, "search_keywords", keywords), 6, Markets.getMarketManager().getSearchResults(player, market, keywords));
+		super(parent, player, TranslationManager.string(player, Translations.GUI_SEARCH_TITLE, "search_keywords", keywords), 6, new ArrayList<>());
 		this.keywords = keywords;
+		this.market = market;
+		this.category = null;
+		this.items = getSortedResults(Markets.getMarketManager().getSearchResults(player, market, keywords));
 		draw();
 	}
 
 	public MarketSearchGUI(Gui parent, @NonNull Player player, @NonNull final Category category, @NonNull String keywords) {
-		super(parent, player, TranslationManager.string(player, Translations.GUI_SEARCH_TITLE, "search_keywords", keywords), 6, Markets.getMarketManager().getSearchResults(category, keywords));
+		super(parent, player, TranslationManager.string(player, Translations.GUI_SEARCH_TITLE, "search_keywords", keywords), 6, new ArrayList<>());
 		this.keywords = keywords;
+		this.market = null;
+		this.category = category;
+		this.items = getSortedResults(Markets.getMarketManager().getSearchResults(category, keywords));
+		draw();
+	}
+
+	@Override
+	protected void drawFixed() {
+		// Add sort button in slot 49 (between prev and next)
+		setButton(49, getSortButton(), click -> {
+			currentSort = currentSort.next();
+			refreshWithCurrentSort();
+		});
+	}
+
+	private ItemStack getSortButton() {
+		List<String> lore = new ArrayList<>();
+		lore.add(TranslationManager.string(this.player, Translations.GUI_SEARCH_ITEMS_SORT_LORE_HEADER));
+		lore.add("");
+
+		// Add all sort options with arrow indicator
+		for (SearchSortType sortType : SearchSortType.values()) {
+			String prefix = sortType == currentSort ? "&a➤ " : "&7  ";
+			lore.add(prefix + sortType.getDisplayName());
+		}
+
+		lore.add("");
+		lore.add(TranslationManager.string(this.player, Translations.GUI_SEARCH_ITEMS_SORT_LORE_FOOTER));
+
+		return QuickItem
+				.of(Material.HOPPER)
+				.name(TranslationManager.string(this.player, Translations.GUI_SEARCH_ITEMS_SORT_NAME))
+				.lore(lore)
+				.make();
+	}
+
+	private List<MarketItem> getSortedResults(List<MarketItem> results) {
+		return results.stream()
+				.sorted(currentSort.getComparator())
+				.collect(Collectors.toList());
+	}
+
+	private void refreshWithCurrentSort() {
+		// Re-fetch and sort the results
+		List<MarketItem> rawResults;
+		if (category != null) {
+			rawResults = Markets.getMarketManager().getSearchResults(category, keywords);
+		} else if (market != null) {
+			rawResults = Markets.getMarketManager().getSearchResults(player, market, keywords);
+		} else {
+			rawResults = Markets.getMarketManager().getSearchResults(player, keywords);
+		}
+
+		this.items = getSortedResults(rawResults);
+		this.page = 1; // Reset to first page
 		draw();
 	}
 
