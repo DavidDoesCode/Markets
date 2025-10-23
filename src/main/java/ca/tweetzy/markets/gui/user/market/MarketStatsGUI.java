@@ -15,7 +15,8 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public final class MarketStatsGUI extends MarketsBaseGUI {
 
@@ -84,13 +85,19 @@ public final class MarketStatsGUI extends MarketsBaseGUI {
 		int totalQuantity = sales.stream().mapToInt(Transaction::getQuantity).sum();
 		double totalRevenue = sales.stream().mapToDouble(Transaction::getPrice).sum();
 
+		// Get top 3 sold items
+		List<String> topSoldItems = getTopSoldItems(3);
+
 		setButton(3, 2, QuickItem
 				.of(new ItemStack(Material.GOLD_INGOT))
 				.name(TranslationManager.string(this.player, Translations.GUI_MARKET_STATS_ITEMS_SALES_NAME))
 				.lore(TranslationManager.list(this.player, Translations.GUI_MARKET_STATS_ITEMS_SALES_LORE,
 						"total_sales", totalSales,
 						"total_quantity", totalQuantity,
-						"total_revenue", String.format("%.2f", totalRevenue)
+						"total_revenue", String.format("%.2f", totalRevenue),
+						"top_item_1", topSoldItems.size() > 0 ? topSoldItems.get(0) : "None",
+						"top_item_2", topSoldItems.size() > 1 ? topSoldItems.get(1) : "None",
+						"top_item_3", topSoldItems.size() > 2 ? topSoldItems.get(2) : "None"
 				))
 				.make(), click -> {});
 	}
@@ -213,5 +220,25 @@ public final class MarketStatsGUI extends MarketsBaseGUI {
 		if (level >= 3) return CompMaterial.IRON_BLOCK;
 		if (level >= 1) return CompMaterial.COPPER_BLOCK;
 		return CompMaterial.DIRT;
+	}
+
+	private List<String> getTopSoldItems(int limit) {
+		// Group transactions by item name and sum quantities
+		Map<String, Integer> itemSales = new HashMap<>();
+
+		for (Transaction transaction : sales) {
+			String itemName = transaction.getItem().getType().name();
+			if (transaction.getItem().hasItemMeta() && transaction.getItem().getItemMeta().hasDisplayName()) {
+				itemName = transaction.getItem().getItemMeta().getDisplayName();
+			}
+			itemSales.merge(itemName, transaction.getQuantity(), Integer::sum);
+		}
+
+		// Sort by quantity and get top items
+		return itemSales.entrySet().stream()
+				.sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
+				.limit(limit)
+				.map(entry -> entry.getKey() + " (" + entry.getValue() + ")")
+				.collect(Collectors.toList());
 	}
 }
