@@ -50,7 +50,7 @@ public final class MarketStatsGUI extends MarketsBaseGUI {
 		drawSalesStats();
 		drawPurchaseStats();
 		drawInventoryStats();
-		drawCustomerStats();
+//		drawCustomerStats();
 
 		applyBackExit();
 	}
@@ -61,6 +61,8 @@ public final class MarketStatsGUI extends MarketsBaseGUI {
 		int totalListings = getTotalListings();
 		double avgRating = this.market.getRatings().isEmpty() ? 0 : this.market.getReviewAvg();
 		int totalCustomers = getUniqueCustomers();
+		int totalReviews = this.market.getRatings().size();
+		int activeBans = this.market.getBannedUsers().size();
 
 		// Level calculation (0-10 scale)
 		int level = calculateStoreLevel(totalSales, totalListings, avgRating, totalCustomers);
@@ -75,8 +77,10 @@ public final class MarketStatsGUI extends MarketsBaseGUI {
 						"store_tier", levelTier,
 						"total_sales", totalSales,
 						"total_listings", totalListings,
+						"total_reviews", totalReviews,
 						"avg_rating", String.format("%.1f", avgRating),
-						"total_customers", totalCustomers
+						"total_customers", totalCustomers,
+						"active_bans", activeBans
 				))
 				.make(), click -> {});
 	}
@@ -115,7 +119,7 @@ public final class MarketStatsGUI extends MarketsBaseGUI {
 		// Get top 3 bought items
 		List<String> topBoughtItems = getTopBoughtItems(purchases, 3);
 
-		setButton(2, 6, QuickItem
+		setButton(1, 4, QuickItem
 				.of(new ItemStack(Material.EMERALD))
 				.name(TranslationManager.string(this.player, Translations.GUI_MARKET_STATS_ITEMS_PURCHASES_NAME))
 				.lore(TranslationManager.list(this.player, Translations.GUI_MARKET_STATS_ITEMS_PURCHASES_LORE,
