@@ -5,9 +5,9 @@ import ca.tweetzy.flight.settings.TranslationManager;
 import ca.tweetzy.flight.utils.QuickItem;
 import ca.tweetzy.markets.Markets;
 import ca.tweetzy.markets.api.market.Transaction;
-import ca.tweetzy.markets.api.market.TransactionType;
 import ca.tweetzy.markets.api.market.core.Market;
 import ca.tweetzy.markets.gui.MarketsBaseGUI;
+import ca.tweetzy.markets.gui.shared.MarketsMainGUI;
 import ca.tweetzy.markets.settings.Settings;
 import ca.tweetzy.markets.settings.Translations;
 import lombok.NonNull;
@@ -25,7 +25,7 @@ public final class MarketStatsGUI extends MarketsBaseGUI {
 	private final List<Transaction> sales;
 
 	public MarketStatsGUI(@NonNull final Player player, @NonNull final Market market) {
-		super(new MarketOverviewGUI(player, market), player, TranslationManager.string(player, Translations.GUI_MARKET_STATS_TITLE), 6);
+		super(new MarketsMainGUI(player), player, TranslationManager.string(player, Translations.GUI_MARKET_STATS_TITLE), 6);
 		this.player = player;
 		this.market = market;
 		setDefaultItem(QuickItem.bg(Settings.GUI_MARKET_STATS_BACKGROUND.getItemStack()));
