@@ -22,3 +22,6 @@ permissions:
   markets.viewstats:
     description: Allows viewing market statistics GUI
     default: false
+  markets.admin.transactions:
+    description: Allows viewing any player's transactions with /markets transactions <player>
+    default: op
