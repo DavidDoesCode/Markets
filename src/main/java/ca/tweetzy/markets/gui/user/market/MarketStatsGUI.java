@@ -122,8 +122,11 @@ public final class MarketStatsGUI extends MarketsBaseGUI {
 		int totalQuantity = purchases.stream().mapToInt(Transaction::getQuantity).sum();
 		double totalSpent = purchases.stream().mapToDouble(Transaction::getPrice).sum();
 
-		// Get top 3 bought items
+		// Get top 3 bought items by quantity
 		List<String> topBoughtItems = getTopBoughtItems(purchases, 3);
+
+		// Get top 3 purchases by price
+		List<String> topPurchasesByPrice = getTopPurchasesByPrice(purchases, 3);
 
 		setButton(1, 4, QuickItem
 				.of(new ItemStack(Material.EMERALD))
@@ -134,7 +137,10 @@ public final class MarketStatsGUI extends MarketsBaseGUI {
 						"total_spent", formatCurrency(totalSpent),
 						"top_item_1", topBoughtItems.size() > 0 ? topBoughtItems.get(0) : "None",
 						"top_item_2", topBoughtItems.size() > 1 ? topBoughtItems.get(1) : "None",
-						"top_item_3", topBoughtItems.size() > 2 ? topBoughtItems.get(2) : "None"
+						"top_item_3", topBoughtItems.size() > 2 ? topBoughtItems.get(2) : "None",
+						"top_purchase_1", topPurchasesByPrice.size() > 0 ? topPurchasesByPrice.get(0) : "None",
+						"top_purchase_2", topPurchasesByPrice.size() > 1 ? topPurchasesByPrice.get(1) : "None",
+						"top_purchase_3", topPurchasesByPrice.size() > 2 ? topPurchasesByPrice.get(2) : "None"
 				))
 				.make(), click -> {});
 	}
@@ -299,6 +305,27 @@ public final class MarketStatsGUI extends MarketsBaseGUI {
 
 		// Sort by revenue and get top items
 		return itemRevenue.entrySet().stream()
+				.sorted(Map.Entry.<String, Double>comparingByValue().reversed())
+				.limit(limit)
+				.map(entry -> entry.getKey() + " ($" + formatCurrency(entry.getValue()) + ")")
+				.collect(Collectors.toList());
+	}
+
+	private List<String> getTopPurchasesByPrice(List<Transaction> purchases, int limit) {
+		// Group transactions by item name and sum total spent
+		Map<String, Double> itemSpent = new HashMap<>();
+
+		for (Transaction transaction : purchases) {
+			String itemName = transaction.getItem().getType().name();
+			if (transaction.getItem().hasItemMeta() && transaction.getItem().getItemMeta().hasDisplayName()) {
+				itemName = transaction.getItem().getItemMeta().getDisplayName();
+			}
+			double spent = transaction.getPrice();
+			itemSpent.merge(itemName, spent, Double::sum);
+		}
+
+		// Sort by amount spent and get top items
+		return itemSpent.entrySet().stream()
 				.sorted(Map.Entry.<String, Double>comparingByValue().reversed())
 				.limit(limit)
 				.map(entry -> entry.getKey() + " ($" + formatCurrency(entry.getValue()) + ")")
