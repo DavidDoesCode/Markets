@@ -128,8 +128,8 @@ public final class MarketStatsGUI extends MarketsBaseGUI {
 		// Get top 3 purchases by price
 		List<String> topPurchasesByPrice = getTopPurchasesByPrice(purchases, 3);
 
-		setButton(1, 4, QuickItem
-				.of(new ItemStack(Material.EMERALD))
+		setButton(4, 2, QuickItem
+				.of(new ItemStack(Material.BLACK_BUNDLE))
 				.name(TranslationManager.string(this.player, Translations.GUI_MARKET_STATS_ITEMS_PURCHASES_NAME))
 				.lore(TranslationManager.list(this.player, Translations.GUI_MARKET_STATS_ITEMS_PURCHASES_LORE,
 						"total_purchases", totalPurchases,
@@ -151,7 +151,7 @@ public final class MarketStatsGUI extends MarketsBaseGUI {
 		int outOfStock = getOutOfStockCount();
 		int totalCategories = this.market.getCategories().size();
 
-		setButton(4, 2, QuickItem
+		setButton(2, 2, QuickItem
 				.of(new ItemStack(Material.CHEST))
 				.name(TranslationManager.string(this.player, Translations.GUI_MARKET_STATS_ITEMS_INVENTORY_NAME))
 				.lore(TranslationManager.list(this.player, Translations.GUI_MARKET_STATS_ITEMS_INVENTORY_LORE,
