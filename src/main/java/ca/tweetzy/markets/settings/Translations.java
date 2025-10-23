@@ -35,6 +35,7 @@ public final class Translations extends TranslationManager {
 	public static TranslationEntry MUST_BE_HIGHER_THAN_ZERO = create("error.must be higher than zero", "&cPlease enter a number that is higher than 0");
 	public static TranslationEntry INSUFFICIENT_ENTRY_AMOUNT = create("error.insufficient bank entry balance", "&cWithdrawal amount exceeds your stored total!");
 	public static TranslationEntry NO_MARKET_FOUND = create("error.no market found", "&cCould not find any market for&F: &4%player_name%");
+	public static TranslationEntry NO_MARKET_FOUND_SELF = create("error.no market found self", "&cYou don't have a market yet! Create one with &e/markets add");
 	public static TranslationEntry ONE_FILL_SLOT_REQUIRED = create("error.one fill slot required", "&cThis layout requires at least one fill slot!");
 	public static TranslationEntry ITEM_OUT_OF_STOCK = create("error.item out of stock", "&cSorry that item is now out of stock");
 	public static TranslationEntry NOT_ENOUGH_STOCK = create("error.not enough stock", "&cSorry there is not enough stock");
