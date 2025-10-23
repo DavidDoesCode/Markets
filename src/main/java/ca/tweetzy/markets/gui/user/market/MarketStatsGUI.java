@@ -90,8 +90,11 @@ public final class MarketStatsGUI extends MarketsBaseGUI {
 		int totalQuantity = sales.stream().mapToInt(Transaction::getQuantity).sum();
 		double totalRevenue = sales.stream().mapToDouble(Transaction::getPrice).sum();
 
-		// Get top 3 sold items
+		// Get top 3 sold items by quantity
 		List<String> topSoldItems = getTopSoldItems(3);
+
+		// Get top 3 sales by price
+		List<String> topSalesByPrice = getTopSalesByPrice(3);
 
 		setButton(3, 2, QuickItem
 				.of(new ItemStack(Material.GOLD_INGOT))
@@ -102,7 +105,10 @@ public final class MarketStatsGUI extends MarketsBaseGUI {
 						"total_revenue", formatCurrency(totalRevenue),
 						"top_item_1", topSoldItems.size() > 0 ? topSoldItems.get(0) : "None",
 						"top_item_2", topSoldItems.size() > 1 ? topSoldItems.get(1) : "None",
-						"top_item_3", topSoldItems.size() > 2 ? topSoldItems.get(2) : "None"
+						"top_item_3", topSoldItems.size() > 2 ? topSoldItems.get(2) : "None",
+						"top_sale_1", topSalesByPrice.size() > 0 ? topSalesByPrice.get(0) : "None",
+						"top_sale_2", topSalesByPrice.size() > 1 ? topSalesByPrice.get(1) : "None",
+						"top_sale_3", topSalesByPrice.size() > 2 ? topSalesByPrice.get(2) : "None"
 				))
 				.make(), click -> {});
 	}
@@ -276,5 +282,26 @@ public final class MarketStatsGUI extends MarketsBaseGUI {
 	private String formatCurrency(double amount) {
 		DecimalFormat formatter = new DecimalFormat("#,##0.00");
 		return formatter.format(amount);
+	}
+
+	private List<String> getTopSalesByPrice(int limit) {
+		// Group transactions by item name and sum total revenue (price * quantity)
+		Map<String, Double> itemRevenue = new HashMap<>();
+
+		for (Transaction transaction : sales) {
+			String itemName = transaction.getItem().getType().name();
+			if (transaction.getItem().hasItemMeta() && transaction.getItem().getItemMeta().hasDisplayName()) {
+				itemName = transaction.getItem().getItemMeta().getDisplayName();
+			}
+			double revenue = transaction.getPrice();
+			itemRevenue.merge(itemName, revenue, Double::sum);
+		}
+
+		// Sort by revenue and get top items
+		return itemRevenue.entrySet().stream()
+				.sorted(Map.Entry.<String, Double>comparingByValue().reversed())
+				.limit(limit)
+				.map(entry -> entry.getKey() + " ($" + formatCurrency(entry.getValue()) + ")")
+				.collect(Collectors.toList());
 	}
 }
