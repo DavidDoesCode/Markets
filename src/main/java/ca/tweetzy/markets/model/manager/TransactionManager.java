@@ -26,6 +26,12 @@ public final class TransactionManager extends ListManager<Transaction> {
 		return getManagerContent().stream().filter(transaction -> transaction.getSeller().equals(sellerUUID) && transaction.getTimeCreated() >= user.getLastSeenAt()).collect(Collectors.toList());
 	}
 
+	public List<Transaction> getTransactionsFor(@NonNull final UUID playerUUID) {
+		return getManagerContent().stream().filter(transaction ->
+				transaction.getSeller().equals(playerUUID) ||
+						transaction.getBuyer().equals(playerUUID)).collect(Collectors.toList());
+	}
+
 	public List<Transaction> getSalesTransactionsFor(@NonNull final UUID sellerUUID) {
 		return getManagerContent().stream().filter(transaction -> transaction.getSeller().equals(sellerUUID)).collect(Collectors.toList());
 	}

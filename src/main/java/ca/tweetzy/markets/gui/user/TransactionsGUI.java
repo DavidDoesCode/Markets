@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-public final class TransactionsGUI extends MarketsPagedGUI<Transaction> {
+public class TransactionsGUI extends MarketsPagedGUI<Transaction> {
 
 	private final Player player;
 	private boolean viewAll;

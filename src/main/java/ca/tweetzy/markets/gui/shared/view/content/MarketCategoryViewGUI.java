@@ -4,6 +4,7 @@ import ca.tweetzy.flight.gui.Gui;
 import ca.tweetzy.flight.gui.events.GuiClickEvent;
 import ca.tweetzy.flight.settings.TranslationManager;
 import ca.tweetzy.flight.utils.Common;
+import ca.tweetzy.flight.utils.ItemUtil;
 import ca.tweetzy.flight.utils.QuickItem;
 import ca.tweetzy.flight.utils.input.TitleInput;
 import ca.tweetzy.markets.Markets;
@@ -13,11 +14,13 @@ import ca.tweetzy.markets.api.market.core.MarketItem;
 import ca.tweetzy.markets.gui.MarketsPagedGUI;
 import ca.tweetzy.markets.gui.shared.checkout.MarketItemPurchaseGUI;
 import ca.tweetzy.markets.gui.shared.checkout.OfferCreateGUI;
+import ca.tweetzy.markets.gui.shared.selector.ConfirmGUI;
 import ca.tweetzy.markets.gui.shared.view.AllMarketsViewGUI;
 import ca.tweetzy.markets.gui.shared.view.UserProfileGUI;
 import ca.tweetzy.markets.gui.shared.view.ratings.MarketRatingsViewGUI;
 import ca.tweetzy.markets.gui.shared.view.ratings.NewMarketRatingGUI;
 import ca.tweetzy.markets.impl.MarketOffer;
+import ca.tweetzy.markets.model.AdminActionLogger;
 import ca.tweetzy.markets.settings.Settings;
 import ca.tweetzy.markets.settings.Translations;
 import lombok.NonNull;
@@ -207,6 +210,53 @@ public final class MarketCategoryViewGUI extends MarketsPagedGUI<MarketItem> {
 			this.category.getViewingPlayers().remove(player);
 			marketItem.getViewingPlayers().add(player);
 			return;
+		}
+
+		if (click.clickType == ClickType.DROP) {
+			if (player.isOp()) {
+				click.manager.showGUI(click.player, new ConfirmGUI(this, click.player, confirmed -> {
+					if (confirmed) {
+						// Get the current stock amount
+						final int stockAmount = marketItem.getStock();
+						final ItemStack itemToReturn = marketItem.getItem().clone();
+						itemToReturn.setAmount(1);
+
+						// Set stock to 0
+						marketItem.setStock(0);
+						marketItem.sync(result -> {
+							// Create offline payment for seller with all the items
+							Markets.getOfflineItemPaymentManager().create(
+									this.market.getOwnerUUID(),
+									itemToReturn,
+									stockAmount,
+									"Admin removed item from market",
+									created -> {
+										if (created) {
+											// Log the admin action
+											AdminActionLogger.log(
+													click.player.getName(),
+													String.format("Removed %d x %s from market '%s' (Owner: %s, Category: %s)",
+															stockAmount,
+															ItemUtil.getItemName(marketItem.getItem()),
+															this.market.getDisplayName(),
+															this.market.getOwnerName(),
+															this.category.getDisplayName()
+													)
+											);
+
+											// Refresh the GUI to show updated stock
+											click.manager.showGUI(click.player, new MarketCategoryViewGUI(this.player, this.market, this.category, this.viewAsCustomer, this.fromAdminCommand));
+										}
+									}
+							);
+						});
+					} else {
+						// User cancelled, return to category view
+						click.manager.showGUI(click.player, MarketCategoryViewGUI.this);
+					}
+				}));
+				return;
+			}
 		}
 
 		clickLock = false;
