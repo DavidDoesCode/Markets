@@ -129,7 +129,7 @@ public final class MarketStatsGUI extends MarketsBaseGUI {
 		List<String> topPurchasesByPrice = getTopPurchasesByPrice(purchases, 3);
 
 		setButton(4, 2, QuickItem
-				.of(new ItemStack(Material.BLACK_BUNDLE))
+				.of(new ItemStack(Material.BLACK_WOOL))
 				.name(TranslationManager.string(this.player, Translations.GUI_MARKET_STATS_ITEMS_PURCHASES_NAME))
 				.lore(TranslationManager.list(this.player, Translations.GUI_MARKET_STATS_ITEMS_PURCHASES_LORE,
 						"total_purchases", totalPurchases,
