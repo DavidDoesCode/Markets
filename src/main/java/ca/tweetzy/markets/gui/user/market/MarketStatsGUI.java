@@ -76,7 +76,6 @@ public final class MarketStatsGUI extends MarketsBaseGUI {
 				.lore(TranslationManager.list(this.player, Translations.GUI_MARKET_STATS_ITEMS_LEVEL_LORE,
 						"store_tier", levelTier,
 						"total_sales", totalSales,
-						"total_listings", totalListings,
 						"total_reviews", totalReviews,
 						"avg_rating", String.format("%.1f", avgRating),
 						"total_customers", totalCustomers,

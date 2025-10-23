@@ -571,7 +571,6 @@ public final class Translations extends TranslationManager {
 			"",
 			"&7Store Performance:",
 			"&8▪ &7Total Sales&f: &e%total_sales%",
-			"&8▪ &7Active Listings&f: &e%total_listings%",
 			"&8▪ &7Total Reviews&f: &e%total_reviews%",
 			"&8▪ &7Average Rating&f: &e%avg_rating% ★",
 			"&8▪ &7Unique Customers&f: &e%total_customers%",
