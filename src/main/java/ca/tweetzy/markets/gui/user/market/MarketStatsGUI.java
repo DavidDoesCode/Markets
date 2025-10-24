@@ -290,23 +290,20 @@ public final class MarketStatsGUI extends MarketsBaseGUI {
 	}
 
 	private List<String> getTopSalesByPrice(int limit) {
-		// Group transactions by item name and sum total revenue (price * quantity)
-		Map<String, Double> itemRevenue = new HashMap<>();
-
-		for (Transaction transaction : sales) {
-			String itemName = transaction.getItem().getType().name();
-			if (transaction.getItem().hasItemMeta() && transaction.getItem().getItemMeta().hasDisplayName()) {
-				itemName = transaction.getItem().getItemMeta().getDisplayName();
-			}
-			double revenue = transaction.getPrice();
-			itemRevenue.merge(itemName, revenue, Double::sum);
-		}
-
-		// Sort by revenue and get top items
-		return itemRevenue.entrySet().stream()
-				.sorted(Map.Entry.<String, Double>comparingByValue().reversed())
+		// Sort individual sales by price and get top sales
+		return sales.stream()
+				.sorted(Comparator.comparingDouble(Transaction::getPrice).reversed())
 				.limit(limit)
-				.map(entry -> entry.getKey() + " ($" + formatCurrency(entry.getValue()) + ")")
+				.map(transaction -> {
+					String itemName = transaction.getItem().getType().name();
+					if (transaction.getItem().hasItemMeta() && transaction.getItem().getItemMeta().hasDisplayName()) {
+						itemName = transaction.getItem().getItemMeta().getDisplayName();
+					}
+					String buyerName = Markets.getPlayerManager().getByUUID(transaction.getBuyer())
+							.map(marketUser -> marketUser.getName())
+							.orElse("Unknown");
+					return itemName + " ($" + formatCurrency(transaction.getPrice()) + ") - " + buyerName;
+				})
 				.collect(Collectors.toList());
 	}
 
