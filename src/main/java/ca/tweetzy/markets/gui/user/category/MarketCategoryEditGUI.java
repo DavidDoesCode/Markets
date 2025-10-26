@@ -251,12 +251,14 @@ public final class MarketCategoryEditGUI extends MarketsPagedGUI<MarketItem> {
 
 		final MarketItem locate = Markets.getCategoryItemManager().getByUUID(marketItem.getId());
 		if (locate == null || locate.getStock() != marketItem.getStock()) {
+			Common.log(player.getName() + " stock mismatch, cancelling click");
 			reopen(click);
 			return;
 		}
 
-		if (click.clickType == ClickType.LEFT) {
+		if (click.clickType == ClickType.LEFT || FloodGateCheck.isBedrock(this.player)) {
 			click.manager.showGUI(click.player, new MarketItemEditGUI(this.player, this.market, this.category, marketItem));
+			return;
 		}
 
 		if (click.clickType == ClickType.RIGHT) {

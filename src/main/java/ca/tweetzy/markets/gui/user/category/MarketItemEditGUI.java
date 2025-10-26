@@ -15,6 +15,7 @@ import ca.tweetzy.markets.api.market.core.Market;
 import ca.tweetzy.markets.api.market.core.MarketItem;
 import ca.tweetzy.markets.gui.MarketsBaseGUI;
 import ca.tweetzy.markets.gui.shared.selector.CurrencyPickerGUI;
+import ca.tweetzy.markets.model.FloodGateCheck;
 import ca.tweetzy.markets.settings.Settings;
 import ca.tweetzy.markets.settings.Translations;
 import lombok.NonNull;
@@ -108,7 +109,7 @@ public final class MarketItemEditGUI extends MarketsBaseGUI {
 				))
 				.make(), click -> {
 
-			if (click.clickType == ClickType.LEFT) {
+			if (click.clickType == ClickType.LEFT || FloodGateCheck.isBedrock(this.player)) {
 				synchronized (this) {
 					if (playerLock) {
 						Bukkit.getLogger().severe(click.player.getName() + " attempting to deposit twice.");
