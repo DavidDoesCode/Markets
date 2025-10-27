@@ -14,7 +14,9 @@ import ca.tweetzy.markets.api.market.core.Category;
 import ca.tweetzy.markets.api.market.core.Market;
 import ca.tweetzy.markets.api.market.core.MarketItem;
 import ca.tweetzy.markets.gui.MarketsBaseGUI;
+import ca.tweetzy.markets.gui.shared.selector.ConfirmGUI;
 import ca.tweetzy.markets.gui.shared.selector.CurrencyPickerGUI;
+import ca.tweetzy.markets.gui.shared.view.content.MarketCategoryViewGUI;
 import ca.tweetzy.markets.model.FloodGateCheck;
 import ca.tweetzy.markets.settings.Settings;
 import ca.tweetzy.markets.settings.Translations;
@@ -56,6 +58,7 @@ public final class MarketItemEditGUI extends MarketsBaseGUI {
 		drawStockButton();
 		drawPriceButton();
 		drawCurrencyButton();
+		drawRemoveButton();
 
 		applyBackExit();
 	}
@@ -226,6 +229,74 @@ public final class MarketItemEditGUI extends MarketsBaseGUI {
 					}
 				};
 			}
+		});
+	}
+
+	private void drawRemoveButton() {
+		setButton(3, 8, QuickItem
+				.of(CompMaterial.BARRIER)
+				.name(TranslationManager.string(this.player, Translations.GUI_EDIT_ITEM_ITEMS_REMOVE_NAME))
+				.lore(TranslationManager.list(this.player, Translations.GUI_EDIT_ITEM_ITEMS_REMOVE_LORE,
+						"left_click", TranslationManager.string(this.player, Translations.MOUSE_LEFT_CLICK)
+				))
+				.make(), click -> {
+
+			// todo this was copied from MarketCategoryEditGUI, refaactor
+			if(marketItem.getStock() > 0) {
+				click.gui.exit();
+				Common.tell(click.player, "You cannot remove an item that is stocked.");
+				return;
+			}
+
+			if (Settings.USE_ADDITIONAL_CONFIRMS.getBoolean()) {
+				click.manager.showGUI(click.player, new ConfirmGUI(this, click.player, confirmed -> {
+					if (!confirmed) {
+						click.manager.showGUI(click.player, MarketItemEditGUI.this);
+						return;
+					}
+
+					marketItem.unStore(result -> {
+						if (result != SynchronizeResult.SUCCESS)
+							return;
+
+						// close guis of other users
+						marketItem.getViewingPlayers().forEach(viewingUser -> {
+							click.manager.showGUI(viewingUser, new MarketCategoryViewGUI(viewingUser, this.market, this.category, false));
+						});
+
+						// give user the item or drop
+						giveBackMarketItem(marketItem);
+						reopen(click);
+					});
+				}));
+
+			} else {
+				marketItem.unStore(result -> {
+					if (result != SynchronizeResult.SUCCESS)
+						return;
+
+					// close guis of other users
+					marketItem.getViewingPlayers().forEach(viewingUser -> {
+						click.manager.showGUI(viewingUser, new MarketCategoryViewGUI(viewingUser, this.market, this.category, false));
+					});
+
+					// give user the item or drop
+					giveBackMarketItem(marketItem);
+					reopen(click);
+				});
+			}
+
+		});
+	}
+
+	// todo this was copied from MarketCategoryEditGUI, refaactor
+	private void giveBackMarketItem(@NonNull final MarketItem marketItem) {
+		final ItemStack item = marketItem.getItem().clone();
+		item.setAmount(1);
+
+		Bukkit.getServer().getScheduler().runTask(Markets.getInstance(), () -> {
+			for (int i = 0; i < marketItem.getStock(); i++)
+				PlayerUtil.giveItem(this.player, item);
 		});
 	}
 

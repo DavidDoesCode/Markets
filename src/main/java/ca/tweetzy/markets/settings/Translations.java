@@ -1100,6 +1100,13 @@ public final class Translations extends TranslationManager {
 			"",
 			"&e%left_click% &7to edit price");
 
+	public static TranslationEntry GUI_EDIT_ITEM_ITEMS_REMOVE_NAME = create("gui.edit market item.items.remove.name", "<GRADIENT:65B1B4>&LRemove Item</GRADIENT:2B6F8A>");
+	public static TranslationEntry GUI_EDIT_ITEM_ITEMS_REMOVE_LORE = create("gui.edit market item.items.remove.lore",
+			"&7Remove the item from category",
+			"&7You must first empty the stock.",
+			"",
+			"&e%left_click% &7to remove item");
+
 	public static TranslationEntry GUI_NEW_RATING_TITLE = create("gui.new rating.title", "%market_display_name% &f- &7Review");
 	public static TranslationEntry GUI_NEW_RATING_ITEMS_CREATE_NAME = create("gui.new rating.items.create.name", "<GRADIENT:65B1B4>&lLeave Review</GRADIENT:2B6F8A>");
 	public static TranslationEntry GUI_NEW_RATING_ITEMS_CREATE_LORE = create("gui.new rating.items.create.lore",
