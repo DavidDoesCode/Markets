@@ -14,6 +14,7 @@ import ca.tweetzy.markets.gui.MarketsPagedGUI;
 import ca.tweetzy.markets.gui.shared.checkout.MarketItemPurchaseGUI;
 import ca.tweetzy.markets.gui.shared.checkout.OfferCreateGUI;
 import ca.tweetzy.markets.impl.MarketOffer;
+import ca.tweetzy.markets.model.FloodGateCheck;
 import ca.tweetzy.markets.settings.Settings;
 import ca.tweetzy.markets.settings.Translations;
 import lombok.NonNull;
@@ -92,7 +93,7 @@ public final class MarketSearchGUI extends MarketsPagedGUI<MarketItem> {
 		final Category category = Markets.getCategoryManager().getByUUID(marketItem.getOwningCategory());
 		final Market market = Markets.getMarketManager().getByUUID(category.getOwningMarket());
 
-		if (click.clickType == ClickType.LEFT) {
+		if (click.clickType == ClickType.LEFT || FloodGateCheck.isBedrock(player)) {
 			click.manager.showGUI(click.player, new MarketItemPurchaseGUI(this.player, market, marketItem));
 			category.getViewingPlayers().remove(player);
 			marketItem.getViewingPlayers().add(player);
