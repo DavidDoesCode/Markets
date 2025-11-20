@@ -244,7 +244,7 @@ public final class CategoryItem implements MarketItem {
 		synchronized (this.editLock) {
 			if (this.beingEdited) {
 				// Item is currently being edited/deleted - reject purchase
-				transactionResult.accept(TransactionResult.FAILED_LOCKED);
+				transactionResult.accept(TransactionResult.ERROR);
 				Common.tell(buyer, TranslationManager.string(buyer, Translations.ITEM_BEING_EDITED));
 				DupeDetector.logBlockedOperation("PURCHASE", buyer, this);
 				return;
