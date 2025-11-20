@@ -165,6 +165,12 @@ public final class MarketItemEditGUI extends MarketsBaseGUI {
 			}
 
 			if (click.clickType == ClickType.RIGHT || click.clickType == ClickType.DROP) {
+				// Dupe prevention: Check if item is being purchased
+				if (marketItem.isBeingEdited()) {
+					Common.tell(click.player, TranslationManager.list(click.player, Translations.ITEM_BEING_EDITED));
+					return;
+				}
+
 				synchronized (this) {
 					if (playerLock) {
 						Bukkit.getLogger().severe(click.player.getName() + " attempting to withdraw twice.");

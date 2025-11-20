@@ -1251,6 +1251,29 @@ public final class Translations extends TranslationManager {
 			"&e&l%left_click% &7to change request pay"
 	);
 
+	/*
+	========================= Dupe Detection Alerts =========================
+	 */
+	public static TranslationEntry DUPE_ALERT_MESSAGE = create("alerts.dupe.detected",
+			"&c&l[DUPE DETECTED] &e%buyer% &7purchased from &e%seller% &7during item deletion!",
+			"&7Item: &f%item_name% &7x%quantity%",
+			"&7Type: &f%attempt_type%",
+			"&c&lIMPORTANT: &7This is a potential dupe exploit - review logs immediately!"
+	);
+
+	public static TranslationEntry DUPE_PREVENTED_MESSAGE = create("alerts.dupe.prevented",
+			"&a&l[DUPE BLOCKED] &7Prevented potential dupe exploit",
+			"&7Seller: &e%seller% &7attempted to delete/withdraw",
+			"&7Buyer: &e%buyer% &7was purchasing at the same time",
+			"&7Item: &f%item_name% &7x%quantity%",
+			"&7Type: &f%attempt_type%"
+	);
+
+	public static TranslationEntry ITEM_BEING_EDITED = create("error.item being edited",
+			"&cThis item is currently being purchased and cannot be modified.",
+			"&7Please wait a moment and try again."
+	);
+
 
 	public static void init() {
 		new Translations(Markets.getInstance()).setup(Markets.getInstance());

@@ -273,6 +273,14 @@ public final class Settings extends FlightSettings {
 	public static ConfigEntry GUI_CREATE_REQUEST_ITEMS_PRICE_ITEM = create("gui.create request.items.price.item", CompMaterial.SUNFLOWER.name());
 	public static ConfigEntry GUI_CREATE_REQUEST_ITEMS_CREATE_ITEM = create("gui.create request.items.create.item", CompMaterial.LIME_DYE.name());
 
+	/*
+	========================= Dupe Detection Settings =========================
+	 */
+	public static final ConfigEntry DUPE_ALERT_ENABLED = create("dupe detection.alert.enabled", true, "Alert admins when dupe exploits are detected or prevented");
+	public static final ConfigEntry DUPE_ALERT_PERMISSION = create("dupe detection.alert.permission", "markets.alerts.dupe", "Permission required to receive dupe alerts");
+	public static final ConfigEntry DUPE_ALERT_SOUND_ENABLED = create("dupe detection.alert.sound enabled", true, "Play a sound when alerting admins");
+	public static final ConfigEntry DUPE_ALERT_SOUND = create("dupe detection.alert.sound", "ENTITY_EXPERIENCE_ORB_PICKUP", "Sound to play for dupe alerts (Bukkit Sound enum name)");
+	public static final ConfigEntry DUPE_LOG_TO_FILE = create("dupe detection.log.file", true, "Log dupe attempts to dupe-attempts.txt file");
 
 	public static void init() {
 		Markets.getCoreConfig().init();
