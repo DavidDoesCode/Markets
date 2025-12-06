@@ -4,6 +4,7 @@ import ca.tweetzy.flight.gui.Gui;
 import ca.tweetzy.flight.gui.events.GuiClickEvent;
 import ca.tweetzy.flight.settings.TranslationManager;
 import ca.tweetzy.flight.utils.Common;
+import ca.tweetzy.flight.utils.ItemUtil;
 import ca.tweetzy.flight.utils.QuickItem;
 import ca.tweetzy.flight.utils.input.TitleInput;
 import ca.tweetzy.markets.Markets;
@@ -13,10 +14,13 @@ import ca.tweetzy.markets.api.market.core.MarketItem;
 import ca.tweetzy.markets.gui.MarketsPagedGUI;
 import ca.tweetzy.markets.gui.shared.checkout.MarketItemPurchaseGUI;
 import ca.tweetzy.markets.gui.shared.checkout.OfferCreateGUI;
+import ca.tweetzy.markets.gui.shared.selector.ConfirmGUI;
+import ca.tweetzy.markets.gui.shared.view.AllMarketsViewGUI;
 import ca.tweetzy.markets.gui.shared.view.UserProfileGUI;
 import ca.tweetzy.markets.gui.shared.view.ratings.MarketRatingsViewGUI;
 import ca.tweetzy.markets.gui.shared.view.ratings.NewMarketRatingGUI;
 import ca.tweetzy.markets.impl.MarketOffer;
+import ca.tweetzy.markets.model.AdminActionLogger;
 import ca.tweetzy.markets.settings.Settings;
 import ca.tweetzy.markets.settings.Translations;
 import lombok.NonNull;
@@ -34,6 +38,8 @@ public final class MarketCategoryViewGUI extends MarketsPagedGUI<MarketItem> {
 	private final Category category;
 	private final boolean viewAsCustomer;
 	private final boolean fromAdminCommand;
+
+	private boolean clickLock = false;
 
 	public MarketCategoryViewGUI(Gui parent, @NonNull final Player player, @NonNull final Market market, @NonNull final Category category, boolean viewAsCustomer, boolean fromAdminCommand) {
 		super(fromAdminCommand ? null : parent, player, TranslationManager.string(player, Translations.GUI_MARKET_CATEGORY_VIEW_TITLE,
@@ -60,12 +66,15 @@ public final class MarketCategoryViewGUI extends MarketsPagedGUI<MarketItem> {
 	}
 
 	public MarketCategoryViewGUI(@NonNull final Player player, @NonNull final Market market, @NonNull final Category category, boolean viewAsCustomer) {
-		this(new MarketViewGUI(player, market), player, market, category, viewAsCustomer, false);
+		this(new MarketViewGUI(new AllMarketsViewGUI(null, player), player, market, false), player, market, category, viewAsCustomer, false);
 	}
 
 	@Override
 	protected ItemStack makeDisplayItem(MarketItem marketItem) {
-		final QuickItem item = QuickItem.of(marketItem.getItem()).amount(marketItem.getPlusOneStock()).lore(TranslationManager.list(this.player, Translations.GUI_MARKET_CATEGORY_VIEW_ITEMS_ITEM_LORE_HEADER));
+		final QuickItem item = QuickItem
+				.of(marketItem.getItem())
+				.amount(marketItem.getPlusOneStock())
+				.lore(TranslationManager.list(this.player, Translations.GUI_MARKET_CATEGORY_VIEW_ITEMS_ITEM_LORE_HEADER));
 
 		item.lore(TranslationManager.list(this.player, Translations.GUI_MARKET_CATEGORY_VIEW_ITEMS_ITEM_LORE_INFO,
 				"market_item_price", String.format("%,.2f", marketItem.getPrice()),
@@ -125,8 +134,10 @@ public final class MarketCategoryViewGUI extends MarketsPagedGUI<MarketItem> {
 					return;
 				}
 
-				if (click.clickType == ClickType.LEFT)
+				if (click.clickType == ClickType.LEFT) {
 					click.manager.showGUI(click.player, new NewMarketRatingGUI(this, click.player, this.market));
+					return;
+				}
 
 				if (click.clickType == ClickType.RIGHT)
 					click.manager.showGUI(click.player, new MarketRatingsViewGUI(this, click.player, this.market));
@@ -175,6 +186,12 @@ public final class MarketCategoryViewGUI extends MarketsPagedGUI<MarketItem> {
 			return;
 		}
 
+		if(clickLock){
+			Bukkit.getLogger().info("MarketCategoryViewGUI Click Lock: " + click.clickType.toString());
+			return;
+		} else
+			clickLock = true;
+
 		if (Markets.getCategoryItemManager().getByUUID(marketItem.getId()) == null) {
 			click.manager.showGUI(click.player, new MarketCategoryViewGUI(this.player, this.market, this.category, this.viewAsCustomer));
 			Common.tell(click.player, TranslationManager.string(click.player, Translations.ITEM_NO_LONGER_AVAILABLE));
@@ -185,13 +202,64 @@ public final class MarketCategoryViewGUI extends MarketsPagedGUI<MarketItem> {
 			click.manager.showGUI(click.player, new MarketItemPurchaseGUI(this.player, this.market, marketItem));
 			this.category.getViewingPlayers().remove(player);
 			marketItem.getViewingPlayers().add(player);
+			return;
 		}
 
 		if (click.clickType == ClickType.RIGHT && !Settings.DISABLE_OFFERS.getBoolean() && marketItem.isAcceptingOffers()) {
 			click.manager.showGUI(click.player, new OfferCreateGUI(this, this.player, this.market, marketItem, new MarketOffer(this.player, this.market, marketItem)));
 			this.category.getViewingPlayers().remove(player);
 			marketItem.getViewingPlayers().add(player);
+			return;
 		}
+
+		if (click.clickType == ClickType.DROP) {
+			if (player.isOp()) {
+				click.manager.showGUI(click.player, new ConfirmGUI(this, click.player, confirmed -> {
+					if (confirmed) {
+						// Get the current stock amount
+						final int stockAmount = marketItem.getStock();
+						final ItemStack itemToReturn = marketItem.getItem().clone();
+						itemToReturn.setAmount(1);
+
+						// Set stock to 0
+						marketItem.setStock(0);
+						marketItem.sync(result -> {
+							// Create offline payment for seller with all the items
+							Markets.getOfflineItemPaymentManager().create(
+									this.market.getOwnerUUID(),
+									itemToReturn,
+									stockAmount,
+									"Admin removed item from market",
+									created -> {
+										if (created) {
+											// Log the admin action
+											AdminActionLogger.log(
+													click.player.getName(),
+													String.format("Removed %d x %s from market '%s' (Owner: %s, Category: %s)",
+															stockAmount,
+															ItemUtil.getItemName(marketItem.getItem()),
+															this.market.getDisplayName(),
+															this.market.getOwnerName(),
+															this.category.getDisplayName()
+													)
+											);
+
+											// Refresh the GUI to show updated stock
+											click.manager.showGUI(click.player, new MarketCategoryViewGUI(this.player, this.market, this.category, this.viewAsCustomer, this.fromAdminCommand));
+										}
+									}
+							);
+						});
+					} else {
+						// User cancelled, return to category view
+						click.manager.showGUI(click.player, MarketCategoryViewGUI.this);
+					}
+				}));
+				return;
+			}
+		}
+
+		clickLock = false;
 	}
 
 	@Override

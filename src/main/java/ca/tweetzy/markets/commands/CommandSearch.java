@@ -6,10 +6,16 @@ import ca.tweetzy.flight.command.ReturnType;
 import ca.tweetzy.markets.Markets;
 import ca.tweetzy.markets.gui.shared.view.content.MarketSearchGUI;
 import ca.tweetzy.markets.settings.Settings;
+import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.command.CommandSender;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public final class CommandSearch extends Command {
 
@@ -37,7 +43,38 @@ public final class CommandSearch extends Command {
 
 	@Override
 	protected List<String> tab(CommandSender sender, String... args) {
-		return null;
+		if (args.length == 0) {
+			return null;
+		}
+
+		// Get the current search term (last argument)
+		String currentSearch = args[args.length - 1].toLowerCase();
+		List<String> suggestions = new ArrayList<>();
+
+		// Add all Material names
+		for (Material material : Material.values()) {
+			if (material.isItem()) {
+				String materialName = material.name().toLowerCase().replace("_", " ");
+				if (materialName.contains(currentSearch)) {
+					suggestions.add(material.name().toLowerCase());
+				}
+			}
+		}
+
+		// Add all enchantment names
+		for (Enchantment enchantment : Enchantment.values()) {
+			NamespacedKey key = enchantment.getKey();
+			String enchantmentName = key.getKey().toLowerCase();
+			if (enchantmentName.contains(currentSearch)) {
+				suggestions.add(enchantmentName);
+			}
+		}
+
+		// Sort and limit suggestions
+		return suggestions.stream()
+				.sorted()
+				.limit(50) // Limit to 50 suggestions to avoid overwhelming the player
+				.collect(Collectors.toList());
 	}
 
 	@Override

@@ -2,7 +2,6 @@ package ca.tweetzy.markets.gui.user.category;
 
 import ca.tweetzy.flight.comp.enums.CompMaterial;
 import ca.tweetzy.flight.gui.events.GuiClickEvent;
-import ca.tweetzy.flight.gui.template.MaterialPickerGUI;
 import ca.tweetzy.flight.settings.TranslationManager;
 import ca.tweetzy.flight.utils.*;
 import ca.tweetzy.flight.utils.input.TitleInput;
@@ -13,6 +12,7 @@ import ca.tweetzy.markets.api.market.core.Market;
 import ca.tweetzy.markets.api.market.core.MarketItem;
 import ca.tweetzy.markets.gui.MarketsPagedGUI;
 import ca.tweetzy.markets.gui.shared.selector.ConfirmGUI;
+import ca.tweetzy.markets.gui.shared.selector.ItemSelectorGUI;
 import ca.tweetzy.markets.gui.shared.view.content.MarketCategoryViewGUI;
 import ca.tweetzy.markets.gui.shared.view.content.MarketViewGUI;
 import ca.tweetzy.markets.gui.user.market.MarketOverviewGUI;
@@ -192,7 +192,7 @@ public final class MarketCategoryEditGUI extends MarketsPagedGUI<MarketItem> {
 
 			if (click.clickType == ClickType.RIGHT) {
 				final ItemStack cursor = click.cursor;
-				if (cursor != null && cursor.getType() != CompMaterial.AIR.parseMaterial()) {
+				if (cursor != null && cursor.getType() != CompMaterial.AIR.get()) {
 					final ItemStack newIcon = cursor.clone();
 					newIcon.setAmount(1);
 
@@ -205,7 +205,7 @@ public final class MarketCategoryEditGUI extends MarketsPagedGUI<MarketItem> {
 			}
 
 			if (click.clickType == ClickType.LEFT) {
-				click.manager.showGUI(click.player, new MaterialPickerGUI(this, null, "", (event, selected) -> {
+				click.manager.showGUI(click.player, new ItemSelectorGUI(this, false, (event, selected) -> {
 
 					if (selected != null) {
 						this.category.setIcon(selected);
@@ -242,61 +242,64 @@ public final class MarketCategoryEditGUI extends MarketsPagedGUI<MarketItem> {
 	protected void onClick(MarketItem marketItem, GuiClickEvent click) {
 		final Player player = click.player;
 
+		if(player.getLocation().getWorld().getName().contains("the_end") ||
+				player.getLocation().getWorld().getName().contains("nether")) {
+			click.gui.exit();
+			Common.tell(click.player, "You can only manage your store in the overworld.");
+			return;
+		}
+
 		final MarketItem locate = Markets.getCategoryItemManager().getByUUID(marketItem.getId());
 		if (locate == null || locate.getStock() != marketItem.getStock()) {
+			Common.log(player.getName() + " stock mismatch, cancelling click");
 			reopen(click);
 			return;
 		}
 
-		switch (click.clickType) {
-			case LEFT ->
-					new TitleInput(Markets.getInstance(), click.player, TranslationManager.string(click.player, Translations.PROMPT_ITEM_PRICE_TITLE), TranslationManager.string(click.player, Translations.PROMPT_ITEM_PRICE_SUBTITLE)) {
-						@Override
-						public void onExit(Player player) {
-							click.manager.showGUI(click.player, MarketCategoryEditGUI.this);
-						}
+		if (click.clickType == ClickType.LEFT || FloodGateCheck.isBedrock(this.player)) {
+			click.manager.showGUI(click.player, new MarketItemEditGUI(this.player, this.market, this.category, marketItem));
+			return;
+		}
 
-						@Override
-						public boolean onResult(String string) {
-							string = ChatColor.stripColor(string);
+		if (click.clickType == ClickType.RIGHT) {
+			new TitleInput(Markets.getInstance(), click.player, TranslationManager.string(click.player, Translations.PROMPT_ITEM_PRICE_TITLE), TranslationManager.string(click.player, Translations.PROMPT_ITEM_PRICE_SUBTITLE)) {
+				@Override
+				public void onExit(Player player) {
+					click.manager.showGUI(click.player, MarketCategoryEditGUI.this);
+				}
 
-							if (!NumberUtils.isNumber(string)) {
-								Common.tell(click.player, TranslationManager.string(click.player, Translations.NOT_A_NUMBER, "value", string));
-								return false;
-							}
+				@Override
+				public boolean onResult(String string) {
+					string = ChatColor.stripColor(string);
 
-							final double price = Double.parseDouble(string);
-							marketItem.setPrice(price);
-							marketItem.sync(result -> reopen(click));
-							return true;
-						}
-					};
+					if (!NumberUtils.isNumber(string)) {
+						Common.tell(click.player, TranslationManager.string(click.player, Translations.NOT_A_NUMBER, "value", string));
+						return false;
+					}
 
-			case RIGHT -> click.manager.showGUI(click.player, new MarketItemEditGUI(this.player, this.market, this.category, marketItem));
+					final double price = Double.parseDouble(string);
+					marketItem.setPrice(price);
+					marketItem.sync(result -> reopen(click));
+					return true;
+				}
+			};
+		}
 
-			case DROP -> {
-//				final MarketItem relocatedItem = Markets.getCategoryItemManager().getByUUID(marketItem.getId());
+		if (click.clickType == Enum.valueOf(ClickType.class, Settings.CLICK_DELETE_ITEM.getString().toUpperCase())) {
 
-				if (Settings.USE_ADDITIONAL_CONFIRMS.getBoolean()) {
-					click.manager.showGUI(click.player, new ConfirmGUI(this, click.player, confirmed -> {
-						if (!confirmed) return;
+			if(marketItem.getStock() > 0) {
+				click.gui.exit();
+				Common.tell(click.player, "You cannot remove an item that is stocked.");
+				return;
+			}
 
-						marketItem.unStore(result -> {
-							if (result != SynchronizeResult.SUCCESS)
-								return;
+			if (Settings.USE_ADDITIONAL_CONFIRMS.getBoolean()) {
+				click.manager.showGUI(click.player, new ConfirmGUI(this, click.player, confirmed -> {
+					if (!confirmed) {
+						click.manager.showGUI(click.player, MarketCategoryEditGUI.this);
+						return;
+					}
 
-							// close guis of other users
-							marketItem.getViewingPlayers().forEach(viewingUser -> {
-								click.manager.showGUI(viewingUser, new MarketCategoryViewGUI(viewingUser, this.market, this.category, false));
-							});
-
-							// give user the item or drop
-							giveBackMarketItem(marketItem);
-							reopen(click);
-						});
-					}));
-
-				} else {
 					marketItem.unStore(result -> {
 						if (result != SynchronizeResult.SUCCESS)
 							return;
@@ -310,7 +313,22 @@ public final class MarketCategoryEditGUI extends MarketsPagedGUI<MarketItem> {
 						giveBackMarketItem(marketItem);
 						reopen(click);
 					});
-				}
+				}));
+
+			} else {
+				marketItem.unStore(result -> {
+					if (result != SynchronizeResult.SUCCESS)
+						return;
+
+					// close guis of other users
+					marketItem.getViewingPlayers().forEach(viewingUser -> {
+						click.manager.showGUI(viewingUser, new MarketCategoryViewGUI(viewingUser, this.market, this.category, false));
+					});
+
+					// give user the item or drop
+					giveBackMarketItem(marketItem);
+					reopen(click);
+				});
 			}
 		}
 	}

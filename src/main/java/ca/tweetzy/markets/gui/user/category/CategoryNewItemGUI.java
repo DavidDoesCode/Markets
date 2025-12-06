@@ -30,6 +30,8 @@ public final class CategoryNewItemGUI extends MarketsBaseGUI {
 	private final Category category;
 	private final MarketItem marketItem;
 
+	private Boolean clickLock = false;
+
 	public CategoryNewItemGUI(@NonNull final Player player, @NonNull final Market market, @NonNull final Category category, final MarketItem marketItem) {
 		super(new MarketCategoryEditGUI(player, market, category), player, TranslationManager.string(Translations.GUI_CATEGORY_ADD_ITEM_TITLE, "category_name", category.getName()), 6);
 		this.player = player;
@@ -45,6 +47,7 @@ public final class CategoryNewItemGUI extends MarketsBaseGUI {
 		setAcceptsItems(true);
 		setUnlocked(1, 4);
 
+		// todo this causes items to get lost when player dc/gets kicked/closes menu weirdly
 		setOnClose(close -> {
 			final ItemStack placedItem = getItem(1, 4);
 			if (placedItem != null) PlayerUtil.giveItem(close.player, placedItem);
@@ -61,7 +64,7 @@ public final class CategoryNewItemGUI extends MarketsBaseGUI {
 	@Override
 	protected void draw() {
 
-		if (this.marketItem.getItem().getType() != CompMaterial.AIR.parseMaterial()) setItem(1, 4, this.marketItem.getItem());
+		if (this.marketItem.getItem().getType() != CompMaterial.AIR.get()) setItem(1, 4, this.marketItem.getItem());
 
 		if (this.marketItem.getCurrencyItem() != null && this.marketItem.isCurrencyOfItem()) {
 			final ItemStack currencyItem = this.marketItem.getCurrencyItem().clone();
@@ -127,7 +130,7 @@ public final class CategoryNewItemGUI extends MarketsBaseGUI {
 					.make(), click -> {
 
 				final ItemStack placedItem = getItem(1, 4);
-				if (placedItem != null && placedItem.getType() != CompMaterial.AIR.parseMaterial())
+				if (placedItem != null && placedItem.getType() != CompMaterial.AIR.get())
 					this.marketItem.setItem(placedItem);
 
 				click.manager.showGUI(click.player, new CurrencyPickerGUI(this, click.player, (currency, item) -> {
@@ -152,23 +155,39 @@ public final class CategoryNewItemGUI extends MarketsBaseGUI {
 
 		// new item button
 		setButton(getRows() - 1, 4, QuickItem.of(Settings.GUI_CATEGORY_ADD_ITEM_ITEMS_NEW_ITEM_ITEM.getItemStack()).name(TranslationManager.string(this.player, Translations.GUI_CATEGORY_ADD_ITEM_ITEMS_NEW_ITEM_NAME)).lore(TranslationManager.list(this.player, Translations.GUI_CATEGORY_ADD_ITEM_ITEMS_NEW_ITEM_LORE, "left_click", TranslationManager.string(this.player, Translations.MOUSE_LEFT_CLICK))).make(), click -> {
+			if (clickLock) {
+				Bukkit.getLogger().severe(click.player.getName() + " sent duplicate add item clicks");
+				return;
+			} else
+				clickLock = true;
 
 			final ItemStack placedItem = getItem(1, 4);
 			if (placedItem == null) {
 				Common.tell(click.player, TranslationManager.string(click.player, Translations.PLACE_ITEM_TO_ADD));
+				clickLock = false;
 				return;
 			}
 
 			// check blacklist
-			if (!BlacklistChecker.passesChecks(click.player, placedItem)) return;
+			if (!BlacklistChecker.passesChecks(click.player, placedItem)) {
+				clickLock = false;
+				return;
+			}
 
 			this.marketItem.setItem(placedItem.clone());
 			this.marketItem.setStock(placedItem.clone().getAmount());
-			if (this.marketItem.getPrice() <= 0) return;
+			if (this.marketItem.getPrice() <= 0) {
+				clickLock = false;
+				return;
+			}
 
 			if (this.market.isServerMarket()) {
 				this.marketItem.setIsAcceptingOffers(false);
 			}
+
+			// todo this is where its fixed. but we've already generated multple async functions of this.....
+			// todo honey pot!! create one.....
+			setItem(1, 4, CompMaterial.AIR.parseItem());
 
 			// create the item
 			Bukkit.getScheduler().runTaskLaterAsynchronously(Markets.getInstance(), () -> {
@@ -177,11 +196,13 @@ public final class CategoryNewItemGUI extends MarketsBaseGUI {
 					return;
 				}
 
+				// todo so we create this item, great. WHEN ARE WE CHECKING IF THE PLAYER HAS 1 IN THEIR INVENTORY??
+				// todo and sync its async..... that might not even help??
 				Markets.getCategoryItemManager().create(this.category, this.marketItem.getItem(), this.marketItem.getCurrency(), this.marketItem.getCurrencyItem(), this.marketItem.getPrice(), this.marketItem.isPriceForAll(), this.marketItem.isAcceptingOffers(), this.marketItem.isInfinite(), created -> {
 					if (created) {
-						setItem(1, 4, CompMaterial.AIR.parseItem());
 						click.manager.showGUI(click.player, new MarketCategoryEditGUI(this.player, this.market, this.category));
 					}
+					clickLock = false;
 				});
 			}, Settings.INTERNAL_ADD_ITEM_DELAY.getInt());
 

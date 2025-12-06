@@ -14,3 +14,17 @@ softdepend:
 libraries:
   - com.google.code.gson:gson:2.8.9
   - org.apache.commons:commons-lang3:3.14.0
+
+permissions:
+  markets.command.stats:
+    description: Allows access to the /markets stats command
+    default: false
+  markets.viewstats:
+    description: Allows viewing market statistics GUI
+    default: false
+  markets.admin.transactions:
+    description: Allows viewing any player's transactions with /markets transactions <player>
+    default: op
+  markets.admin.stats:
+    description: Allows viewing any player's market statistics with /markets stats <player>
+    default: op

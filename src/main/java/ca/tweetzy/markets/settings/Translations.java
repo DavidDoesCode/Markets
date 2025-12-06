@@ -35,6 +35,7 @@ public final class Translations extends TranslationManager {
 	public static TranslationEntry MUST_BE_HIGHER_THAN_ZERO = create("error.must be higher than zero", "&cPlease enter a number that is higher than 0");
 	public static TranslationEntry INSUFFICIENT_ENTRY_AMOUNT = create("error.insufficient bank entry balance", "&cWithdrawal amount exceeds your stored total!");
 	public static TranslationEntry NO_MARKET_FOUND = create("error.no market found", "&cCould not find any market for&F: &4%player_name%");
+	public static TranslationEntry NO_MARKET_FOUND_SELF = create("error.no market found self", "&cYou don't have a market yet! Create one with &e/markets add");
 	public static TranslationEntry ONE_FILL_SLOT_REQUIRED = create("error.one fill slot required", "&cThis layout requires at least one fill slot!");
 	public static TranslationEntry ITEM_OUT_OF_STOCK = create("error.item out of stock", "&cSorry that item is now out of stock");
 	public static TranslationEntry NOT_ENOUGH_STOCK = create("error.not enough stock", "&cSorry there is not enough stock");
@@ -136,6 +137,10 @@ public final class Translations extends TranslationManager {
 	public static TranslationEntry PROMPT_CATEGORY_DESC_TITLE = create("prompts.category description.title", "<GRADIENT:65B1B4>&LCategory Description</GRADIENT:2B6F8A>");
 	public static TranslationEntry PROMPT_CATEGORY_DESC_SUBTITLE = create("prompts.category description.subtitle", "&fEnter new category description");
 
+	public static TranslationEntry PROMPT_MATERIAL_PICKER_TITLE = create("prompts.material picker.title", "<GRADIENT:65B1B4>&LMaterial Search</GRADIENT:2B6F8A>");
+	public static TranslationEntry PROMPT_MATERIAL_PICKER_SUBTITLE = create("prompts.material picker.subtitle", "&fEnter keywords into chat to search");
+
+
 	// guis
 	public static TranslationEntry GUI_SHARED_ITEMS_BACK_BUTTON_NAME = create("gui.shared buttons.back button.name", "<GRADIENT:65B1B4>&LGo Back</GRADIENT:2B6F8A>");
 	public static TranslationEntry GUI_SHARED_ITEMS_BACK_BUTTON_LORE = create("gui.shared buttons.back button.lore",
@@ -169,6 +174,28 @@ public final class Translations extends TranslationManager {
 			"&a&lClick &7to view server market"
 	);
 
+	public static TranslationEntry GUI_MATERIAL_PICKER_TITLE = create("gui.material picker.title", "&eMarkets &f- &7Material Picker");
+	public static TranslationEntry GUI_MATERIAL_PICKER_ITEMS_ITEM_NAME = create("gui.material picker.items.item.name", "<GRADIENT:65B1B4>&L%item_name%</GRADIENT:2B6F8A>");
+	public static TranslationEntry GUI_MATERIAL_PICKER_ITEMS_ITEM_LORE = create("gui.material picker.items.item.lore",
+			"&7Click to select this material."
+	);
+
+	public static TranslationEntry GUI_MATERIAL_PICKER_ITEMS_SEARCH_NAME = create("gui.material picker.items.search.name", "<GRADIENT:65B1B4>&LSearch</GRADIENT:2B6F8A>");
+	public static TranslationEntry GUI_MATERIAL_PICKER_ITEMS_SEARCH_LORE = create("gui.material picker.items.search.lore",
+			"&7Click to search materials"
+	);
+
+	public static TranslationEntry GUI_MATERIAL_PICKER_ITEMS_AIR_NAME = create("gui.material picker.items.air.name", "<GRADIENT:65B1B4>&lNo Item</GRADIENT:2B6F8A>");
+	public static TranslationEntry GUI_MATERIAL_PICKER_ITEMS_AIR_LORE = create("gui.material picker.items.air.lore",
+			"&7Click to use no item (air)"
+	);
+
+	public static TranslationEntry GUI_MATERIAL_PICKER_ITEMS_CLEAR_NAME = create("gui.material picker.items.clear.name", "&c&lClear Search");
+	public static TranslationEntry GUI_MATERIAL_PICKER_ITEMS_CLEAR_LORE = create("gui.material picker.items.clear.lore",
+			"&7Click to clear your search"
+	);
+
+
 
 	public static TranslationEntry GUI_MAIN_VIEW_TITLE = create("gui.main view.title", "&eMarkets &f- &7Home");
 	public static TranslationEntry GUI_MAIN_VIEW_ITEMS_YOUR_MARKET_NAME = create("gui.main view.items.your market.name", "&e&lYour Market");
@@ -196,6 +223,20 @@ public final class Translations extends TranslationManager {
 			"&7made to your market while you were offline.",
 			"",
 			"&e&l%left_click% &7to collect payments"
+	);
+
+	public static TranslationEntry GUI_MAIN_VIEW_ITEMS_TRANSACTIONS_NAME = create("gui.main view.items.transactions.name", "<GRADIENT:65B1B4>&LView Transactions</GRADIENT:2B6F8A>");
+	public static TranslationEntry GUI_MAIN_VIEW_ITEMS_TRANSACTIONS_LORE = create("gui.main view.items.transactions.lore",
+			"&7View your transactions",
+			"",
+			"&e&l%left_click% &7to view transactions"
+	);
+
+	public static TranslationEntry GUI_MAIN_VIEW_ITEMS_STATS_NAME = create("gui.main view.items.statistics.name", "<GRADIENT:65B1B4>&LView Statistics</GRADIENT:2B6F8A>");
+	public static TranslationEntry GUI_MAIN_VIEW_ITEMS_STATS_LORE = create("gui.main view.items.statistics.lore",
+			"&7View your statistics",
+			"",
+			"&e&l%left_click% &7to view statistics"
 	);
 
 	public static TranslationEntry GUI_MAIN_VIEW_ITEMS_REQUESTS_NAME = create("gui.main view.items.requests.name", "<GRADIENT:65B1B4>&LRequests</GRADIENT:2B6F8A>");
@@ -307,8 +348,8 @@ public final class Translations extends TranslationManager {
 			"&7Wholesale&f: &e%market_item_wholesale%",
 			"&7Accept Offers&f: &e%market_item_accepting_offers%",
 			"",
-			"&e&l%left_click% &7to edit price",
-			"&b&l%right_click% &7to edit settings",
+			"&e&l%left_click% &7to edit settings",
+			"&b&l%right_click% &7to edit price",
 			"&c&l%drop_button% &7to remove item",
 			"&7----------------------------"
 	);
@@ -523,6 +564,93 @@ public final class Translations extends TranslationManager {
 			"&e&l%left_click% &7to ban a player"
 	);
 
+	public static TranslationEntry GUI_MARKET_STATS_TITLE = create("gui.market stats.title", "&eMarkets &f- &7Statistics");
+	public static TranslationEntry GUI_MARKET_STATS_ITEMS_LEVEL_NAME = create("gui.market stats.items.level.name", "<GRADIENT:FFD700>&lStore Level %store_level%</GRADIENT:FFA500>");
+	public static TranslationEntry GUI_MARKET_STATS_ITEMS_LEVEL_LORE = create("gui.market stats.items.level.lore",
+			"&7Your store has been rated as&f: &e%store_tier%",
+			"",
+			"&7Store Performance:",
+			"&8▪ &7Total Sales&f: &e%total_sales%",
+			"&8▪ &7Total Reviews&f: &e%total_reviews%",
+			"&8▪ &7Average Rating&f: &e%avg_rating% ★",
+			"&8▪ &7Unique Customers&f: &e%total_customers%",
+			"&8▪ &7Active Bans&f: &c%active_bans%",
+			"",
+			"&7Keep improving your store to reach",
+			"&7the legendary tier!"
+	);
+
+	public static TranslationEntry GUI_MARKET_STATS_ITEMS_SALES_NAME = create("gui.market stats.items.sales.name", "<GRADIENT:65B1B4>&lStore Sales Stats</GRADIENT:2B6F8A>");
+	public static TranslationEntry GUI_MARKET_STATS_ITEMS_SALES_LORE = create("gui.market stats.items.sales.lore",
+			"&7----------------------------",
+			"&7Total Sales&f: &e%total_sales%",
+			"&7Items Sold&f: &e%total_quantity%",
+			"&7Total Revenue&f: &a$%total_revenue%",
+			"",
+			"&6&lTop 3 Sold Items &7(by quantity)&6&l:",
+			"&e1. &f%top_item_1%",
+			"&e2. &f%top_item_2%",
+			"&e3. &f%top_item_3%",
+			"",
+			"&6&lTop 3 Sales &7(by revenue)&6&l:",
+			"&e1. &f%top_sale_1%",
+			"&e2. &f%top_sale_2%",
+			"&e3. &f%top_sale_3%",
+			"",
+			"&7These are all the sales you've made",
+			"&7through your market."
+	);
+
+	public static TranslationEntry GUI_MARKET_STATS_ITEMS_PURCHASES_NAME = create("gui.market stats.items.purchases.name", "<GRADIENT:65B1B4>&lPurchase Stats</GRADIENT:2B6F8A>");
+	public static TranslationEntry GUI_MARKET_STATS_ITEMS_PURCHASES_LORE = create("gui.market stats.items.purchases.lore",
+			"&7----------------------------",
+			"&7Total Purchases&f: &e%total_purchases%",
+			"&7Items Bought&f: &e%total_quantity%",
+			"&7Total Spent&f: &c$%total_spent%",
+			"",
+			"&6&lTop 3 Bought Items &7(by quantity)&6&l:",
+			"&e1. &f%top_item_1%",
+			"&e2. &f%top_item_2%",
+			"&e3. &f%top_item_3%",
+			"",
+			"&6&lTop 3 Purchases &7(by cost)&6&l:",
+			"&e1. &f%top_purchase_1%",
+			"&e2. &f%top_purchase_2%",
+			"&e3. &f%top_purchase_3%",
+			"",
+			"&7These are all the purchases you've made",
+			"&7from other markets."
+	);
+
+	public static TranslationEntry GUI_MARKET_STATS_ITEMS_INVENTORY_NAME = create("gui.market stats.items.inventory.name", "<GRADIENT:65B1B4>&lInventory Stats</GRADIENT:2B6F8A>");
+	public static TranslationEntry GUI_MARKET_STATS_ITEMS_INVENTORY_LORE = create("gui.market stats.items.inventory.lore",
+			"&7----------------------------",
+			"&7Categories&f: &e%total_categories%",
+			"&7Total Listings&f: &e%total_listings%",
+			"&7In Stock&f: &a%in_stock%",
+			"&7Out of Stock&f: &c%out_of_stock%",
+			"",
+			"&7Keep your inventory stocked to",
+			"&7maintain customer satisfaction!"
+	);
+
+	public static TranslationEntry GUI_MARKET_STATS_ITEMS_CUSTOMERS_NAME = create("gui.market stats.items.customers.name", "<GRADIENT:65B1B4>&lCustomer Stats</GRADIENT:2B6F8A>");
+	public static TranslationEntry GUI_MARKET_STATS_ITEMS_CUSTOMERS_LORE = create("gui.market stats.items.customers.lore",
+			"&7----------------------------",
+			"&7Unique Customers&f: &e%unique_customers%",
+			"&7Total Reviews&f: &e%total_reviews%",
+			"&7Average Rating&f: &e%avg_rating% ★",
+			"&7Active Bans&f: &c%active_bans%",
+			"",
+			"&7Great reviews lead to more customers!"
+	);
+
+	public static TranslationEntry STORE_TIER_LEGENDARY = create("store.tier.legendary", "&6&lLEGENDARY");
+	public static TranslationEntry STORE_TIER_MASTER = create("store.tier.master", "&5&lMASTER");
+	public static TranslationEntry STORE_TIER_EXPERT = create("store.tier.expert", "&b&lEXPERT");
+	public static TranslationEntry STORE_TIER_ESTABLISHED = create("store.tier.established", "&a&lESTABLISHED");
+	public static TranslationEntry STORE_TIER_NOVICE = create("store.tier.novice", "&e&lNOVICE");
+	public static TranslationEntry STORE_TIER_BEGINNER = create("store.tier.beginner", "&7&lBEGINNER");
 
 	public static TranslationEntry GUI_LAYOUT_CONTROL_PICKER_TITLE = create("gui.layout control picker.title", "&eMarkets &f- &7Select Layout Control");
 	public static TranslationEntry GUI_LAYOUT_CONTROL_PICKER_ITEMS_EXIT_NAME = create("gui.layout control picker.items.exit.name", "<GRADIENT:65B1B4>&lExit Button</GRADIENT:2B6F8A>");
@@ -841,9 +969,29 @@ public final class Translations extends TranslationManager {
 			"&7Currency&f: &a%market_item_currency%",
 			"",
 			"&7Buyer&f: &e%buyer_name%",
+			"&7Seller&f: &e%seller_name%",
 			"&7Date&f: &e%transaction_date%",
 			""
 	);
+
+	public static TranslationEntry GUI_TRANSACTIONS_ITEMS_TYPE_TOGGLE_NAME = create("gui.transactions.items.type toggle.name", "<GRADIENT:65B1B4>&lTransaction Type Filter</GRADIENT:2B6F8A>");
+	public static TranslationEntry GUI_TRANSACTIONS_ITEMS_TYPE_TOGGLE_LORE = create("gui.transactions.items.type toggle.lore",
+			"&7Toggle between viewing,",
+			"&7purchases or sales.",
+			"",
+			"&7Current Filter&f: %current_filter%",
+			"",
+			"&e&l%left_click% &7to cycle filter"
+	);
+
+	// Loading indicator for async operations
+	public static TranslationEntry GUI_LOADING_INDICATOR_NAME = create("gui.loading.name", "&eLoading...");
+	public static TranslationEntry GUI_LOADING_INDICATOR_LORE = create("gui.loading.lore",
+			"&7Please wait while data is being loaded",
+			"&7This should only take a moment"
+	);
+
+	public static TranslationEntry LOADING_TRANSACTIONS = create("command.transactions.loading", "&eLoading transactions for &b%player_name%&e...");
 
 	public static TranslationEntry GUI_BANK_TAX_TITLE = create("gui.tax bank.title", "&eMarkets &f- &7Tax Collection");
 	public static TranslationEntry GUI_BANK_TAX_ITEMS_ENTRY_NAME = create("gui.tax bank.items.entry.name", "&a%entry_name%");
@@ -938,10 +1086,11 @@ public final class Translations extends TranslationManager {
 			"&7If you have any of this item in your",
 			"&7inventory you can &edrop &7it here to add to stock.",
 			"",
-			"&7Current Stock&F: &e%market_item_stock%",
+			"&7%shift_left_click% to deposit all items.",
 			"",
-			"&e&l%shift_left_click% &7to deposit all items from inventory",
-			"&b&l%right_click% &7to withdraw from stock"
+			"&7%right_click% or %drop_button% to withdraw",
+			"",
+			"&7Current Stock&F: &e%market_item_stock%"
 	);
 
 	public static TranslationEntry GUI_EDIT_ITEM_ITEMS_CURRENCY_NAME = create("gui.edit market item.items.currency.name", "<GRADIENT:65B1B4>&lSwitch Currency</GRADIENT:2B6F8A>");
@@ -953,6 +1102,19 @@ public final class Translations extends TranslationManager {
 			"",
 			"&e&l%left_click% &7to edit currency"
 	);
+
+	public static TranslationEntry GUI_EDIT_ITEM_ITEMS_PRICE_NAME = create("gui.edit market item.items.price.name", "<GRADIENT:65B1B4>&LItem Price</GRADIENT:2B6F8A>");
+	public static TranslationEntry GUI_EDIT_ITEM_ITEMS_PRICE_LORE = create("gui.edit market item.items.price.lore",
+			"&7The current price is&f: &a%market_item_price%",
+			"",
+			"&e%left_click% &7to edit price");
+
+	public static TranslationEntry GUI_EDIT_ITEM_ITEMS_REMOVE_NAME = create("gui.edit market item.items.remove.name", "<GRADIENT:65B1B4>&LRemove Item</GRADIENT:2B6F8A>");
+	public static TranslationEntry GUI_EDIT_ITEM_ITEMS_REMOVE_LORE = create("gui.edit market item.items.remove.lore",
+			"&7Remove the item from category",
+			"&7You must first empty the stock.",
+			"",
+			"&e%left_click% &7to remove item");
 
 	public static TranslationEntry GUI_NEW_RATING_TITLE = create("gui.new rating.title", "%market_display_name% &f- &7Review");
 	public static TranslationEntry GUI_NEW_RATING_ITEMS_CREATE_NAME = create("gui.new rating.items.create.name", "<GRADIENT:65B1B4>&lLeave Review</GRADIENT:2B6F8A>");
@@ -1034,11 +1196,22 @@ public final class Translations extends TranslationManager {
 	);
 
 	public static TranslationEntry GUI_REQUEST_ITEMS_REQUEST_LORE_OTHER = create("gui.request.items.request.lore.others",
+			"&7Requested by&F: &e%request_owner_name%",
 			"&7Price&F: &a%request_price%",
 			"&7Currency&f: &a%request_currency%",
 			"&7Quantity&f: &a%request_amount%",
 			"",
 			"&e&l%left_click% &7to fulfill request"
+	);
+
+	public static TranslationEntry GUI_REQUEST_ITEMS_REQUEST_LORE_OTHER_ADMIN = create("gui.request.items.request.lore.othersadmin",
+			"&7Requested by&F: &e%request_owner_name%",
+			"&7Price&F: &a%request_price%",
+			"&7Currency&f: &a%request_currency%",
+			"&7Quantity&f: &a%request_amount%",
+			"",
+			"&e&l%left_click% &7to fulfill request",
+			"&c&l%drop_key% &7to remove request &c(Admin)"
 	);
 
 	public static TranslationEntry GUI_REQUEST_ITEMS_REQUEST_LORE_SELF = create("gui.request.items.request.lore.self",

@@ -28,4 +28,10 @@ public final class FloodGateCheck {
 
 		return floodgatePlayer.getDeviceOs() == DeviceOs.IOS || floodgatePlayer.getDeviceOs() == DeviceOs.GOOGLE;
 	}
+
+	public static boolean isBedrock(@NonNull final Player player) {
+		if(player.getName().startsWith("."))
+			return true;
+		return false;
+	}
 }
