@@ -127,6 +127,8 @@ public class TransactionsGUI extends MarketsPagedGUI<Transaction> {
 				.make(), click -> {
 
 			this.viewAll = !this.viewAll;
+			// Reset to page 1 when changing filters
+			this.page = 0;
 			// Reload data with new filter
 			loadTransactionsAsync();
 		});
@@ -149,6 +151,8 @@ public class TransactionsGUI extends MarketsPagedGUI<Transaction> {
 			} else {
 				this.filterType = PlayerRole.SELLER;
 			}
+			// Reset to page 1 when changing filters
+			this.page = 0;
 			// Reload data with new filter
 			loadTransactionsAsync();
 		});
