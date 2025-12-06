@@ -41,23 +41,30 @@ public final class CommandTransactions extends Command {
 					return ReturnType.FAIL;
 				}
 
-				// Create a temporary online player reference for GUI
-				Player onlineTarget = Bukkit.getPlayer(target.getUniqueId());
-				if (onlineTarget == null) {
-					// For offline players, we need to show their transactions to the admin
-					// We'll pass the admin player as the viewer, but filter by target's UUID
-					Markets.getGuiManager().showGUI(player, new TransactionsGUI(null, player, false) {
-						@Override
-						protected void prePopulate() {
-							// Override to show target player's transactions
-							this.items = new java.util.ArrayList<>(Markets.getTransactionManager().getTransactionsFor(target.getUniqueId()));
-							this.items.sort(java.util.Comparator.comparing(ca.tweetzy.markets.api.market.Transaction::getTimeCreated).reversed());
-						}
-					});
-				} else {
-					// Show online player's transactions
-					Markets.getGuiManager().showGUI(player, new TransactionsGUI(null, onlineTarget, false));
-				}
+				// Show loading message
+				Common.tell(player, TranslationManager.string(Translations.LOADING_TRANSACTIONS, "player_name", args[0]));
+
+				// Load transactions async
+				Markets.getTransactionManager().getTransactionsForAsync(target.getUniqueId(), transactions -> {
+					// Open GUI with loaded data (already on main thread from callback)
+					Player onlineTarget = Bukkit.getPlayer(target.getUniqueId());
+					if (onlineTarget == null) {
+						// For offline players, show their transactions to admin
+						Markets.getGuiManager().showGUI(player, new TransactionsGUI(null, player, false) {
+							@Override
+							protected void prePopulate() {
+								// Override with pre-loaded transactions
+								this.items = new java.util.ArrayList<>(transactions);
+								this.items.sort(java.util.Comparator.comparing(ca.tweetzy.markets.api.market.Transaction::getTimeCreated).reversed());
+								this.isLoading = false; // Mark as loaded
+							}
+						});
+					} else {
+						// Show online player's transactions (will load async)
+						Markets.getGuiManager().showGUI(player, new TransactionsGUI(null, onlineTarget, false));
+					}
+				});
+
 				return ReturnType.SUCCESS;
 			}
 

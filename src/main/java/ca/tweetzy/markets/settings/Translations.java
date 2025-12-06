@@ -984,6 +984,15 @@ public final class Translations extends TranslationManager {
 			"&e&l%left_click% &7to cycle filter"
 	);
 
+	// Loading indicator for async operations
+	public static TranslationEntry GUI_LOADING_INDICATOR_NAME = create("gui.loading.name", "&eLoading...");
+	public static TranslationEntry GUI_LOADING_INDICATOR_LORE = create("gui.loading.lore",
+			"&7Please wait while data is being loaded",
+			"&7This should only take a moment"
+	);
+
+	public static TranslationEntry LOADING_TRANSACTIONS = create("command.transactions.loading", "&eLoading transactions for &b%player_name%&e...");
+
 	public static TranslationEntry GUI_BANK_TAX_TITLE = create("gui.tax bank.title", "&eMarkets &f- &7Tax Collection");
 	public static TranslationEntry GUI_BANK_TAX_ITEMS_ENTRY_NAME = create("gui.tax bank.items.entry.name", "&a%entry_name%");
 	public static TranslationEntry GUI_BANK_TAX_ITEMS_ENTRY_LORE = create("gui.tax bank.items.entry.lore",

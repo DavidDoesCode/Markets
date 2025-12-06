@@ -48,11 +48,19 @@ public final class PlayerJoinListener implements Listener {
 				}
 			}
 
-			final List<Transaction> offlineTransactions = Markets.getTransactionManager().getOfflineTransactionsFor(player.getUniqueId());
-			if (offlineTransactions.isEmpty()) return;
+			// Check for offline transactions asynchronously
+			Markets.getTransactionManager().getOfflineTransactionsForAsync(player.getUniqueId(), offlineTransactions -> {
+				if (offlineTransactions.isEmpty()) return;
 
-			// they had sales when offline, let them know
-			Bukkit.getServer().getScheduler().runTaskLaterAsynchronously(Markets.getInstance(), () -> Common.tellNoPrefix(player, TranslationManager.list(player, Translations.OFFLINE_SALES_INFO, "offline_sales_amount", offlineTransactions.size())), 20L);
+				// Show notification after 1 second delay
+				Bukkit.getServer().getScheduler().runTaskLater(
+						Markets.getInstance(),
+						() -> Common.tellNoPrefix(player, TranslationManager.list(player,
+								Translations.OFFLINE_SALES_INFO,
+								"offline_sales_amount", offlineTransactions.size())),
+						20L
+				);
+			});
 
 			return;
 		}
