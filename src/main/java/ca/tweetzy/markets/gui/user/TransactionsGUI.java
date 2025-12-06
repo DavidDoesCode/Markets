@@ -1,5 +1,6 @@
 package ca.tweetzy.markets.gui.user;
 
+import ca.tweetzy.flight.comp.enums.CompMaterial;
 import ca.tweetzy.flight.gui.Gui;
 import ca.tweetzy.flight.gui.events.GuiClickEvent;
 import ca.tweetzy.flight.gui.helper.InventoryBorder;
@@ -24,7 +25,7 @@ public class TransactionsGUI extends MarketsPagedGUI<Transaction> {
 	private final Player player;
 	private boolean viewAll;
 	private PlayerRole filterType = PlayerRole.SELLER;
-	private boolean isLoading = false;  // Track loading state
+	protected boolean isLoading = false;  // Track loading state
 
 	private enum PlayerRole {
 		BUYER, SELLER
@@ -110,10 +111,10 @@ public class TransactionsGUI extends MarketsPagedGUI<Transaction> {
 	private void showLoadingIndicator() {
 		// Place loading indicator in center of GUI
 		setButton(2, 4, QuickItem
-				.of(Material.HOPPER)
+				.of(new ItemStack(Material.HOPPER))
 				.name(TranslationManager.string(Translations.GUI_LOADING_INDICATOR_NAME))
 				.lore(TranslationManager.list(Translations.GUI_LOADING_INDICATOR_LORE))
-				.make());
+				.make(), click -> {});
 	}
 
 	private void setTransactionViewButton() {

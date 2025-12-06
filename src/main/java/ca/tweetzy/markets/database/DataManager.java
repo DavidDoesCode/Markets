@@ -5,6 +5,7 @@ import ca.tweetzy.flight.database.Callback;
 import ca.tweetzy.flight.database.DataManagerAbstract;
 import ca.tweetzy.flight.database.DatabaseConnector;
 import ca.tweetzy.flight.database.UpdateCallback;
+import ca.tweetzy.flight.utils.Common;
 import ca.tweetzy.flight.utils.SerializeUtil;
 import ca.tweetzy.markets.api.currency.Payment;
 import ca.tweetzy.markets.api.market.*;
@@ -793,6 +794,25 @@ public final class DataManager extends DataManagerAbstract {
 	}
 
 	public void createTransaction(@NonNull final Transaction transaction, final Callback<Transaction> callback) {
+		// Validate transaction data before attempting insert
+		if (transaction.getBuyerName() == null || transaction.getBuyerName().isEmpty()) {
+			String error = "Cannot create transaction: buyer_name is null or empty (Buyer UUID: " + transaction.getBuyer() + ")";
+			Common.log("&c" + error);
+			if (callback != null) {
+				callback.accept(new IllegalArgumentException(error), null);
+			}
+			return;
+		}
+
+		if (transaction.getSellerName() == null || transaction.getSellerName().isEmpty()) {
+			String error = "Cannot create transaction: seller_name is null or empty (Seller UUID: " + transaction.getSeller() + ")";
+			Common.log("&c" + error);
+			if (callback != null) {
+				callback.accept(new IllegalArgumentException(error), null);
+			}
+			return;
+		}
+
 		this.runAsync(() -> this.databaseConnector.connect(connection -> {
 
 			final String query = "INSERT INTO " + this.getTablePrefix() + "transaction (id, buyer, buyer_name, seller, seller_name, type, item, currency, quantity, price, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
