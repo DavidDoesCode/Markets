@@ -43,6 +43,11 @@ public final class RequestsGUI extends MarketsPagedGUI<Request> {
 	}
 
 	@Override
+	protected void prePopulate() {
+		// Data is loaded in constructor, don't reload here
+	}
+
+	@Override
 	protected void drawFixed() {
 		setButton(getRows() - 1, 7, QuickItem
 				.of(Settings.GUI_REQUEST_ITEMS_TOGGLE_ITEM.getItemStack())

@@ -115,7 +115,14 @@ public final class MarketsMainGUI extends MarketsBaseGUI {
 						.of(Settings.GUI_MAIN_VIEW_ITEMS_STATS.getItemStack())
 						.hideTags(true).name(TranslationManager.string(this.player, Translations.GUI_MAIN_VIEW_ITEMS_STATS_NAME))
 						.lore(TranslationManager.list(this.player, Translations.GUI_MAIN_VIEW_ITEMS_STATS_LORE, "left_click", TranslationManager.string(this.player, Translations.MOUSE_LEFT_CLICK)))
-						.make(), click -> click.manager.showGUI(click.player, new MarketStatsGUI(click.player, playerMarket)));
+						.make(), click -> {
+			// Check permission before opening stats GUI
+			if (!click.player.hasPermission("markets.viewstats")) {
+				Common.tell(click.player, TranslationManager.string(click.player, Translations.NO_PERMISSION));
+				return;
+			}
+			click.manager.showGUI(click.player, new MarketStatsGUI(click.player, playerMarket));
+		});
 
 		// bank
 		setButton(Settings.ALLOW_BANK.getBoolean() ? Settings.GUI_MAIN_VIEW_ITEMS_BANK_SLOT.getInt() : -1,
