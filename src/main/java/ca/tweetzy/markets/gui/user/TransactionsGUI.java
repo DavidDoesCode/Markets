@@ -26,6 +26,7 @@ public class TransactionsGUI extends MarketsPagedGUI<Transaction> {
 	private boolean viewAll;
 	private PlayerRole filterType = PlayerRole.SELLER;
 	protected boolean isLoading = false;  // Track loading state
+	private boolean dataLoaded = false;   // Track if initial data has been loaded
 
 	private enum PlayerRole {
 		BUYER, SELLER
@@ -38,23 +39,14 @@ public class TransactionsGUI extends MarketsPagedGUI<Transaction> {
 		setAcceptsItems(true);
 		setDefaultItem(QuickItem.bg(Settings.GUI_TRANSACTIONS_BACKGROUND.getItemStack()));
 
-		draw();
+		// Load data initially
+		loadTransactionsAsync();
 	}
 
 	@Override
 	protected void prePopulate() {
-		// Start with empty list, will be populated async
-		this.items = new ArrayList<>();
-
-		if (this.viewAll) {
-			// For "view all", use synchronous (already in memory, no filtering needed)
-			this.items = new ArrayList<>(Markets.getTransactionManager().getManagerContent());
-			this.items.sort(Comparator.comparing(Transaction::getTimeCreated).reversed());
-			this.isLoading = false;
-		} else {
-			// Load filtered transactions asynchronously
-			loadTransactionsAsync();
-		}
+		// Don't reload data here - it's loaded in constructor and when filters change
+		// This prevents infinite loop when draw() is called from async callback
 	}
 
 	/**
@@ -62,14 +54,23 @@ public class TransactionsGUI extends MarketsPagedGUI<Transaction> {
 	 */
 	private void loadTransactionsAsync() {
 		this.isLoading = true;
+		this.dataLoaded = false;
 
-		if (this.filterType == PlayerRole.SELLER) {
+		if (this.viewAll) {
+			// For "view all", use synchronous (already in memory, no filtering needed)
+			this.items = new ArrayList<>(Markets.getTransactionManager().getManagerContent());
+			this.items.sort(Comparator.comparing(Transaction::getTimeCreated).reversed());
+			this.isLoading = false;
+			this.dataLoaded = true;
+			draw();
+		} else if (this.filterType == PlayerRole.SELLER) {
 			// Load sales transactions async
 			Markets.getTransactionManager().getSalesTransactionsForAsync(this.player.getUniqueId(), transactions -> {
 				// This callback runs on main thread
 				this.items = new ArrayList<>(transactions);
 				this.items.sort(Comparator.comparing(Transaction::getTimeCreated).reversed());
 				this.isLoading = false;
+				this.dataLoaded = true;
 
 				// Redraw GUI with loaded data
 				draw();
@@ -81,6 +82,7 @@ public class TransactionsGUI extends MarketsPagedGUI<Transaction> {
 				this.items = new ArrayList<>(transactions);
 				this.items.sort(Comparator.comparing(Transaction::getTimeCreated).reversed());
 				this.isLoading = false;
+				this.dataLoaded = true;
 
 				// Redraw GUI with loaded data
 				draw();
@@ -125,7 +127,8 @@ public class TransactionsGUI extends MarketsPagedGUI<Transaction> {
 				.make(), click -> {
 
 			this.viewAll = !this.viewAll;
-			draw();
+			// Reload data with new filter
+			loadTransactionsAsync();
 		});
 	}
 
@@ -140,13 +143,14 @@ public class TransactionsGUI extends MarketsPagedGUI<Transaction> {
 					"left_click", TranslationManager.string(Translations.MOUSE_LEFT_CLICK)))
 				.make(), click -> {
 
-			// Cycle through: null (all) -> ITEM_PURCHASE -> REQUEST_FULFILLMENT -> null
+			// Toggle between seller and buyer view
 			if (this.filterType == PlayerRole.SELLER) {
 				this.filterType = PlayerRole.BUYER;
 			} else {
 				this.filterType = PlayerRole.SELLER;
 			}
-			draw();
+			// Reload data with new filter
+			loadTransactionsAsync();
 		});
 	}
 
