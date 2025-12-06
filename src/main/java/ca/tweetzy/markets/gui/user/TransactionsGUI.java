@@ -27,6 +27,7 @@ public class TransactionsGUI extends MarketsPagedGUI<Transaction> {
 	private PlayerRole filterType = PlayerRole.SELLER;
 	protected boolean isLoading = false;  // Track loading state
 	private boolean dataLoaded = false;   // Track if initial data has been loaded
+	private boolean guiShown = false;     // Track if GUI has been shown to player
 
 	private enum PlayerRole {
 		BUYER, SELLER
@@ -41,6 +42,7 @@ public class TransactionsGUI extends MarketsPagedGUI<Transaction> {
 
 		// Load data initially
 		loadTransactionsAsync();
+		this.guiShown = true;
 	}
 
 	@Override
@@ -57,8 +59,8 @@ public class TransactionsGUI extends MarketsPagedGUI<Transaction> {
 		this.dataLoaded = false;
 		this.items = new ArrayList<>();  // Clear items immediately
 
-		// Draw immediately to show loading indicator
-		if (this.dataLoaded || this.isLoading) {
+		// Draw immediately to show loading indicator (only if GUI already shown)
+		if (this.guiShown) {
 			draw();
 		}
 
