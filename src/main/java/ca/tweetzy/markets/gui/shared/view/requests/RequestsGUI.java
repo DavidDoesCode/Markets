@@ -82,7 +82,7 @@ public final class RequestsGUI extends MarketsPagedGUI<Request> {
 						"request_currency", request.getCurrencyDisplayName(),
 						"request_amount", request.getRequestedAmount(),
 						"left_click", TranslationManager.string(player, Translations.MOUSE_LEFT_CLICK),
-						"drop_key", TranslationManager.string(player, Translations.MOUSE_DROP)
+						"drop_key", TranslationManager.string(player, Translations.DROP_KEY)
 				))
 				.make();
 	}
