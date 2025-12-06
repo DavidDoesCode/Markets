@@ -3,6 +3,7 @@ package ca.tweetzy.markets.gui.shared.view.requests;
 import ca.tweetzy.flight.gui.Gui;
 import ca.tweetzy.flight.gui.events.GuiClickEvent;
 import ca.tweetzy.flight.gui.helper.InventoryBorder;
+import ca.tweetzy.flight.settings.TranslationEntry;
 import ca.tweetzy.flight.settings.TranslationManager;
 import ca.tweetzy.flight.utils.Common;
 import ca.tweetzy.flight.utils.ItemUtil;
@@ -15,13 +16,16 @@ import ca.tweetzy.markets.api.market.BankEntry;
 import ca.tweetzy.markets.api.market.Request;
 import ca.tweetzy.markets.api.market.TransactionType;
 import ca.tweetzy.markets.gui.MarketsPagedGUI;
+import ca.tweetzy.markets.gui.shared.selector.ConfirmGUI;
 import ca.tweetzy.markets.impl.MarketRequest;
+import ca.tweetzy.markets.model.AdminActionLogger;
 import ca.tweetzy.markets.settings.Settings;
 import ca.tweetzy.markets.settings.Translations;
 import lombok.NonNull;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
@@ -60,7 +64,7 @@ public final class RequestsGUI extends MarketsPagedGUI<Request> {
 		boolean isAdmin = this.player.isOp() || this.player.hasPermission("markets.admin.requests");
 
 		// Select appropriate translation entry
-		ca.tweetzy.markets.settings.Translations.TranslationEntry loreEntry;
+		TranslationEntry loreEntry;
 		if (isOwnRequest) {
 			loreEntry = Translations.GUI_REQUEST_ITEMS_REQUEST_LORE_SELF;
 		} else if (isAdmin) {
@@ -77,7 +81,7 @@ public final class RequestsGUI extends MarketsPagedGUI<Request> {
 						"request_currency", request.getCurrencyDisplayName(),
 						"request_amount", request.getRequestedAmount(),
 						"left_click", TranslationManager.string(player, Translations.MOUSE_LEFT_CLICK),
-						"drop_key", TranslationManager.string(player, Translations.MOUSE_DROP)
+						"drop_key", TranslationManager.string(player, Translations.DROP_KEY)
 				))
 				.make();
 	}
@@ -90,17 +94,17 @@ public final class RequestsGUI extends MarketsPagedGUI<Request> {
 				click.manager.showGUI(click.player, new ConfirmGUI(this, click.player, confirmed -> {
 					if (confirmed) {
 						// Log admin action
-						AdminActionLogger.log(click.player, "Removed request",
-							"Request Owner: " + request.getOwnerName() + " (" + request.getOwner() + ")",
-							"Item: " + request.getRequestItem().getType().name(),
-							"Amount: " + request.getRequestedAmount(),
+						AdminActionLogger.log(click.player.getName(), "Removed request" +
+							"Request Owner: " + request.getOwnerName() + " (" + request.getOwner() + ")" +
+							"Item: " + request.getRequestItem().getType().name() +
+							"Amount: " + request.getRequestedAmount() +
 							"Price: " + request.getPrice() + " " + request.getCurrencyDisplayName()
 						);
 
 						// Delete the request
 						request.unStore(result -> {
 							if (result == SynchronizeResult.FAILURE) {
-								Common.tell(click.player, TranslationManager.string(click.player, Translations.SOMETHING_WENT_WRONG));
+								Common.tell(click.player, "&cSomething went wrong trying to delete the player request for " + request.getOwnerName());
 								return;
 							}
 
