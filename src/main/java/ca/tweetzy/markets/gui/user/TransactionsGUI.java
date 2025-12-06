@@ -55,6 +55,12 @@ public class TransactionsGUI extends MarketsPagedGUI<Transaction> {
 	private void loadTransactionsAsync() {
 		this.isLoading = true;
 		this.dataLoaded = false;
+		this.items = new ArrayList<>();  // Clear items immediately
+
+		// Draw immediately to show loading indicator
+		if (this.dataLoaded || this.isLoading) {
+			draw();
+		}
 
 		if (this.viewAll) {
 			// For "view all", use synchronous (already in memory, no filtering needed)

@@ -48,7 +48,10 @@ public final class RequestsGUI extends MarketsPagedGUI<Request> {
 				.of(Settings.GUI_REQUEST_ITEMS_TOGGLE_ITEM.getItemStack())
 				.name(TranslationManager.string(player, Translations.GUI_REQUEST_ITEMS_TOGGLE_NAME))
 				.lore(TranslationManager.list(player, Translations.GUI_REQUEST_ITEMS_TOGGLE_LORE, "left_click", TranslationManager.string(player, Translations.MOUSE_LEFT_CLICK)))
-				.make(), click -> click.manager.showGUI(click.player, new RequestsGUI(this.parent, this.player, !this.viewOwnRequests)));
+				.make(), click -> {
+			// Toggle view and create new GUI
+			click.manager.showGUI(click.player, new RequestsGUI(this.parent, click.player, !this.viewOwnRequests));
+		});
 
 		setButton(getRows() - 1, 4, QuickItem
 				.of(Settings.GUI_REQUEST_ITEMS_CREATE_ITEM.getItemStack())
@@ -77,11 +80,12 @@ public final class RequestsGUI extends MarketsPagedGUI<Request> {
 				.of(request.getRequestItem())
 				.lore(TranslationManager.list(this.player, loreEntry,
 						"request_owner_name", request.getOwnerName(),
+						"request_date", request.getFormattedDate(),
 						"request_price", String.format("%,.2f", request.getPrice()),
 						"request_currency", request.getCurrencyDisplayName(),
 						"request_amount", request.getRequestedAmount(),
 						"left_click", TranslationManager.string(player, Translations.MOUSE_LEFT_CLICK),
-						"drop_key", TranslationManager.string(player, Translations.DROP_KEY)
+						"drop_key", TranslationManager.string(player, Translations.MOUSE_DROP)
 				))
 				.make();
 	}
