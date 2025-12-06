@@ -1204,7 +1204,7 @@ public final class Translations extends TranslationManager {
 			"&e&l%left_click% &7to fulfill request"
 	);
 
-	public static TranslationEntry GUI_REQUEST_ITEMS_REQUEST_LORE_OTHER_ADMIN = create("gui.request.items.request.lore.others.admin",
+	public static TranslationEntry GUI_REQUEST_ITEMS_REQUEST_LORE_OTHER_ADMIN = create("gui.request.items.request.lore.othersadmin",
 			"&7Requested by&F: &e%request_owner_name%",
 			"&7Price&F: &a%request_price%",
 			"&7Currency&f: &a%request_currency%",
