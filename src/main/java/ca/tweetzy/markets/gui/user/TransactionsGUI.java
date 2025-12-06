@@ -59,11 +59,6 @@ public class TransactionsGUI extends MarketsPagedGUI<Transaction> {
 		this.dataLoaded = false;
 		this.items = new ArrayList<>();  // Clear items immediately
 
-		// Draw immediately to show loading indicator (only if GUI already shown)
-		if (this.guiShown) {
-			draw();
-		}
-
 		if (this.viewAll) {
 			// For "view all", use synchronous (already in memory, no filtering needed)
 			this.items = new ArrayList<>(Markets.getTransactionManager().getManagerContent());
@@ -71,30 +66,37 @@ public class TransactionsGUI extends MarketsPagedGUI<Transaction> {
 			this.isLoading = false;
 			this.dataLoaded = true;
 			draw();
-		} else if (this.filterType == PlayerRole.SELLER) {
-			// Load sales transactions async
-			Markets.getTransactionManager().getSalesTransactionsForAsync(this.player.getUniqueId(), transactions -> {
-				// This callback runs on main thread
-				this.items = new ArrayList<>(transactions);
-				this.items.sort(Comparator.comparing(Transaction::getTimeCreated).reversed());
-				this.isLoading = false;
-				this.dataLoaded = true;
-
-				// Redraw GUI with loaded data
-				draw();
-			});
 		} else {
-			// Load purchase transactions async
-			Markets.getTransactionManager().getPurchaseTransactionsForAsync(this.player.getUniqueId(), transactions -> {
-				// This callback runs on main thread
-				this.items = new ArrayList<>(transactions);
-				this.items.sort(Comparator.comparing(Transaction::getTimeCreated).reversed());
-				this.isLoading = false;
-				this.dataLoaded = true;
-
-				// Redraw GUI with loaded data
+			// Show loading indicator for async operations (only if GUI already shown)
+			if (this.guiShown) {
 				draw();
-			});
+			}
+
+			if (this.filterType == PlayerRole.SELLER) {
+				// Load sales transactions async
+				Markets.getTransactionManager().getSalesTransactionsForAsync(this.player.getUniqueId(), transactions -> {
+					// This callback runs on main thread
+					this.items = new ArrayList<>(transactions);
+					this.items.sort(Comparator.comparing(Transaction::getTimeCreated).reversed());
+					this.isLoading = false;
+					this.dataLoaded = true;
+
+					// Redraw GUI with loaded data
+					draw();
+				});
+			} else {
+				// Load purchase transactions async
+				Markets.getTransactionManager().getPurchaseTransactionsForAsync(this.player.getUniqueId(), transactions -> {
+					// This callback runs on main thread
+					this.items = new ArrayList<>(transactions);
+					this.items.sort(Comparator.comparing(Transaction::getTimeCreated).reversed());
+					this.isLoading = false;
+					this.dataLoaded = true;
+
+					// Redraw GUI with loaded data
+					draw();
+				});
+			}
 		}
 	}
 
