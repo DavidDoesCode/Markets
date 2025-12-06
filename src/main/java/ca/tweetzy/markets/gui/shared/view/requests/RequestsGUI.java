@@ -55,19 +55,69 @@ public final class RequestsGUI extends MarketsPagedGUI<Request> {
 
 	@Override
 	protected ItemStack makeDisplayItem(Request request) {
+		// Determine which lore to use based on ownership and admin status
+		boolean isOwnRequest = request.getOwner().equals(this.player.getUniqueId());
+		boolean isAdmin = this.player.isOp() || this.player.hasPermission("markets.admin.requests");
+
+		// Select appropriate translation entry
+		ca.tweetzy.markets.settings.Translations.TranslationEntry loreEntry;
+		if (isOwnRequest) {
+			loreEntry = Translations.GUI_REQUEST_ITEMS_REQUEST_LORE_SELF;
+		} else if (isAdmin) {
+			loreEntry = Translations.GUI_REQUEST_ITEMS_REQUEST_LORE_OTHER_ADMIN;
+		} else {
+			loreEntry = Translations.GUI_REQUEST_ITEMS_REQUEST_LORE_OTHER;
+		}
+
 		return QuickItem
 				.of(request.getRequestItem())
-				.lore(TranslationManager.list(this.player, request.getOwner().equals(this.player.getUniqueId()) ? Translations.GUI_REQUEST_ITEMS_REQUEST_LORE_SELF : Translations.GUI_REQUEST_ITEMS_REQUEST_LORE_OTHER,
+				.lore(TranslationManager.list(this.player, loreEntry,
+						"request_owner_name", request.getOwnerName(),
 						"request_price", String.format("%,.2f", request.getPrice()),
 						"request_currency", request.getCurrencyDisplayName(),
 						"request_amount", request.getRequestedAmount(),
-						"left_click", TranslationManager.string(player, Translations.MOUSE_LEFT_CLICK)
+						"left_click", TranslationManager.string(player, Translations.MOUSE_LEFT_CLICK),
+						"drop_key", TranslationManager.string(player, Translations.MOUSE_DROP)
 				))
 				.make();
 	}
 
 	@Override
 	protected void onClick(Request request, GuiClickEvent click) {
+		// Handle admin deletion with Q key (DROP click type)
+		if (click.clickType == ClickType.DROP) {
+			if (click.player.isOp() || click.player.hasPermission("markets.admin.requests")) {
+				click.manager.showGUI(click.player, new ConfirmGUI(this, click.player, confirmed -> {
+					if (confirmed) {
+						// Log admin action
+						AdminActionLogger.log(click.player, "Removed request",
+							"Request Owner: " + request.getOwnerName() + " (" + request.getOwner() + ")",
+							"Item: " + request.getRequestItem().getType().name(),
+							"Amount: " + request.getRequestedAmount(),
+							"Price: " + request.getPrice() + " " + request.getCurrencyDisplayName()
+						);
+
+						// Delete the request
+						request.unStore(result -> {
+							if (result == SynchronizeResult.FAILURE) {
+								Common.tell(click.player, TranslationManager.string(click.player, Translations.SOMETHING_WENT_WRONG));
+								return;
+							}
+
+							// Refresh GUI
+							click.manager.showGUI(click.player, new RequestsGUI(this.parent, click.player, this.viewOwnRequests));
+							Common.tell(click.player, "&aRequest removed successfully");
+						});
+					} else {
+						// User cancelled - return to this GUI
+						click.manager.showGUI(click.player, this);
+					}
+				}));
+			}
+			return;
+		}
+
+		// Handle player cancelling their own request
 		if (request.getOwner().equals(click.player.getUniqueId())) {
 			request.unStore(result -> {
 				if (result == SynchronizeResult.FAILURE) return;

@@ -1196,11 +1196,22 @@ public final class Translations extends TranslationManager {
 	);
 
 	public static TranslationEntry GUI_REQUEST_ITEMS_REQUEST_LORE_OTHER = create("gui.request.items.request.lore.others",
+			"&7Requested by&F: &e%request_owner_name%",
 			"&7Price&F: &a%request_price%",
 			"&7Currency&f: &a%request_currency%",
 			"&7Quantity&f: &a%request_amount%",
 			"",
 			"&e&l%left_click% &7to fulfill request"
+	);
+
+	public static TranslationEntry GUI_REQUEST_ITEMS_REQUEST_LORE_OTHER_ADMIN = create("gui.request.items.request.lore.others.admin",
+			"&7Requested by&F: &e%request_owner_name%",
+			"&7Price&F: &a%request_price%",
+			"&7Currency&f: &a%request_currency%",
+			"&7Quantity&f: &a%request_amount%",
+			"",
+			"&e&l%left_click% &7to fulfill request",
+			"&c&l%drop_key% &7to remove request &c(Admin)"
 	);
 
 	public static TranslationEntry GUI_REQUEST_ITEMS_REQUEST_LORE_SELF = create("gui.request.items.request.lore.self",
