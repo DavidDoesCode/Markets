@@ -80,12 +80,11 @@ public final class RequestsGUI extends MarketsPagedGUI<Request> {
 				.of(request.getRequestItem())
 				.lore(TranslationManager.list(this.player, loreEntry,
 						"request_owner_name", request.getOwnerName(),
-						"request_date", request.getFormattedDate(),
 						"request_price", String.format("%,.2f", request.getPrice()),
 						"request_currency", request.getCurrencyDisplayName(),
 						"request_amount", request.getRequestedAmount(),
 						"left_click", TranslationManager.string(player, Translations.MOUSE_LEFT_CLICK),
-						"drop_key", TranslationManager.string(player, Translations.MOUSE_DROP)
+						"drop_key", TranslationManager.string(player, Translations.DROP_KEY)
 				))
 				.make();
 	}
