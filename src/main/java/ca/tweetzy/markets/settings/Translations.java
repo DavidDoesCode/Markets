@@ -1197,7 +1197,6 @@ public final class Translations extends TranslationManager {
 
 	public static TranslationEntry GUI_REQUEST_ITEMS_REQUEST_LORE_OTHER = create("gui.request.items.request.lore.others",
 			"&7Requested by&F: &e%request_owner_name%",
-			"&7Requested on&F: &e%request_date%",
 			"&7Price&F: &a%request_price%",
 			"&7Currency&f: &a%request_currency%",
 			"&7Quantity&f: &a%request_amount%",
@@ -1207,7 +1206,6 @@ public final class Translations extends TranslationManager {
 
 	public static TranslationEntry GUI_REQUEST_ITEMS_REQUEST_LORE_OTHER_ADMIN = create("gui.request.items.request.lore.others.admin",
 			"&7Requested by&F: &e%request_owner_name%",
-			"&7Requested on&F: &e%request_date%",
 			"&7Price&F: &a%request_price%",
 			"&7Currency&f: &a%request_currency%",
 			"&7Quantity&f: &a%request_amount%",
@@ -1217,7 +1215,6 @@ public final class Translations extends TranslationManager {
 	);
 
 	public static TranslationEntry GUI_REQUEST_ITEMS_REQUEST_LORE_SELF = create("gui.request.items.request.lore.self",
-			"&7Requested on&F: &e%request_date%",
 			"&7Price&F: &a%request_price%",
 			"&7Currency&f: &a%request_currency%",
 			"&7Quantity&f: &a%request_amount%",

@@ -10,8 +10,6 @@ import ca.tweetzy.markets.settings.Settings;
 import lombok.NonNull;
 import org.bukkit.inventory.ItemStack;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.UUID;
 
 public interface Request extends Identifiable, Trackable, Storeable<Request> { // todo probs extract the currency shit since it's repeated in other interfaces
@@ -57,12 +55,5 @@ public interface Request extends Identifiable, Trackable, Storeable<Request> { /
 			return abstractCurrency.getDisplayName();
 
 		return Settings.CURRENCY_VAULT_SYMBOL.getString();
-	}
-
-	default String getFormattedDate() {
-		Date date = new Date(getTimeCreated());
-		SimpleDateFormat formatter = new SimpleDateFormat(Settings.DATETIME_FORMAT.getString());
-
-		return formatter.format(date);
 	}
 }
