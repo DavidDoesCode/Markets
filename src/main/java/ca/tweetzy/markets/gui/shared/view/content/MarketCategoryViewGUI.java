@@ -73,7 +73,7 @@ public final class MarketCategoryViewGUI extends MarketsPagedGUI<MarketItem> {
 	protected ItemStack makeDisplayItem(MarketItem marketItem) {
 		final QuickItem item = QuickItem
 				.of(marketItem.getItem())
-				.amount(marketItem.getPlusOneStock())
+				.amount(Math.min(marketItem.getPlusOneStock(), marketItem.getItem().getMaxStackSize()))
 				.lore(TranslationManager.list(this.player, Translations.GUI_MARKET_CATEGORY_VIEW_ITEMS_ITEM_LORE_HEADER));
 
 		item.lore(TranslationManager.list(this.player, Translations.GUI_MARKET_CATEGORY_VIEW_ITEMS_ITEM_LORE_INFO,

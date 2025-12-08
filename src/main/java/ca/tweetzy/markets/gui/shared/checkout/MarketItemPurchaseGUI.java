@@ -119,7 +119,7 @@ public final class MarketItemPurchaseGUI extends MarketsBaseGUI {
 		setItem(1, 4, QuickItem
 				.of(this.marketItem.getItem().clone())
 				.lore(TranslationManager.list(this.player, Translations.GUI_PURCHASE_ITEM_ITEMS_PURCHASE_ITEM_LORE, "market_item_stock", this.marketItem.isInfinite() ? "∞" : this.marketItem.getStock()))
-				.amount(this.purchaseQty)
+				.amount(Math.min(this.purchaseQty, this.marketItem.getItem().getMaxStackSize()))
 				.make());
 	}
 
