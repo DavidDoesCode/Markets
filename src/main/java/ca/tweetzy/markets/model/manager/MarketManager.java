@@ -22,6 +22,9 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.PotionMeta;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,7 +40,7 @@ public final class MarketManager extends ListManager<Market> {
 	}
 
 	/**
-	 * Enhanced search that includes enchantment names for enchanted books
+	 * Enhanced search that includes enchantment names for enchanted books and potion effects for potions
 	 *
 	 * @param keywords the search keywords
 	 * @param item     the item to search
@@ -79,6 +82,34 @@ public final class MarketManager extends ListManager<Market> {
 				// Match by enchantment name
 				if (enchantmentName.contains(lowerKeywords)) {
 					return true;
+				}
+			}
+
+			// Check potion effects on potions
+			if (meta instanceof PotionMeta) {
+				PotionMeta potionMeta = (PotionMeta) meta;
+
+				// Check custom potion effects
+				if (potionMeta.hasCustomEffects()) {
+					for (PotionEffect effect : potionMeta.getCustomEffects()) {
+						NamespacedKey key = effect.getType().getKey();
+						String effectName = key.getKey().toLowerCase();
+
+						// Match by potion effect name (e.g., "healing", "strength", "speed")
+						if (effectName.contains(lowerKeywords)) {
+							return true;
+						}
+					}
+				}
+
+				// Check base potion data (for non-custom potions)
+				if (potionMeta.getBasePotionType() != null) {
+					String basePotionName = potionMeta.getBasePotionType().name().toLowerCase();
+
+					// Match by base potion type (e.g., "healing", "strength")
+					if (basePotionName.contains(lowerKeywords)) {
+						return true;
+					}
 				}
 			}
 		}
