@@ -19,10 +19,13 @@ import org.bukkit.inventory.ItemStack;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.UUID;
 
 public class TransactionsGUI extends MarketsPagedGUI<Transaction> {
 
 	private final Player player;
+	private final UUID targetUuid;        // UUID of player whose transactions to view (null = viewer's own)
+	private final String targetName;      // Name of target player for display
 	private boolean viewAll;
 	private PlayerRole filterType = PlayerRole.SELLER;
 	protected boolean isLoading = false;  // Track loading state
@@ -34,8 +37,14 @@ public class TransactionsGUI extends MarketsPagedGUI<Transaction> {
 	}
 
 	public TransactionsGUI(Gui parent, @NonNull final Player player, boolean viewAll) {
-		super(parent, player, TranslationManager.string(player, Translations.GUI_TRANSACTIONS_TITLE), 6, new ArrayList<>());
+		this(parent, player, viewAll, null, null);
+	}
+
+	public TransactionsGUI(Gui parent, @NonNull final Player player, boolean viewAll, UUID targetUuid, String targetName) {
+		super(parent, player, buildTitle(player, targetName), 6, new ArrayList<>());
 		this.player = player;
+		this.targetUuid = targetUuid;
+		this.targetName = targetName;
 		this.viewAll = viewAll;
 		setAcceptsItems(true);
 		setDefaultItem(QuickItem.bg(Settings.GUI_TRANSACTIONS_BACKGROUND.getItemStack()));
@@ -43,6 +52,13 @@ public class TransactionsGUI extends MarketsPagedGUI<Transaction> {
 		// Load data initially
 		loadTransactionsAsync();
 		this.guiShown = true;
+	}
+
+	private static String buildTitle(@NonNull final Player viewer, String targetName) {
+		if (targetName != null) {
+			return TranslationManager.string(viewer, Translations.GUI_TRANSACTIONS_TITLE) + " - " + targetName;
+		}
+		return TranslationManager.string(viewer, Translations.GUI_TRANSACTIONS_TITLE);
 	}
 
 	@Override
@@ -59,6 +75,9 @@ public class TransactionsGUI extends MarketsPagedGUI<Transaction> {
 		this.dataLoaded = false;
 		this.items = new ArrayList<>();  // Clear items immediately
 
+		// Determine which player's transactions to load
+		final UUID playerUuid = this.targetUuid != null ? this.targetUuid : this.player.getUniqueId();
+
 		if (this.viewAll) {
 			// For "view all", use synchronous (already in memory, no filtering needed)
 			this.items = new ArrayList<>(Markets.getTransactionManager().getManagerContent());
@@ -74,7 +93,7 @@ public class TransactionsGUI extends MarketsPagedGUI<Transaction> {
 
 			if (this.filterType == PlayerRole.SELLER) {
 				// Load sales transactions async
-				Markets.getTransactionManager().getSalesTransactionsForAsync(this.player.getUniqueId(), transactions -> {
+				Markets.getTransactionManager().getSalesTransactionsForAsync(playerUuid, transactions -> {
 					// This callback runs on main thread
 					this.items = new ArrayList<>(transactions);
 					this.items.sort(Comparator.comparing(Transaction::getTimeCreated).reversed());
@@ -86,7 +105,7 @@ public class TransactionsGUI extends MarketsPagedGUI<Transaction> {
 				});
 			} else {
 				// Load purchase transactions async
-				Markets.getTransactionManager().getPurchaseTransactionsForAsync(this.player.getUniqueId(), transactions -> {
+				Markets.getTransactionManager().getPurchaseTransactionsForAsync(playerUuid, transactions -> {
 					// This callback runs on main thread
 					this.items = new ArrayList<>(transactions);
 					this.items.sort(Comparator.comparing(Transaction::getTimeCreated).reversed());

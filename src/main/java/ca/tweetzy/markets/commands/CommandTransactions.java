@@ -33,39 +33,42 @@ public final class CommandTransactions extends Command {
 					return ReturnType.FAIL;
 				}
 
-				// Get target player
-				final OfflinePlayer target = Bukkit.getOfflinePlayer(args[0]);
+				final String targetName = args[0];
 
-				if (target == null || !target.hasPlayedBefore()) {
-					Common.tell(player, TranslationManager.string(player, Translations.PLAYER_OFFLINE, "value", args[0]));
-					return ReturnType.FAIL;
+				// Try to find the player - first check if they're online
+				Player onlineTarget = Bukkit.getPlayer(targetName);
+				if (onlineTarget != null) {
+					// Player is online - show their transactions
+					Markets.getGuiManager().showGUI(player, new TransactionsGUI(null, player, false, onlineTarget.getUniqueId(), onlineTarget.getName()));
+					return ReturnType.SUCCESS;
 				}
 
-				// Show loading message
-				Common.tell(player, TranslationManager.string(Translations.LOADING_TRANSACTIONS, "player_name", args[0]));
+				// Player is offline - look them up in the player manager
+				final ca.tweetzy.markets.api.market.core.MarketUser marketUser = Markets.getPlayerManager().getManagerContent()
+						.values()
+						.stream()
+						.filter(user -> user.getLastKnownName().equalsIgnoreCase(targetName))
+						.findFirst()
+						.orElse(null);
 
-				// Load transactions async
-				Markets.getTransactionManager().getTransactionsForAsync(target.getUniqueId(), transactions -> {
-					// Open GUI with loaded data (already on main thread from callback)
-					Player onlineTarget = Bukkit.getPlayer(target.getUniqueId());
-					if (onlineTarget == null) {
-						// For offline players, show their transactions to admin
-						Markets.getGuiManager().showGUI(player, new TransactionsGUI(null, player, false) {
-							@Override
-							protected void prePopulate() {
-								// Override with pre-loaded transactions
-								this.items = new java.util.ArrayList<>(transactions);
-								this.items.sort(java.util.Comparator.comparing(ca.tweetzy.markets.api.market.Transaction::getTimeCreated).reversed());
-								this.isLoading = false; // Mark as loaded
-							}
-						});
-					} else {
-						// Show online player's transactions (will load async)
-						Markets.getGuiManager().showGUI(player, new TransactionsGUI(null, onlineTarget, false));
-					}
-				});
+				if (marketUser != null) {
+					// Found in player manager - use their cached data
+					Markets.getGuiManager().showGUI(player, new TransactionsGUI(null, player, false, marketUser.getUUID(), marketUser.getLastKnownName()));
+					return ReturnType.SUCCESS;
+				}
 
-				return ReturnType.SUCCESS;
+				// Last resort - try OfflinePlayer (less reliable)
+				final OfflinePlayer offlineTarget = Bukkit.getOfflinePlayer(targetName);
+				if (offlineTarget != null && offlineTarget.hasPlayedBefore()) {
+					// Use the offline player's UUID, but their name might be null
+					final String displayName = offlineTarget.getName() != null ? offlineTarget.getName() : targetName;
+					Markets.getGuiManager().showGUI(player, new TransactionsGUI(null, player, false, offlineTarget.getUniqueId(), displayName));
+					return ReturnType.SUCCESS;
+				}
+
+				// Player not found
+				Common.tell(player, "&cPlayer not found: &e" + targetName);
+				return ReturnType.FAIL;
 			}
 
 			// Normal usage: show own transactions
