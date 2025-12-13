@@ -28,6 +28,14 @@ public final class Settings extends FlightSettings {
 	public static final ConfigEntry DATABASE_PASSWORD = create("database.password", "Password1.", "What is the password to the user connecting?");
 	public static final ConfigEntry DATABASE_CUSTOM_PARAMS = create("database.custom parameters", "?useUnicode=yes&characterEncoding=UTF-8&useServerPrepStmts=false&rewriteBatchedStatements=true&useSSL=true", "Leave this alone if you don't know what you're doing. Set to 'None' to use no custom connection params");
 
+	/*
+	========================= Database Backup =========================
+	 */
+	public static final ConfigEntry BACKUP_ENABLED = create("database.backup.enabled", true, "Should automatic daily database backups be enabled?");
+	public static final ConfigEntry BACKUP_TIME_HOUR = create("database.backup.time hour", 1, "What hour (0-23) should backups run? Default is 1 AM");
+	public static final ConfigEntry BACKUP_RETENTION_DAYS = create("database.backup.retention days", 7, "How many days of backups to keep before auto-deletion? Set to 0 to keep all backups");
+	public static final ConfigEntry BACKUP_FOLDER_PATH = create("database.backup.folder path", "snapshots", "Folder path for backups (relative to plugin folder or absolute path)");
+
 
 	/*
 	========================= Admin Market Stuff =========================

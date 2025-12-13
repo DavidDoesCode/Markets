@@ -15,6 +15,7 @@ import ca.tweetzy.markets.database.migrations.*;
 import ca.tweetzy.markets.impl.MarketsAPIImpl;
 import ca.tweetzy.markets.listeners.MarketTransactionListener;
 import ca.tweetzy.markets.listeners.PlayerJoinListener;
+import ca.tweetzy.markets.model.DatabaseBackupTask;
 import ca.tweetzy.markets.model.manager.*;
 import ca.tweetzy.markets.settings.Settings;
 import ca.tweetzy.markets.settings.Translations;
@@ -46,6 +47,9 @@ public final class Markets extends FlightPlugin {
 	private final RequestManager requestManager = new RequestManager();
 	private final OfflineItemPaymentManager offlineItemPaymentManager = new OfflineItemPaymentManager();
 	private final TransactionManager transactionManager = new TransactionManager();
+
+	// database backup task
+	private DatabaseBackupTask databaseBackupTask;
 
 	// default vault economy
 	private Economy economy = null;
@@ -130,6 +134,10 @@ public final class Markets extends FlightPlugin {
 				new CommandStats(),
 				new CommandReload()
 		);
+
+		// start database backup scheduler
+		this.databaseBackupTask = new DatabaseBackupTask(this);
+		this.databaseBackupTask.start();
 	}
 
 	@Override
@@ -139,6 +147,11 @@ public final class Markets extends FlightPlugin {
 
 	@Override
 	protected void onSleep() {
+		// stop backup scheduler
+		if (this.databaseBackupTask != null) {
+			this.databaseBackupTask.stop();
+		}
+
 		shutdownDataManager(this.dataManager);
 	}
 
@@ -200,6 +213,10 @@ public final class Markets extends FlightPlugin {
 
 	public static RequestManager getRequestManager() {
 		return getInstance().requestManager;
+	}
+
+	public static DatabaseBackupTask getDatabaseBackupTask() {
+		return getInstance().databaseBackupTask;
 	}
 
 	public static Economy getEconomy() {
