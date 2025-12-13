@@ -1,5 +1,6 @@
 package ca.tweetzy.markets.model;
 
+import ca.tweetzy.flight.database.DatabaseConnector;
 import ca.tweetzy.flight.utils.Common;
 import ca.tweetzy.markets.Markets;
 import ca.tweetzy.markets.settings.Settings;
@@ -11,12 +12,12 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
@@ -24,15 +25,17 @@ import java.util.zip.GZIPOutputStream;
 
 /**
  * Handles automatic daily database backups at a configured time.
- * Supports both MySQL (via mysqldump) and SQLite (file copy) databases.
+ * Supports both MySQL (via mysqldump) and SQLite (via VACUUM INTO) databases.
  */
 public final class DatabaseBackupTask {
 
 	private BukkitTask scheduledTask;
 	private final Markets plugin;
+	private final DatabaseConnector databaseConnector;
 
-	public DatabaseBackupTask(@NonNull final Markets plugin) {
+	public DatabaseBackupTask(@NonNull final Markets plugin, @NonNull final DatabaseConnector databaseConnector) {
 		this.plugin = plugin;
+		this.databaseConnector = databaseConnector;
 	}
 
 	/**
@@ -232,42 +235,39 @@ public final class DatabaseBackupTask {
 	}
 
 	/**
-	 * Backs up SQLite database by copying the file.
+	 * Backs up SQLite database using VACUUM INTO command.
+	 * This is safer than file copying as it ensures a consistent snapshot.
 	 *
 	 * @param backupDir Directory to save backup
 	 * @return true if successful
 	 */
 	private boolean backupSQLite(@NonNull final Path backupDir) {
-		try {
-			// SQLite database is stored in plugin data folder
-			final Path sourceDb = this.plugin.getDataFolder().toPath().resolve("markets.db");
+		final Path backupFile = backupDir.resolve(getBackupFileName("db"));
 
-			if (!Files.exists(sourceDb)) {
-				Common.log("&cSQLite database file not found: " + sourceDb);
+		try {
+			// Use VACUUM INTO to create a safe, consistent backup
+			// This is much safer than copying files which can result in corruption
+			this.databaseConnector.connect(connection -> {
+				try (final Statement statement = connection.createStatement()) {
+					// VACUUM INTO creates a complete backup in a single transaction
+					final String sql = "VACUUM INTO '" + backupFile.toString().replace("'", "''") + "'";
+					statement.execute(sql);
+					Common.log("&aSQLite backup saved to: " + backupFile.getFileName());
+				} catch (final SQLException e) {
+					Common.log("&cSQLite backup error: " + e.getMessage());
+					e.printStackTrace();
+				}
+			});
+
+			// Verify backup was created
+			if (Files.exists(backupFile)) {
+				return true;
+			} else {
+				Common.log("&cSQLite backup file was not created");
 				return false;
 			}
 
-			final Path backupFile = backupDir.resolve(getBackupFileName("db"));
-
-			// Copy database file
-			Files.copy(sourceDb, backupFile, StandardCopyOption.REPLACE_EXISTING);
-
-			// Also backup WAL and SHM files if they exist (SQLite journal files)
-			final Path sourceWal = this.plugin.getDataFolder().toPath().resolve("markets.db-wal");
-			final Path sourceSHM = this.plugin.getDataFolder().toPath().resolve("markets.db-shm");
-
-			if (Files.exists(sourceWal)) {
-				Files.copy(sourceWal, backupDir.resolve(getBackupFileName("db-wal")), StandardCopyOption.REPLACE_EXISTING);
-			}
-
-			if (Files.exists(sourceSHM)) {
-				Files.copy(sourceSHM, backupDir.resolve(getBackupFileName("db-shm")), StandardCopyOption.REPLACE_EXISTING);
-			}
-
-			Common.log("&aSQLite backup saved to: " + backupFile.getFileName());
-			return true;
-
-		} catch (final IOException e) {
+		} catch (final Exception e) {
 			Common.log("&cSQLite backup error: " + e.getMessage());
 			e.printStackTrace();
 			return false;

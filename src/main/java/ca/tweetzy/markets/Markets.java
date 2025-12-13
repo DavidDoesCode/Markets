@@ -137,7 +137,7 @@ public final class Markets extends FlightPlugin {
 		);
 
 		// start database backup scheduler
-		this.databaseBackupTask = new DatabaseBackupTask(this);
+		this.databaseBackupTask = new DatabaseBackupTask(this, this.databaseConnector);
 		this.databaseBackupTask.start();
 	}
 
