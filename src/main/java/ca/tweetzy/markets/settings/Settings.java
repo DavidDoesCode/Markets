@@ -106,6 +106,7 @@ public final class Settings extends FlightSettings {
 	public static ConfigEntry CMD_ALIAS_SUB_VIEW = create("command aliases.subcommands.view", List.of("view")).withComment("Aliases for the view command");
 	public static ConfigEntry CMD_ALIAS_SUB_PAYMENTS = create("command aliases.subcommands.payments", List.of("payments")).withComment("Aliases for the payments command");
 	public static ConfigEntry CMD_ALIAS_SUB_STATS = create("command aliases.subcommands.stats", List.of("stats", "statistics")).withComment("Aliases for the stats command");
+	public static ConfigEntry CMD_ALIAS_SUB_BACKUP = create("command aliases.subcommands.backup", List.of("backup")).withComment("Aliases for the backup command");
 
 
 	/*
