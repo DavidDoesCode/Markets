@@ -12,6 +12,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -209,6 +210,16 @@ public final class DatabaseBackupTask {
 			final int exitCode = process.waitFor();
 			if (exitCode == 0) {
 				Common.log("&aMySQL backup saved to: " + backupFile.getFileName());
+
+				// Create a "latest" copy for easy access
+				final Path latestFile = backupDir.resolve("markets-latest.sql.gz");
+				try {
+					Files.copy(backupFile, latestFile, StandardCopyOption.REPLACE_EXISTING);
+					Common.log("&aLatest backup copy updated: " + latestFile.getFileName());
+				} catch (final IOException e) {
+					Common.log("&cFailed to create latest backup copy: " + e.getMessage());
+				}
+
 				return true;
 			} else {
 				// Read error output
@@ -261,6 +272,14 @@ public final class DatabaseBackupTask {
 
 			// Verify backup was created
 			if (Files.exists(backupFile)) {
+				// Create a "latest" copy for easy access
+				final Path latestFile = backupDir.resolve("markets-latest.db");
+				try {
+					Files.copy(backupFile, latestFile, StandardCopyOption.REPLACE_EXISTING);
+					Common.log("&aLatest backup copy updated: " + latestFile.getFileName());
+				} catch (final IOException e) {
+					Common.log("&cFailed to create latest backup copy: " + e.getMessage());
+				}
 				return true;
 			} else {
 				Common.log("&cSQLite backup file was not created");
