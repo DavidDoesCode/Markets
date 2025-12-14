@@ -51,8 +51,7 @@ public final class MarketItemEditGUI extends MarketsBaseGUI {
 
 	@Override
 	protected void draw() {
-		setItem(1, 4, this.marketItem.getItem());
-
+		drawItemDisplay();
 		drawWholesaleButton();
 		drawOffersButton();
 		drawStockButton();
@@ -61,6 +60,13 @@ public final class MarketItemEditGUI extends MarketsBaseGUI {
 		drawRemoveButton();
 
 		applyBackExit();
+	}
+
+	private void drawItemDisplay() {
+		// Display item with current stock amount (max 64 for visual representation, min 1 to keep visible)
+		final ItemStack displayItem = this.marketItem.getItem().clone();
+		displayItem.setAmount(Math.max(1, Math.min(this.marketItem.getStock(), 64)));
+		setItem(1, 4, displayItem);
 	}
 
 	private synchronized  void drawPriceButton() {
@@ -132,6 +138,7 @@ public final class MarketItemEditGUI extends MarketsBaseGUI {
 						}
 
 						click.player.setItemOnCursor(CompMaterial.AIR.parseItem());
+						drawItemDisplay();
 						drawStockButton();
 						playerLock = false;
 					});
@@ -159,6 +166,7 @@ public final class MarketItemEditGUI extends MarketsBaseGUI {
 
 				this.marketItem.sync(result -> {
 					if (result == SynchronizeResult.FAILURE) return;
+					drawItemDisplay();
 					drawStockButton();
 					playerLock = false;
 				});
