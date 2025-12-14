@@ -52,6 +52,8 @@ public interface MarketItem extends Identifiable, Synchronize, UserViewable, Sto
 
 	void setInfinite(boolean infinite);
 
+	boolean isBeingEdited();
+
 	void performPurchase(@NonNull final Market market, @NonNull final Player buyer, final int quantity, Consumer<TransactionResult> transactionResult);
 
 	// todo this is needs to be changed

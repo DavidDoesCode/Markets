@@ -293,6 +293,12 @@ public final class MarketCategoryEditGUI extends MarketsPagedGUI<MarketItem> {
 				return;
 			}
 
+			// Dupe prevention: Check if item is being purchased
+			if (marketItem.isBeingEdited()) {
+				Common.tell(click.player, TranslationManager.list(click.player, Translations.ITEM_BEING_EDITED));
+				return;
+			}
+
 			if (Settings.USE_ADDITIONAL_CONFIRMS.getBoolean()) {
 				click.manager.showGUI(click.player, new ConfirmGUI(this, click.player, confirmed -> {
 					if (!confirmed) {

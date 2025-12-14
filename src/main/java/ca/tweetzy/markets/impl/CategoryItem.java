@@ -12,6 +12,7 @@ import ca.tweetzy.markets.api.event.MarketTransactionEvent;
 import ca.tweetzy.markets.api.market.TransactionType;
 import ca.tweetzy.markets.api.market.core.Market;
 import ca.tweetzy.markets.api.market.core.MarketItem;
+import ca.tweetzy.markets.model.DupeDetector;
 import ca.tweetzy.markets.model.Taxer;
 import ca.tweetzy.markets.settings.Settings;
 import ca.tweetzy.markets.settings.Translations;
@@ -41,6 +42,10 @@ public final class CategoryItem implements MarketItem {
 	private boolean infinite;
 
 	private final List<Player> viewingUsers;
+
+	// Dupe prevention: Mutex lock for concurrent operations
+	private final Object editLock = new Object();
+	private volatile boolean beingEdited = false;
 
 	public CategoryItem(
 			@NonNull final UUID id,
@@ -169,6 +174,10 @@ public final class CategoryItem implements MarketItem {
 		return this.viewingUsers;
 	}
 
+	public boolean isBeingEdited() {
+		return this.beingEdited;
+	}
+
 	@Override
 	public void store(@NonNull Consumer<MarketItem> stored) {
 		Markets.getDataManager().createMarketItem(this, (error, created) -> {
@@ -179,7 +188,34 @@ public final class CategoryItem implements MarketItem {
 
 	@Override
 	public void unStore(@Nullable Consumer<SynchronizeResult> syncResult) {
+		// Dupe prevention: Check if item is being purchased
+		synchronized (this.editLock) {
+			if (this.beingEdited) {
+				// Item is currently being purchased - potential dupe attempt!
+				if (!DupeDetector.isHoneypotMode()) {
+					// PREVENTION MODE: Block the deletion
+					Markets.getInstance().getLogger().warning(
+							String.format("[DUPE BLOCKED] Prevented deletion of item %s (being purchased)",
+									ItemUtil.getItemName(this.item))
+					);
+					if (syncResult != null) {
+						syncResult.accept(SynchronizeResult.FAILURE);
+					}
+					return;
+				}
+				// HONEYPOT MODE: Allow deletion but log it
+				// The dupe will be logged when both operations complete
+			} else {
+				this.beingEdited = true; // Lock for deletion
+			}
+		}
+
 		Markets.getDataManager().deleteMarketItem(this, (error, updateStatus) -> {
+			// Release lock after deletion completes
+			synchronized (this.editLock) {
+				this.beingEdited = false;
+			}
+
 			if (updateStatus) {
 
 				getViewingPlayers().forEach(viewingUser -> Common.tell(viewingUser, TranslationManager.string(viewingUser, Translations.ITEM_OUT_OF_STOCK)));
@@ -204,11 +240,24 @@ public final class CategoryItem implements MarketItem {
 	@Override
 	public void performPurchase(@NonNull final Market market, @NonNull Player buyer, int quantity, Consumer<TransactionResult> transactionResult) {
 
-		if (!this.infinite && this.stock == 0) {//todo add check to prevent multiple purchases
-			transactionResult.accept(TransactionResult.FAILED_OUT_OF_STOCK);
-			Common.tell(buyer, TranslationManager.string(buyer, Translations.ITEM_OUT_OF_STOCK));
-			return;
+		// Dupe prevention: Check and set the lock
+		synchronized (this.editLock) {
+			if (this.beingEdited) {
+				// Item is currently being edited/deleted - reject purchase
+				transactionResult.accept(TransactionResult.ERROR);
+				Common.tell(buyer, TranslationManager.string(buyer, Translations.ITEM_BEING_EDITED));
+				DupeDetector.logBlockedOperation("PURCHASE", buyer, this);
+				return;
+			}
+			this.beingEdited = true; // Lock the item for purchase
 		}
+
+		try {
+			if (!this.infinite && this.stock == 0) {
+				transactionResult.accept(TransactionResult.FAILED_OUT_OF_STOCK);
+				Common.tell(buyer, TranslationManager.string(buyer, Translations.ITEM_OUT_OF_STOCK));
+				return;
+			}
 
 		final int newPurchaseAmount = this.infinite ? quantity : Math.min(quantity, stock);
 
@@ -344,11 +393,17 @@ public final class CategoryItem implements MarketItem {
 					totalFixed
 			));
 
-			transactionResult.accept(TransactionResult.SUCCESS);
+				transactionResult.accept(TransactionResult.SUCCESS);
 			return;
 		}
 
-		transactionResult.accept(TransactionResult.ERROR);
+			transactionResult.accept(TransactionResult.ERROR);
+		} finally {
+			// Always release the lock
+			synchronized (this.editLock) {
+				this.beingEdited = false;
+			}
+		}
 	}
 
 	private void alertOutOfStock(final OfflinePlayer seller, @NonNull final Player buyer, final int newPurchaseAmount) {
