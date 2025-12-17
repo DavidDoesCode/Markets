@@ -45,13 +45,16 @@ public final class MarketRatingsViewGUI extends MarketsPagedGUI<Rating> {
 			? Translations.GUI_RATINGS_ITEMS_RATING_LORE_ADMIN
 			: Translations.GUI_RATINGS_ITEMS_RATING_LORE;
 
+		// Word wrap the feedback to 30 characters per line
+		final String wrappedFeedback = wordWrap(rating.getFeedback(), 30);
+
 		return QuickItem
 				.of(Bukkit.getOfflinePlayer(rating.getRaterUUID()))
 				.name(TranslationManager.string(player, Translations.GUI_RATINGS_ITEMS_RATING_NAME, "rater_name", rating.getRaterName()))
 				.lore(TranslationManager.list(player, loreEntry,
 						"rating_stars", StringUtils.repeat("★", rating.getStars()),
 						"rating_date", TimeUtil.convertToReadableDate(rating.getTimeCreated(), Settings.DATETIME_FORMAT.getString()),
-						"rating_feedback", rating.getFeedback(),
+						"rating_feedback", wrappedFeedback,
 						"drop_key", TranslationManager.string(player, Translations.DROP_KEY)
 				))
 				.make();
@@ -99,5 +102,40 @@ public final class MarketRatingsViewGUI extends MarketsPagedGUI<Rating> {
 	@Override
 	protected List<Integer> fillSlots() {
 		return InventoryBorder.getInsideBorders(6);
+	}
+
+	/**
+	 * Word wraps text to a maximum line length
+	 * @param text The text to wrap
+	 * @param maxLength Maximum characters per line
+	 * @return Word-wrapped text with line breaks
+	 */
+	private String wordWrap(String text, int maxLength) {
+		if (text == null || text.isEmpty()) {
+			return "";
+		}
+
+		StringBuilder wrapped = new StringBuilder();
+		String[] words = text.split(" ");
+		int currentLineLength = 0;
+
+		for (String word : words) {
+			// If adding this word would exceed the max length, start a new line
+			if (currentLineLength + word.length() + 1 > maxLength && currentLineLength > 0) {
+				wrapped.append("\n&7");
+				currentLineLength = 0;
+			}
+
+			// Add space before word if not at start of line
+			if (currentLineLength > 0) {
+				wrapped.append(" ");
+				currentLineLength++;
+			}
+
+			wrapped.append(word);
+			currentLineLength += word.length();
+		}
+
+		return wrapped.toString();
 	}
 }
