@@ -50,7 +50,7 @@ public final class AllReviewsGUI extends MarketsPagedGUI<Rating> {
 	protected void prePopulate() {
 		// Get all ratings from all markets
 		this.items = new ArrayList<>();
-		Markets.getMarketManager().getValues().forEach(market -> {
+		Markets.getMarketManager().getManagerContent().forEach(market -> {
 			this.items.addAll(market.getRatings());
 		});
 
