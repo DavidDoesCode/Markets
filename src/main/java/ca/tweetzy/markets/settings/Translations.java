@@ -95,6 +95,10 @@ public final class Translations extends TranslationManager {
 	public static TranslationEntry MARKET_SORT_ITEMS = create("info.market sort type.items", "&eTotal Items");
 	public static TranslationEntry MARKET_SORT_LAST_UPDATED = create("info.market sort type.last updated", "&eLast Updated");
 
+	public static TranslationEntry REVIEW_SORT_RECENT = create("info.review sort type.recent", "&eRecent Reviews");
+	public static TranslationEntry REVIEW_SORT_TOP_RATED = create("info.review sort type.top rated", "&eTop Reviews");
+	public static TranslationEntry REVIEW_SORT_LOWEST_RATED = create("info.review sort type.lowest rated", "&eLowest Reviews");
+
 	// inputs
 	public static TranslationEntry PROMPT_SEARCH_TITLE = create("prompts.search.title", "<GRADIENT:65B1B4>&LSearch</GRADIENT:2B6F8A>");
 	public static TranslationEntry PROMPT_SEARCH_SUBTITLE = create("prompts.search.subtitle", "&fEnter search keywords into chat");
@@ -1153,6 +1157,38 @@ public final class Translations extends TranslationManager {
 			"&e%rating_date%"
 	);
 
+	public static TranslationEntry GUI_RATINGS_ITEMS_RATING_LORE_ADMIN = create("gui.ratings.items.rating.lore.admin",
+			"",
+			"&e&lFeedback",
+			"&7%rating_feedback%",
+			"",
+			"&7Stars&f: &6%rating_stars%",
+			"",
+			"&e%rating_date%",
+			"",
+			"&c&l%drop_key% &7to remove rating &c(Admin)"
+	);
+
+	public static TranslationEntry ADMIN_REMOVED_RATING = create("info.admin.removed rating", "&eSuccessfully removed rating from &b%rater_name%");
+
+	public static TranslationEntry GUI_ALL_REVIEWS_TITLE = create("gui.all reviews.title", "&eAll Reviews");
+	public static TranslationEntry GUI_ALL_REVIEWS_ITEMS_REVIEW_NAME = create("gui.all reviews.items.review.name", "<GRADIENT:65B1B4>&l%rater_name%</GRADIENT:2B6F8A>");
+	public static TranslationEntry GUI_ALL_REVIEWS_ITEMS_REVIEW_LORE = create("gui.all reviews.items.review.lore",
+			"",
+			"&e&lFeedback",
+			"&7%rating_feedback%",
+			"",
+			"&7Stars&f: &6%rating_stars%",
+			"",
+			"&e%rating_date%"
+	);
+	public static TranslationEntry GUI_ALL_REVIEWS_ITEMS_FILTER_NAME = create("gui.all reviews.items.filter.name", "<GRADIENT:65B1B4>&lFilter</GRADIENT:2B6F8A>");
+	public static TranslationEntry GUI_ALL_REVIEWS_ITEMS_FILTER_LORE = create("gui.all reviews.items.filter.lore",
+			"&7Current&f: &e%review_sort_type%",
+			"",
+			"&e&lClick &7to cycle filters"
+	);
+
 	public static TranslationEntry GUI_USER_PROFILE_TITLE = create("gui.user profile.title", "&e%player_name%&f'&7s Profile");
 	public static TranslationEntry GUI_USER_PROFILE_ITEMS_USER_NAME = create("gui.user profile.items.user.name", "<GRADIENT:65B1B4>&l%player_name%</GRADIENT:2B6F8A>");
 	public static TranslationEntry GUI_USER_PROFILE_ITEMS_USER_LORE = create("gui.user profile.items.user.lore",
@@ -1293,6 +1329,12 @@ public final class Translations extends TranslationManager {
 			"&cThis item is currently being purchased and cannot be modified.",
 			"&7Please wait a moment and try again."
 	);
+
+	// Mouse and keyboard action translations
+	public static TranslationEntry MOUSE_LEFT_CLICK = create("actions.mouse.left click", "&aLeft Click");
+	public static TranslationEntry MOUSE_RIGHT_CLICK = create("actions.mouse.right click", "&bRight Click");
+	public static TranslationEntry DROP_KEY = create("actions.keyboard.drop key", "&cQ");
+	public static TranslationEntry NO_PERMISSION = create("error.no permission", "&cYou don't have permission to do that!");
 
 
 	public static void init() {

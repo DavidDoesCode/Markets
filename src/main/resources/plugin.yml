@@ -28,6 +28,12 @@ permissions:
   markets.admin.stats:
     description: Allows viewing any player's market statistics with /markets stats <player>
     default: op
+  markets.admin.removerating:
+    description: Allows removing market ratings/reviews in the ratings GUI
+    default: op
+  markets.command.reviews:
+    description: Allows access to the /markets reviews command
+    default: true
   markets.alerts.dupe:
     description: Receive alerts when dupe exploits are detected or prevented
     default: op
