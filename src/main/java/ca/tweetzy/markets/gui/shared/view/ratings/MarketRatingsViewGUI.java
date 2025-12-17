@@ -40,7 +40,7 @@ public final class MarketRatingsViewGUI extends MarketsPagedGUI<Rating> {
 	@Override
 	protected ItemStack makeDisplayItem(Rating rating) {
 		// Determine which lore to use based on admin permission
-		final boolean hasAdminPermission = this.player.hasPermission("markets.admin.removerating");
+		final boolean hasAdminPermission = this.player.hasPermission("markets.admin.removerating") || this.player.isOp();
 		final TranslationEntry loreEntry = hasAdminPermission
 			? Translations.GUI_RATINGS_ITEMS_RATING_LORE_ADMIN
 			: Translations.GUI_RATINGS_ITEMS_RATING_LORE;
