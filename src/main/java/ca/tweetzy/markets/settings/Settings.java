@@ -106,6 +106,7 @@ public final class Settings extends FlightSettings {
 	public static ConfigEntry CMD_ALIAS_SUB_VIEW = create("command aliases.subcommands.view", List.of("view")).withComment("Aliases for the view command");
 	public static ConfigEntry CMD_ALIAS_SUB_PAYMENTS = create("command aliases.subcommands.payments", List.of("payments")).withComment("Aliases for the payments command");
 	public static ConfigEntry CMD_ALIAS_SUB_STATS = create("command aliases.subcommands.stats", List.of("stats", "statistics")).withComment("Aliases for the stats command");
+	public static ConfigEntry CMD_ALIAS_SUB_REVIEWS = create("command aliases.subcommands.reviews", List.of("reviews", "ratings")).withComment("Aliases for the reviews command");
 	public static ConfigEntry CMD_ALIAS_SUB_BACKUP = create("command aliases.subcommands.backup", List.of("backup")).withComment("Aliases for the backup command");
 
 
@@ -272,6 +273,8 @@ public final class Settings extends FlightSettings {
 	public static ConfigEntry GUI_ALL_MARKETS_ITEMS_MARKET_ITEM = create("gui.all markets.items.market.item", CompMaterial.NETHER_STAR.name());
 	public static ConfigEntry GUI_ALL_MARKETS_ITEMS_SEARCH_ITEM = create("gui.all markets.items.search.item", CompMaterial.DARK_OAK_SIGN.name());
 	public static ConfigEntry GUI_ALL_MARKETS_ITEMS_FILTER_ITEM = create("gui.all markets.items.filter.item", CompMaterial.REPEATER.name());
+	public static ConfigEntry GUI_ALL_REVIEWS_BACKGROUND = create("gui.all reviews.items.background", CompMaterial.BLACK_STAINED_GLASS_PANE.name());
+	public static ConfigEntry GUI_ALL_REVIEWS_ITEMS_FILTER_ITEM = create("gui.all reviews.items.filter.item", CompMaterial.REPEATER.name());
 	public static ConfigEntry GUI_REQUEST_BACKGROUND = create("gui.request.items.background", CompMaterial.BLACK_STAINED_GLASS_PANE.name());
 	public static ConfigEntry GUI_REQUEST_ITEMS_TOGGLE_ITEM = create("gui.request.items.toggle.item", CompMaterial.LEVER.name());
 	public static ConfigEntry GUI_REQUEST_ITEMS_CREATE_ITEM = create("gui.request.items.create.item", CompMaterial.LIME_DYE.name());
