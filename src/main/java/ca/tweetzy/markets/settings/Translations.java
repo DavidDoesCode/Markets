@@ -1182,13 +1182,17 @@ public final class Translations extends TranslationManager {
 	public static TranslationEntry GUI_ALL_REVIEWS_TITLE = create("gui.all reviews.title", "&eAll Reviews");
 	public static TranslationEntry GUI_ALL_REVIEWS_ITEMS_REVIEW_NAME = create("gui.all reviews.items.review.name", "<GRADIENT:65B1B4>&l%rater_name%</GRADIENT:2B6F8A>");
 	public static TranslationEntry GUI_ALL_REVIEWS_ITEMS_REVIEW_LORE = create("gui.all reviews.items.review.lore",
+			"&e&l%market_name%",
+			"&7Owner&f: &b%market_owner%",
 			"",
 			"&e&lFeedback",
 			"&7%rating_feedback%",
 			"",
 			"&7Stars&f: &6%rating_stars%",
 			"",
-			"&e%rating_date%"
+			"&e%rating_date%",
+			"",
+			"&a&lClick &7to view market"
 	);
 	public static TranslationEntry GUI_ALL_REVIEWS_ITEMS_FILTER_NAME = create("gui.all reviews.items.filter.name", "<GRADIENT:65B1B4>&lFilter</GRADIENT:2B6F8A>");
 	public static TranslationEntry GUI_ALL_REVIEWS_ITEMS_FILTER_LORE = create("gui.all reviews.items.filter.lore",

@@ -4,12 +4,15 @@ import ca.tweetzy.flight.comp.enums.CompMaterial;
 import ca.tweetzy.flight.gui.Gui;
 import ca.tweetzy.flight.gui.events.GuiClickEvent;
 import ca.tweetzy.flight.settings.TranslationManager;
+import ca.tweetzy.flight.utils.Common;
 import ca.tweetzy.flight.utils.QuickItem;
 import ca.tweetzy.flight.utils.TimeUtil;
 import ca.tweetzy.markets.Markets;
 import ca.tweetzy.markets.api.market.ReviewSortType;
+import ca.tweetzy.markets.api.market.core.Market;
 import ca.tweetzy.markets.api.market.core.Rating;
 import ca.tweetzy.markets.gui.MarketsPagedGUI;
+import ca.tweetzy.markets.gui.shared.view.content.MarketViewGUI;
 import ca.tweetzy.markets.settings.Settings;
 import ca.tweetzy.markets.settings.Translations;
 import lombok.NonNull;
@@ -66,6 +69,14 @@ public final class AllReviewsGUI extends MarketsPagedGUI<Rating> {
 
 	@Override
 	protected ItemStack makeDisplayItem(Rating rating) {
+		// Find the market this rating belongs to
+		final Market market = Markets.getMarketManager().getByUUID(rating.getMarketID());
+		final String marketName = market != null ? market.getDisplayName() : "&cUnknown Market";
+		final String marketOwner = market != null ? market.getOwnerName() : "&cUnknown";
+
+		// Word wrap the feedback to 30 characters per line
+		final String wrappedFeedback = wordWrap(rating.getFeedback(), 30);
+
 		// Return a placeholder head immediately
 		// The actual player head will be loaded asynchronously
 		return QuickItem
@@ -73,9 +84,11 @@ public final class AllReviewsGUI extends MarketsPagedGUI<Rating> {
 				.name(TranslationManager.string(this.player, Translations.GUI_ALL_REVIEWS_ITEMS_REVIEW_NAME,
 						"rater_name", rating.getRaterName()))
 				.lore(TranslationManager.list(this.player, Translations.GUI_ALL_REVIEWS_ITEMS_REVIEW_LORE,
+						"market_name", marketName,
+						"market_owner", marketOwner,
 						"rating_stars", StringUtils.repeat("★", rating.getStars()),
 						"rating_date", TimeUtil.convertToReadableDate(rating.getTimeCreated(), Settings.DATETIME_FORMAT.getString()),
-						"rating_feedback", rating.getFeedback()
+						"rating_feedback", wrappedFeedback
 				))
 				.make();
 	}
@@ -111,6 +124,14 @@ public final class AllReviewsGUI extends MarketsPagedGUI<Rating> {
 			final Rating rating = itemsToDisplay.get(i);
 			final int slotIndex = fillSlots().get(i);
 
+			// Find the market this rating belongs to
+			final Market market = Markets.getMarketManager().getByUUID(rating.getMarketID());
+			final String marketName = market != null ? market.getDisplayName() : "&cUnknown Market";
+			final String marketOwner = market != null ? market.getOwnerName() : "&cUnknown";
+
+			// Word wrap the feedback to 30 characters per line
+			final String wrappedFeedback = wordWrap(rating.getFeedback(), 30);
+
 			// Load the player head asynchronously
 			final OfflinePlayer rater = Bukkit.getOfflinePlayer(rating.getRaterUUID());
 			QuickItem.asyncPlayerHead(rater).thenAccept(skull -> {
@@ -119,9 +140,11 @@ public final class AllReviewsGUI extends MarketsPagedGUI<Rating> {
 						.name(TranslationManager.string(this.player, Translations.GUI_ALL_REVIEWS_ITEMS_REVIEW_NAME,
 								"rater_name", rating.getRaterName()))
 						.lore(TranslationManager.list(this.player, Translations.GUI_ALL_REVIEWS_ITEMS_REVIEW_LORE,
+								"market_name", marketName,
+								"market_owner", marketOwner,
 								"rating_stars", StringUtils.repeat("★", rating.getStars()),
 								"rating_date", TimeUtil.convertToReadableDate(rating.getTimeCreated(), Settings.DATETIME_FORMAT.getString()),
-								"rating_feedback", rating.getFeedback()
+								"rating_feedback", wrappedFeedback
 						))
 						.make();
 
@@ -135,8 +158,27 @@ public final class AllReviewsGUI extends MarketsPagedGUI<Rating> {
 
 	@Override
 	protected void onClick(Rating rating, GuiClickEvent click) {
-		// For now, clicking a review doesn't do anything
-		// Could potentially navigate to the market the review belongs to
+		// Find and open the market this review belongs to
+		final Market market = Markets.getMarketManager().getByUUID(rating.getMarketID());
+
+		if (market == null) {
+			Common.tell(click.player, "&cMarket no longer exists");
+			return;
+		}
+
+		// Check if user is banned
+		if (Markets.getMarketManager().isBannedFrom(market, click.player)) {
+			Common.tell(click.player, TranslationManager.string(click.player, Translations.BANNED_FROM_MARKET, "market_owner", market.getOwnerName()));
+			return;
+		}
+
+		// Check if market is open
+		if (!market.isOpen()) {
+			Common.tell(click.player, TranslationManager.string(click.player, Translations.MARKET_IS_CLOSED, "market_owner", market.getOwnerName()));
+			return;
+		}
+
+		click.manager.showGUI(click.player, new MarketViewGUI(this, click.player, market, false));
 	}
 
 	@Override
@@ -153,5 +195,40 @@ public final class AllReviewsGUI extends MarketsPagedGUI<Rating> {
 			}
 		}
 		return slots;
+	}
+
+	/**
+	 * Word wraps text to a maximum line length
+	 * @param text The text to wrap
+	 * @param maxLength Maximum characters per line
+	 * @return Word-wrapped text with line breaks
+	 */
+	private String wordWrap(String text, int maxLength) {
+		if (text == null || text.isEmpty()) {
+			return "";
+		}
+
+		StringBuilder wrapped = new StringBuilder();
+		String[] words = text.split(" ");
+		int currentLineLength = 0;
+
+		for (String word : words) {
+			// If adding this word would exceed the max length, start a new line
+			if (currentLineLength + word.length() + 1 > maxLength && currentLineLength > 0) {
+				wrapped.append("\n&7");
+				currentLineLength = 0;
+			}
+
+			// Add space before word if not at start of line
+			if (currentLineLength > 0) {
+				wrapped.append(" ");
+				currentLineLength++;
+			}
+
+			wrapped.append(word);
+			currentLineLength += word.length();
+		}
+
+		return wrapped.toString();
 	}
 }
