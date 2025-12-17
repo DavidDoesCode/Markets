@@ -1209,6 +1209,18 @@ public final class Translations extends TranslationManager {
 			"&e%rating_date%"
 	);
 
+	public static TranslationEntry GUI_USER_PROFILE_ITEMS_RATING_LORE_ADMIN = create("gui.user profile.items.rating.lore.admin",
+			"",
+			"&e&lFeedback",
+			"&7%rating_feedback%",
+			"",
+			"&7Stars&f: &6%rating_stars%",
+			"",
+			"&e%rating_date%",
+			"",
+			"&c&l%drop_key% &7to remove rating &c(Admin)"
+	);
+
 	public static TranslationEntry GUI_SEARCH_TITLE = create("gui.search.title", "&eMarkets &f- &7Search &f- &7%search_keywords%");
 	public static TranslationEntry GUI_SEARCH_ITEMS_ITEM_LORE_INFO = create("gui.search.items.item.lore.info",
 			"&7Price&f: &a%market_item_price%",
