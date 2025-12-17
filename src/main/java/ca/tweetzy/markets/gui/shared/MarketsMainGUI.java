@@ -8,6 +8,7 @@ import ca.tweetzy.markets.api.market.core.Market;
 import ca.tweetzy.markets.gui.MarketsBaseGUI;
 import ca.tweetzy.markets.gui.shared.selector.ConfirmGUI;
 import ca.tweetzy.markets.gui.shared.view.AllMarketsViewGUI;
+import ca.tweetzy.markets.gui.shared.view.AllReviewsGUI;
 import ca.tweetzy.markets.gui.shared.view.requests.RequestsGUI;
 import ca.tweetzy.markets.gui.user.BankGUI;
 import ca.tweetzy.markets.gui.user.OffersGUI;
@@ -43,6 +44,15 @@ public final class MarketsMainGUI extends MarketsBaseGUI {
 						.name(TranslationManager.string(this.player, Translations.GUI_MAIN_VIEW_ITEMS_GLOBAL_NAME))
 						.lore(TranslationManager.list(this.player, Translations.GUI_MAIN_VIEW_ITEMS_GLOBAL_LORE, "left_click", TranslationManager.string(this.player, Translations.MOUSE_LEFT_CLICK)))
 						.make(), click -> click.manager.showGUI(click.player, new AllMarketsViewGUI(new MarketsMainGUI(click.player), click.player)));
+
+		// all reviews
+		setButton(Settings.DISABLE_REVIEWS.getBoolean() ? -1 : Settings.GUI_MAIN_VIEW_ITEMS_ALL_REVIEWS_SLOT.getInt(),
+				QuickItem
+						.of(Settings.GUI_MAIN_VIEW_ITEMS_ALL_REVIEWS.getItemStack())
+						.hideTags(true)
+						.name(TranslationManager.string(this.player, Translations.GUI_MAIN_VIEW_ITEMS_ALL_REVIEWS_NAME))
+						.lore(TranslationManager.list(this.player, Translations.GUI_MAIN_VIEW_ITEMS_ALL_REVIEWS_LORE, "left_click", TranslationManager.string(this.player, Translations.MOUSE_LEFT_CLICK)))
+						.make(), click -> click.manager.showGUI(click.player, new AllReviewsGUI(new MarketsMainGUI(click.player), click.player)));
 
 		// your market
 		setButton(Settings.GUI_MAIN_VIEW_ITEMS_YOUR_MARKET_SLOT.getInt(),

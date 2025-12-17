@@ -221,6 +221,14 @@ public final class Translations extends TranslationManager {
 			"&e&l%left_click% &7to view open markets"
 	);
 
+	public static TranslationEntry GUI_MAIN_VIEW_ITEMS_ALL_REVIEWS_NAME = create("gui.main view.items.all reviews.name", "<GRADIENT:65B1B4>&LAll Reviews</GRADIENT:2B6F8A>");
+	public static TranslationEntry GUI_MAIN_VIEW_ITEMS_ALL_REVIEWS_LORE = create("gui.main view.items.all reviews.lore",
+			"&7View all market reviews from",
+			"&7across the entire marketplace",
+			"",
+			"&e&l%left_click% &7to view all reviews"
+	);
+
 	public static TranslationEntry GUI_MAIN_VIEW_ITEMS_PAYMENTS_NAME = create("gui.main view.items.payments.name", "<GRADIENT:65B1B4>&LCollect Payments</GRADIENT:2B6F8A>");
 	public static TranslationEntry GUI_MAIN_VIEW_ITEMS_PAYMENTS_LORE = create("gui.main view.items.payments.lore",
 			"&7Used to collect any payments that were",
