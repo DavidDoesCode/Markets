@@ -48,8 +48,11 @@ public final class AllReviewsGUI extends MarketsPagedGUI<Rating> {
 
 	@Override
 	protected void prePopulate() {
-		// Get all ratings from all markets via the rating manager
-		this.items = new ArrayList<>(Markets.getRatingManager().getManagerContent().stream().toList());
+		// Get all ratings from all markets
+		this.items = new ArrayList<>();
+		Markets.getMarketManager().getValues().forEach(market -> {
+			this.items.addAll(market.getRatings());
+		});
 
 		// Sort based on the selected sort type
 		if (this.sortType == ReviewSortType.RECENT) {
