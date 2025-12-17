@@ -1201,17 +1201,17 @@ public final class Translations extends TranslationManager {
 			"&e&lClick &7to cycle filters"
 	);
 
-	public static TranslationEntry GUI_USER_PROFILE_TITLE = create("gui.user profile.title", "&e%player_name%&f'&7s Profile");
-	public static TranslationEntry GUI_USER_PROFILE_ITEMS_USER_NAME = create("gui.user profile.items.user.name", "<GRADIENT:65B1B4>&l%player_name%</GRADIENT:2B6F8A>");
-	public static TranslationEntry GUI_USER_PROFILE_ITEMS_USER_LORE = create("gui.user profile.items.user.lore",
+	public static TranslationEntry GUI_USER_PROFILE_TITLE = create("gui.userprofile.title", "&e%player_name%&f'&7s Profile");
+	public static TranslationEntry GUI_USER_PROFILE_ITEMS_USER_NAME = create("gui.userprofile.items.user.name", "<GRADIENT:65B1B4>&l%player_name%</GRADIENT:2B6F8A>");
+	public static TranslationEntry GUI_USER_PROFILE_ITEMS_USER_LORE = create("gui.userprofile.items.user.lore",
 			"&7Last Login&F: ",
 			"&e%user_last_seen%",
 			"",
 			"&7Online&F: %true%"
 	);
 
-	public static TranslationEntry GUI_USER_PROFILE_ITEMS_RATING_NAME = create("gui.user profile.items.rating.name", "<GRADIENT:65B1B4>&l%rater_name%</GRADIENT:2B6F8A>");
-	public static TranslationEntry GUI_USER_PROFILE_ITEMS_RATING_LORE = create("gui.user profile.items.rating.lore",
+	public static TranslationEntry GUI_USER_PROFILE_ITEMS_RATING_NAME = create("gui.userprofile.items.rating.name", "<GRADIENT:65B1B4>&l%rater_name%</GRADIENT:2B6F8A>");
+	public static TranslationEntry GUI_USER_PROFILE_ITEMS_RATING_LORE = create("gui.userprofile.items.rating.lore",
 			"",
 			"&e&lFeedback",
 			"&7%rating_feedback%",
@@ -1221,7 +1221,7 @@ public final class Translations extends TranslationManager {
 			"&e%rating_date%"
 	);
 
-	public static TranslationEntry GUI_USER_PROFILE_ITEMS_RATING_LORE_ADMIN = create("gui.user profile.items.rating.lore.admin",
+	public static TranslationEntry GUI_USER_PROFILE_ITEMS_RATING_LORE_ADMIN = create("gui.userprofile.items.rating.lore.admin",
 			"",
 			"&e&lFeedback",
 			"&7%rating_feedback%",

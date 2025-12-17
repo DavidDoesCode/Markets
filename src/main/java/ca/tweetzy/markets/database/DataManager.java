@@ -724,6 +724,20 @@ public final class DataManager extends DataManagerAbstract {
 		}));
 	}
 
+	public void deleteRating(@NonNull final Rating rating, Callback<Boolean> callback) {
+		this.runAsync(() -> this.databaseConnector.connect(connection -> {
+			try (PreparedStatement statement = connection.prepareStatement("DELETE FROM " + this.getTablePrefix() + "review WHERE id = ?")) {
+				statement.setString(1, rating.getId().toString());
+
+				int result = statement.executeUpdate();
+				callback.accept(null, result > 0);
+
+			} catch (Exception e) {
+				resolveCallback(callback, e);
+			}
+		}));
+	}
+
 	public void createRequest(@NonNull final Request request, final Callback<Request> callback) {
 		this.runAsync(() -> this.databaseConnector.connect(connection -> {
 

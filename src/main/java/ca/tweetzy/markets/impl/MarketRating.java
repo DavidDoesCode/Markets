@@ -1,11 +1,13 @@
 package ca.tweetzy.markets.impl;
 
 import ca.tweetzy.markets.Markets;
+import ca.tweetzy.markets.api.SynchronizeResult;
 import ca.tweetzy.markets.api.market.core.Market;
 import ca.tweetzy.markets.api.market.core.Rating;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -80,6 +82,19 @@ public final class MarketRating implements Rating {
 		Markets.getDataManager().createMarketRating(this, (error, created) -> {
 			if (error == null)
 				stored.accept(created);
+		});
+	}
+
+	@Override
+	public void unStore(@Nullable Consumer<SynchronizeResult> syncResult) {
+		Markets.getDataManager().deleteRating(this, (error, deleted) -> {
+			if (syncResult != null) {
+				if (error != null || !deleted) {
+					syncResult.accept(SynchronizeResult.FAILURE);
+				} else {
+					syncResult.accept(SynchronizeResult.SUCCESS);
+				}
+			}
 		});
 	}
 }

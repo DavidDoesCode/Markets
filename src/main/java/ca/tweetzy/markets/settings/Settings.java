@@ -149,7 +149,7 @@ public final class Settings extends FlightSettings {
 	public static ConfigEntry GUI_SHARED_ITEMS_PREVIOUS_BUTTON = create("gui.shared buttons.previous button.item", CompMaterial.ARROW.name());
 	public static ConfigEntry GUI_SHARED_ITEMS_NEXT_BUTTON = create("gui.shared buttons.next button.item", CompMaterial.ARROW.name());
 
-	public static ConfigEntry GUI_USER_PROFILE_BACKGROUND = create("gui.user profile.items.background", CompMaterial.BLACK_STAINED_GLASS_PANE.name());
+	public static ConfigEntry GUI_USER_PROFILE_BACKGROUND = create("gui.userprofile.items.background", CompMaterial.BLACK_STAINED_GLASS_PANE.name());
 	public static ConfigEntry GUI_OFFLINE_PAYMENTS_BACKGROUND = create("gui.offline payments.items.background", CompMaterial.BLACK_STAINED_GLASS_PANE.name());
 	public static ConfigEntry GUI_OFFERS_BACKGROUND = create("gui.offers.items.background", CompMaterial.BLACK_STAINED_GLASS_PANE.name());
 	public static ConfigEntry GUI_RATINGS_BACKGROUND = create("gui.ratings.items.background", CompMaterial.BLACK_STAINED_GLASS_PANE.name());
