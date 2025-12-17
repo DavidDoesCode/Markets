@@ -1155,7 +1155,7 @@ public final class Translations extends TranslationManager {
 
 	public static TranslationEntry GUI_RATINGS_TITLE = create("gui.ratings.title", "%market_display_name% &f- &7Ratings");
 	public static TranslationEntry GUI_RATINGS_ITEMS_RATING_NAME = create("gui.ratings.items.rating.name", "<GRADIENT:65B1B4>&l%rater_name%</GRADIENT:2B6F8A>");
-	public static TranslationEntry GUI_RATINGS_ITEMS_RATING_LORE = create("gui.ratings.items.rating.lore",
+	public static TranslationEntry GUI_RATINGS_ITEMS_RATING_LORE = create("gui.ratings.items.rating.lore.default",
 			"",
 			"&e&lFeedback",
 			"&7%rating_feedback%",
@@ -1211,7 +1211,7 @@ public final class Translations extends TranslationManager {
 	);
 
 	public static TranslationEntry GUI_USER_PROFILE_ITEMS_RATING_NAME = create("gui.userprofile.items.rating.name", "<GRADIENT:65B1B4>&l%rater_name%</GRADIENT:2B6F8A>");
-	public static TranslationEntry GUI_USER_PROFILE_ITEMS_RATING_LORE = create("gui.userprofile.items.rating.lore",
+	public static TranslationEntry GUI_USER_PROFILE_ITEMS_RATING_LORE = create("gui.userprofile.items.rating.lore.default",
 			"",
 			"&e&lFeedback",
 			"&7%rating_feedback%",
