@@ -40,7 +40,7 @@ public final class UserProfileGUI extends MarketsPagedGUI<Rating> {
 				"player_name", profileUserUUID.equals(UUID.fromString(Settings.SERVER_MARKET_UUID.getString()))
 					? TranslationManager.string(Translations.SERVER_MARKET_NAME)
 					: Markets.getPlayerManager().get(profileUserUUID).getLastKnownName()
-		), 6, Markets.getRatingManager().getRatingsByOrFor(Bukkit.getOfflinePlayer(profileUserUUID)));
+		), 6, Markets.getRatingManager().getRatingsByOrFor(profileUserUUID));
 		this.profileUserUUID = profileUserUUID;
 		this.profileUserName = Markets.getPlayerManager().get(profileUserUUID).getLastKnownName();
 		this.serverProfile = profileUserUUID.equals(UUID.fromString(Settings.SERVER_MARKET_UUID.getString()));
