@@ -148,7 +148,6 @@ public final class RequestsGUI extends MarketsPagedGUI<Request> {
 		// ================================== FULFILL THE REQUEST ================================== //
 
 		final Player fulfiller = click.player;
-		final OfflinePlayer requestedOwner = Bukkit.getOfflinePlayer(request.getOwner());
 
 		// do they even have enough items
 		if (PlayerUtil.getItemCountInPlayerInventory(fulfiller, request.getRequestItem()) < request.getRequestedAmount()) {
@@ -160,9 +159,23 @@ public final class RequestsGUI extends MarketsPagedGUI<Request> {
 		final String currencyPlugin = request.getCurrency().split("/")[0];
 		final String currencyName = request.getCurrency().split("/")[1];
 
-		boolean hasEnoughMoney = request.isCurrencyOfItem() ?
-				Markets.getBankManager().getEntryCountByPlayer(request.getOwner(), request.getCurrencyItem()) >= (int) request.getPrice() :
-				Markets.getCurrencyManager().has(requestedOwner, currencyPlugin, currencyName, request.getPrice());
+		// Load OfflinePlayer asynchronously to avoid blocking main thread
+		Bukkit.getScheduler().runTaskAsynchronously(Markets.getInstance(), () -> {
+			final OfflinePlayer requestedOwner = Bukkit.getOfflinePlayer(request.getOwner());
+
+			// Check if requester has enough money (async)
+			final boolean hasEnoughMoney = request.isCurrencyOfItem() ?
+					Markets.getBankManager().getEntryCountByPlayer(request.getOwner(), request.getCurrencyItem()) >= (int) request.getPrice() :
+					Markets.getCurrencyManager().has(requestedOwner, currencyPlugin, currencyName, request.getPrice());
+
+			// Continue on main thread
+			Bukkit.getScheduler().runTask(Markets.getInstance(), () -> {
+				fulfillRequestMainThread(click, request, fulfiller, requestedOwner, hasEnoughMoney, currencyPlugin, currencyName);
+			});
+		});
+	}
+
+	private void fulfillRequestMainThread(GuiClickEvent click, Request request, Player fulfiller, OfflinePlayer requestedOwner, boolean hasEnoughMoney, String currencyPlugin, String currencyName) {
 
 		if (!hasEnoughMoney) {
 			Common.tell(fulfiller, TranslationManager.string(fulfiller, Translations.REQUESTER_CANT_PAY, "requester_name", request.getOwnerName()));
@@ -210,13 +223,16 @@ public final class RequestsGUI extends MarketsPagedGUI<Request> {
 				TranslationManager.string(Translations.REQUEST_PAYMENT), success -> {
 				});
 
-		if (requestedOwner.isOnline()) {
-			Common.tell(requestedOwner.getPlayer(), TranslationManager.string(requestedOwner.getPlayer(), Translations.REQUEST_FULFILLED, "fulfill_name", fulfiller.getName(), "request_item_name", ItemUtil.getItemName(request.getRequestItem())));
+		// Use getPlayer() instead of isOnline() to avoid blocking
+		final Player requestOwnerPlayer = Bukkit.getPlayer(request.getOwner());
+		if (requestOwnerPlayer != null) {
+			Common.tell(requestOwnerPlayer, TranslationManager.string(requestOwnerPlayer, Translations.REQUEST_FULFILLED, "fulfill_name", fulfiller.getName(), "request_item_name", ItemUtil.getItemName(request.getRequestItem())));
 		}
 
+		// Use cached name from request instead of getName()
 		Common.tell(click.player, TranslationManager.string(Translations.REQUEST_FULFILLED_FILLER,
 				"request_item_name", ItemUtil.getItemName(request.getRequestItem()),
-				"fulfill_name", requestedOwner.getName()
+				"fulfill_name", request.getOwnerName()
 		));
 
 		// call transaction event
