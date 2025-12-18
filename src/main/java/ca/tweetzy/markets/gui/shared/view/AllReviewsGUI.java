@@ -132,25 +132,28 @@ public final class AllReviewsGUI extends MarketsPagedGUI<Rating> {
 			// Word wrap the feedback to 30 characters per line
 			final String wrappedFeedback = wordWrap(rating.getFeedback(), 30);
 
-			// Load the player head asynchronously
-			final OfflinePlayer rater = Bukkit.getOfflinePlayer(rating.getRaterUUID());
-			QuickItem.asyncPlayerHead(rater).thenAccept(skull -> {
-				// Build the final item with the loaded skull
-				ItemStack finalItem = QuickItem.of(skull)
-						.name(TranslationManager.string(this.player, Translations.GUI_ALL_REVIEWS_ITEMS_REVIEW_NAME,
-								"rater_name", rating.getRaterName()))
-						.lore(TranslationManager.list(this.player, Translations.GUI_ALL_REVIEWS_ITEMS_REVIEW_LORE,
-								"market_name", marketName,
-								"market_owner", marketOwner,
-								"rating_stars", StringUtils.repeat("★", rating.getStars()),
-								"rating_date", TimeUtil.convertToReadableDate(rating.getTimeCreated(), Settings.DATETIME_FORMAT.getString()),
-								"rating_feedback", wrappedFeedback
-						))
-						.make();
+			// Load the OfflinePlayer and then the player head asynchronously
+			// This prevents blocking the main thread
+			Bukkit.getScheduler().runTaskAsynchronously(Markets.getInstance(), () -> {
+				final OfflinePlayer rater = Bukkit.getOfflinePlayer(rating.getRaterUUID());
+				QuickItem.asyncPlayerHead(rater).thenAccept(skull -> {
+					// Build the final item with the loaded skull
+					ItemStack finalItem = QuickItem.of(skull)
+							.name(TranslationManager.string(this.player, Translations.GUI_ALL_REVIEWS_ITEMS_REVIEW_NAME,
+									"rater_name", rating.getRaterName()))
+							.lore(TranslationManager.list(this.player, Translations.GUI_ALL_REVIEWS_ITEMS_REVIEW_LORE,
+									"market_name", marketName,
+									"market_owner", marketOwner,
+									"rating_stars", StringUtils.repeat("★", rating.getStars()),
+									"rating_date", TimeUtil.convertToReadableDate(rating.getTimeCreated(), Settings.DATETIME_FORMAT.getString()),
+									"rating_feedback", wrappedFeedback
+							))
+							.make();
 
-				// Update the slot on the main thread
-				Bukkit.getScheduler().runTask(Markets.getInstance(), () -> {
-					setItem(slotIndex, finalItem);
+					// Update the slot on the main thread
+					Bukkit.getScheduler().runTask(Markets.getInstance(), () -> {
+						setItem(slotIndex, finalItem);
+					});
 				});
 			});
 		}
