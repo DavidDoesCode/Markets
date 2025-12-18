@@ -74,18 +74,19 @@ public final class OffersGUI extends MarketsPagedGUI<Offer> {
 
 		if (click.clickType == ClickType.LEFT) {
 			offer.accept(result -> {
-				final OfflinePlayer offerSender = Bukkit.getOfflinePlayer(offer.getOfferSender());
+				// Use getPlayer() instead of getOfflinePlayer() to avoid blocking main thread
+				final Player offerSender = Bukkit.getPlayer(offer.getOfferSender());
 
-				if (offerSender.isOnline())
+				if (offerSender != null)
 					switch (result) {
 						case SUCCESS ->
-								Common.tell(offerSender.getPlayer(), TranslationManager.string(offerSender.getPlayer(), Translations.OFFER_ACCEPTED, "owner_name", click.player.getName(), "market_item_name", ItemUtil.getItemName(marketItem.getItem())));
+								Common.tell(offerSender, TranslationManager.string(offerSender, Translations.OFFER_ACCEPTED, "owner_name", click.player.getName(), "market_item_name", ItemUtil.getItemName(marketItem.getItem())));
 						case FAILED_NO_MONEY ->
-								Common.tell(offerSender.getPlayer(), TranslationManager.string(offerSender.getPlayer(), Translations.OFFER_REJECT_NO_MONEY, "owner_name", click.player.getName(), "market_item_name", ItemUtil.getItemName(marketItem.getItem())));
+								Common.tell(offerSender, TranslationManager.string(offerSender, Translations.OFFER_REJECT_NO_MONEY, "owner_name", click.player.getName(), "market_item_name", ItemUtil.getItemName(marketItem.getItem())));
 						case FAILED_OUT_OF_STOCK ->
-								Common.tell(offerSender.getPlayer(), TranslationManager.string(offerSender.getPlayer(), Translations.OFFER_REJECT_INSUFFICIENT_STOCK, "owner_name", click.player.getName(), "market_item_name", ItemUtil.getItemName(marketItem.getItem())));
+								Common.tell(offerSender, TranslationManager.string(offerSender, Translations.OFFER_REJECT_INSUFFICIENT_STOCK, "owner_name", click.player.getName(), "market_item_name", ItemUtil.getItemName(marketItem.getItem())));
 						case NO_LONGER_AVAILABLE ->
-								Common.tell(offerSender.getPlayer(), TranslationManager.string(offerSender.getPlayer(), Translations.OFFER_REJECT_NOT_AVAILABLE, "owner_name", click.player.getName()));
+								Common.tell(offerSender, TranslationManager.string(offerSender, Translations.OFFER_REJECT_NOT_AVAILABLE, "owner_name", click.player.getName()));
 					}
 
 				click.manager.showGUI(click.player, new OffersGUI(this.parent, click.player));
@@ -96,16 +97,17 @@ public final class OffersGUI extends MarketsPagedGUI<Offer> {
 			offer.reject((result, reason) -> {
 				if (result != TransactionResult.SUCCESS) return;
 
-				final OfflinePlayer offerSender = Bukkit.getOfflinePlayer(offer.getOfferSender());
+				// Use getPlayer() instead of getOfflinePlayer() to avoid blocking main thread
+				final Player offerSender = Bukkit.getPlayer(offer.getOfferSender());
 
-				if (offerSender.isOnline())
+				if (offerSender != null)
 					switch (reason) {
 						case NOT_ACCEPTED ->
-								Common.tell(offerSender.getPlayer(), TranslationManager.string(offerSender.getPlayer(), Translations.OFFER_REJECT_NOT_ACCEPTED, "owner_name", click.player.getName(), "market_item_name", ItemUtil.getItemName(marketItem.getItem())));
+								Common.tell(offerSender, TranslationManager.string(offerSender, Translations.OFFER_REJECT_NOT_ACCEPTED, "owner_name", click.player.getName(), "market_item_name", ItemUtil.getItemName(marketItem.getItem())));
 						case ITEM_NO_LONGER_AVAILABLE ->
-								Common.tell(offerSender.getPlayer(), TranslationManager.string(offerSender.getPlayer(), Translations.OFFER_REJECT_NOT_AVAILABLE, "owner_name", click.player.getName()));
+								Common.tell(offerSender, TranslationManager.string(offerSender, Translations.OFFER_REJECT_NOT_AVAILABLE, "owner_name", click.player.getName()));
 						case INSUFFICIENT_STOCK ->
-								Common.tell(offerSender.getPlayer(), TranslationManager.string(offerSender.getPlayer(), Translations.OFFER_REJECT_INSUFFICIENT_STOCK, "owner_name", click.player.getName(), "market_item_name", ItemUtil.getItemName(marketItem.getItem())));
+								Common.tell(offerSender, TranslationManager.string(offerSender, Translations.OFFER_REJECT_INSUFFICIENT_STOCK, "owner_name", click.player.getName(), "market_item_name", ItemUtil.getItemName(marketItem.getItem())));
 					}
 
 				click.manager.showGUI(click.player, new OffersGUI(this.parent, click.player));
