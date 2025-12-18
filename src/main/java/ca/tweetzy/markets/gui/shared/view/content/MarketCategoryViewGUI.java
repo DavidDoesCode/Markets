@@ -1,5 +1,6 @@
 package ca.tweetzy.markets.gui.shared.view.content;
 
+import ca.tweetzy.flight.comp.enums.CompMaterial;
 import ca.tweetzy.flight.gui.Gui;
 import ca.tweetzy.flight.gui.events.GuiClickEvent;
 import ca.tweetzy.flight.settings.TranslationManager;
@@ -25,6 +26,7 @@ import ca.tweetzy.markets.settings.Settings;
 import ca.tweetzy.markets.settings.Translations;
 import lombok.NonNull;
 import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.ItemStack;
@@ -102,22 +104,60 @@ public final class MarketCategoryViewGUI extends MarketsPagedGUI<MarketItem> {
 		this.market.getCategoryLayout().getDecoration().forEach(this::setItem);
 
 		// set custom shit
-		setButton(this.market.getCategoryLayout().getOwnerProfileSlot(), QuickItem
-				.of(this.market.getDynamicIcon())
-				.name(TranslationManager.string(this.player, Translations.GUI_MARKET_CATEGORY_VIEW_ITEMS_PROFILE_NAME))
-				.lore(TranslationManager.list(this.player, Translations.GUI_MARKET_CATEGORY_VIEW_ITEMS_PROFILE_LORE,
-						"market_owner", this.market.getOwnerName(),
-						"left_click", TranslationManager.string(this.player, Translations.MOUSE_LEFT_CLICK)
-				))
-				.make(), click -> {
+		// Load market owner icon asynchronously to avoid blocking main thread
+		final int ownerSlot = this.market.getCategoryLayout().getOwnerProfileSlot();
 
-			if (this.viewAsCustomer) {
-				Common.tell(click.player, TranslationManager.string(click.player, Translations.IN_CUSTOMER_MODE));
-				return;
-			}
+		// For server market, show texture immediately (non-blocking)
+		if (this.market.isServerMarket()) {
+			setButton(ownerSlot, QuickItem
+					.of(Settings.SERVER_MARKET_TEXTURE.getString())
+					.name(TranslationManager.string(this.player, Translations.GUI_MARKET_CATEGORY_VIEW_ITEMS_PROFILE_NAME))
+					.lore(TranslationManager.list(this.player, Translations.GUI_MARKET_CATEGORY_VIEW_ITEMS_PROFILE_LORE,
+							"market_owner", this.market.getOwnerName(),
+							"left_click", TranslationManager.string(this.player, Translations.MOUSE_LEFT_CLICK)
+					))
+					.make(), click -> {
+				if (this.viewAsCustomer) {
+					Common.tell(click.player, TranslationManager.string(click.player, Translations.IN_CUSTOMER_MODE));
+					return;
+				}
+				click.manager.showGUI(click.player, new UserProfileGUI(this, click.player, this.market.getOwnerUUID()));
+			});
+		} else {
+			// For player market, show placeholder first
+			setButton(ownerSlot, QuickItem
+					.of(CompMaterial.PLAYER_HEAD)
+					.name(TranslationManager.string(this.player, Translations.GUI_MARKET_CATEGORY_VIEW_ITEMS_PROFILE_NAME))
+					.lore(TranslationManager.list(this.player, Translations.GUI_MARKET_CATEGORY_VIEW_ITEMS_PROFILE_LORE,
+							"market_owner", this.market.getOwnerName(),
+							"left_click", TranslationManager.string(this.player, Translations.MOUSE_LEFT_CLICK)
+					))
+					.make(), click -> {
+				if (this.viewAsCustomer) {
+					Common.tell(click.player, TranslationManager.string(click.player, Translations.IN_CUSTOMER_MODE));
+					return;
+				}
+				click.manager.showGUI(click.player, new UserProfileGUI(this, click.player, this.market.getOwnerUUID()));
+			});
 
-			click.manager.showGUI(click.player, new UserProfileGUI(this, click.player, this.market.getOwnerUUID()));
-		});
+			// Load actual player head asynchronously
+			Bukkit.getScheduler().runTaskAsynchronously(Markets.getInstance(), () -> {
+				final OfflinePlayer owner = Bukkit.getOfflinePlayer(this.market.getOwnerUUID());
+				QuickItem.asyncPlayerHead(owner).thenAccept(skull -> {
+					ItemStack finalItem = QuickItem.of(skull)
+							.name(TranslationManager.string(this.player, Translations.GUI_MARKET_CATEGORY_VIEW_ITEMS_PROFILE_NAME))
+							.lore(TranslationManager.list(this.player, Translations.GUI_MARKET_CATEGORY_VIEW_ITEMS_PROFILE_LORE,
+									"market_owner", this.market.getOwnerName(),
+									"left_click", TranslationManager.string(this.player, Translations.MOUSE_LEFT_CLICK)
+							))
+							.make();
+
+					Bukkit.getScheduler().runTask(Markets.getInstance(), () -> {
+						setItem(ownerSlot, finalItem);
+					});
+				});
+			});
+		}
 
 		if (!Settings.DISABLE_REVIEWS.getBoolean()) {
 			setButton(this.market.getCategoryLayout().getReviewButtonSlot(), QuickItem
