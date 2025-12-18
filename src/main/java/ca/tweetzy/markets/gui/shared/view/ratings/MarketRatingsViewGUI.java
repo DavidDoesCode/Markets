@@ -1,5 +1,6 @@
 package ca.tweetzy.markets.gui.shared.view.ratings;
 
+import ca.tweetzy.flight.comp.enums.CompMaterial;
 import ca.tweetzy.flight.gui.Gui;
 import ca.tweetzy.flight.gui.events.GuiClickEvent;
 import ca.tweetzy.flight.gui.helper.InventoryBorder;
@@ -20,6 +21,7 @@ import ca.tweetzy.markets.settings.Translations;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.ItemStack;
@@ -38,6 +40,12 @@ public final class MarketRatingsViewGUI extends MarketsPagedGUI<Rating> {
 	}
 
 	@Override
+	protected void onPopulateComplete() {
+		// Load rating player heads asynchronously after the GUI is populated
+		loadRatingHeadsAsync();
+	}
+
+	@Override
 	protected ItemStack makeDisplayItem(Rating rating) {
 		// Determine which lore to use based on admin permission
 		final boolean hasAdminPermission = this.player.hasPermission("markets.admin.removerating") || this.player.isOp();
@@ -48,8 +56,10 @@ public final class MarketRatingsViewGUI extends MarketsPagedGUI<Rating> {
 		// Word wrap the feedback to 30 characters per line
 		final String wrappedFeedback = wordWrap(rating.getFeedback(), 30);
 
+		// Return placeholder head immediately
+		// The actual player head will be loaded asynchronously in onPopulateComplete()
 		return QuickItem
-				.of(Bukkit.getOfflinePlayer(rating.getRaterUUID()))
+				.of(CompMaterial.PLAYER_HEAD)
 				.name(TranslationManager.string(player, Translations.GUI_RATINGS_ITEMS_RATING_NAME, "rater_name", rating.getRaterName()))
 				.lore(TranslationManager.list(player, loreEntry,
 						"rating_stars", StringUtils.repeat("★", rating.getStars()),
@@ -58,6 +68,52 @@ public final class MarketRatingsViewGUI extends MarketsPagedGUI<Rating> {
 						"drop_key", TranslationManager.string(player, Translations.DROP_KEY)
 				))
 				.make();
+	}
+
+	private void loadRatingHeadsAsync() {
+		// Determine which lore to use based on admin permission
+		final boolean hasAdminPermission = this.player.hasPermission("markets.admin.removerating") || this.player.isOp();
+		final TranslationEntry loreEntry = hasAdminPermission
+			? Translations.GUI_RATINGS_ITEMS_RATING_LORE_ADMIN
+			: Translations.GUI_RATINGS_ITEMS_RATING_LORE;
+
+		// Get the current page items
+		final List<Rating> itemsToDisplay = this.items.stream()
+				.skip((page - 1) * (long) fillSlots().size())
+				.limit(fillSlots().size())
+				.toList();
+
+		// Load player heads asynchronously for each rating
+		for (int i = 0; i < itemsToDisplay.size(); i++) {
+			final Rating rating = itemsToDisplay.get(i);
+			final int slotIndex = fillSlots().get(i);
+
+			// Word wrap the feedback to 30 characters per line
+			final String wrappedFeedback = wordWrap(rating.getFeedback(), 30);
+
+			// Load the OfflinePlayer and then the player head asynchronously
+			// This prevents blocking the main thread
+			Bukkit.getScheduler().runTaskAsynchronously(Markets.getInstance(), () -> {
+				final OfflinePlayer rater = Bukkit.getOfflinePlayer(rating.getRaterUUID());
+				QuickItem.asyncPlayerHead(rater).thenAccept(skull -> {
+					// Build the final item with the loaded skull
+					ItemStack finalItem = QuickItem.of(skull)
+							.name(TranslationManager.string(player, Translations.GUI_RATINGS_ITEMS_RATING_NAME, "rater_name", rating.getRaterName()))
+							.lore(TranslationManager.list(player, loreEntry,
+									"rating_stars", StringUtils.repeat("★", rating.getStars()),
+									"rating_date", TimeUtil.convertToReadableDate(rating.getTimeCreated(), Settings.DATETIME_FORMAT.getString()),
+									"rating_feedback", wrappedFeedback,
+									"drop_key", TranslationManager.string(player, Translations.DROP_KEY)
+							))
+							.make();
+
+					// Update the slot on the main thread
+					Bukkit.getScheduler().runTask(Markets.getInstance(), () -> {
+						setItem(slotIndex, finalItem);
+					});
+				});
+			});
+		}
 	}
 
 	@Override
