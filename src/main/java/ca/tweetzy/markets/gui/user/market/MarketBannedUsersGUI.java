@@ -1,9 +1,11 @@
 package ca.tweetzy.markets.gui.user.market;
 
+import ca.tweetzy.flight.comp.enums.CompMaterial;
 import ca.tweetzy.flight.gui.events.GuiClickEvent;
 import ca.tweetzy.flight.gui.helper.InventoryBorder;
 import ca.tweetzy.flight.settings.TranslationManager;
 import ca.tweetzy.flight.utils.QuickItem;
+import ca.tweetzy.markets.Markets;
 import ca.tweetzy.markets.api.SynchronizeResult;
 import ca.tweetzy.markets.api.market.core.Market;
 import ca.tweetzy.markets.gui.MarketsPagedGUI;
@@ -60,14 +62,56 @@ public final class MarketBannedUsersGUI extends MarketsPagedGUI<UUID> {
 	}
 
 	@Override
-	protected ItemStack makeDisplayItem(UUID uuid) {
-		final OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(uuid);
+	protected void onPopulateComplete() {
+		// Load player heads asynchronously after the GUI is populated
+		loadPlayerHeadsAsync();
+	}
 
+	@Override
+	protected ItemStack makeDisplayItem(UUID uuid) {
+		// Get cached player name from MarketUser instead of blocking with getOfflinePlayer()
+		final String playerName = Markets.getPlayerManager().get(uuid).getLastKnownName();
+
+		// Return placeholder head immediately
+		// The actual player head will be loaded asynchronously in onPopulateComplete()
 		return QuickItem
-				.of(offlinePlayer)
-				.name(TranslationManager.string(this.player, Translations.GUI_MARKET_BANNED_USERS_ITEMS_PLAYER_NAME, "player_name", offlinePlayer.getName()))
+				.of(CompMaterial.PLAYER_HEAD)
+				.name(TranslationManager.string(this.player, Translations.GUI_MARKET_BANNED_USERS_ITEMS_PLAYER_NAME, "player_name", playerName))
 				.lore(TranslationManager.list(this.player, Translations.GUI_MARKET_BANNED_USERS_ITEMS_PLAYER_LORE, "left_click", TranslationManager.string(this.player, Translations.MOUSE_LEFT_CLICK)))
 				.make();
+	}
+
+	private void loadPlayerHeadsAsync() {
+		// Get the current page items
+		final List<UUID> itemsToDisplay = this.items.stream()
+				.skip((page - 1) * (long) fillSlots().size())
+				.limit(fillSlots().size())
+				.toList();
+
+		// Load player heads asynchronously for each banned user
+		for (int i = 0; i < itemsToDisplay.size(); i++) {
+			final UUID uuid = itemsToDisplay.get(i);
+			final int slotIndex = fillSlots().get(i);
+			final String playerName = Markets.getPlayerManager().get(uuid).getLastKnownName();
+
+			// Load the OfflinePlayer and then the player head asynchronously
+			// This prevents blocking the main thread
+			Bukkit.getScheduler().runTaskAsynchronously(Markets.getInstance(), () -> {
+				final OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(uuid);
+				QuickItem.asyncPlayerHead(offlinePlayer).thenAccept(skull -> {
+					// Build the final item with the loaded skull
+					ItemStack finalItem = QuickItem.of(skull)
+							.name(TranslationManager.string(this.player, Translations.GUI_MARKET_BANNED_USERS_ITEMS_PLAYER_NAME, "player_name", playerName))
+							.lore(TranslationManager.list(this.player, Translations.GUI_MARKET_BANNED_USERS_ITEMS_PLAYER_LORE, "left_click", TranslationManager.string(this.player, Translations.MOUSE_LEFT_CLICK)))
+							.make();
+
+					// Update the slot on the main thread
+					Bukkit.getScheduler().runTask(Markets.getInstance(), () -> {
+						setItem(slotIndex, finalItem);
+					});
+				});
+			});
+		}
 	}
 
 	@Override
