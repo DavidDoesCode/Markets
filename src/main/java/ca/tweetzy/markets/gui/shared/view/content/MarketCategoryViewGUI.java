@@ -116,7 +116,7 @@ public final class MarketCategoryViewGUI extends MarketsPagedGUI<MarketItem> {
 				return;
 			}
 
-			click.manager.showGUI(click.player, new UserProfileGUI(this, click.player, Bukkit.getOfflinePlayer(this.market.getOwnerUUID())));
+			click.manager.showGUI(click.player, new UserProfileGUI(this, click.player, this.market.getOwnerUUID()));
 		});
 
 		if (!Settings.DISABLE_REVIEWS.getBoolean()) {

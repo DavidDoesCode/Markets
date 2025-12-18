@@ -31,19 +31,19 @@ import java.util.UUID;
 
 public final class UserProfileGUI extends MarketsPagedGUI<Rating> {
 
-	private final OfflinePlayer profileUser;
+	private final UUID profileUserUUID;
 	private final String profileUserName;
 	private boolean serverProfile = false;
 
-	public UserProfileGUI(Gui parent, @NonNull Player player, @NonNull final OfflinePlayer profileUser) {
+	public UserProfileGUI(Gui parent, @NonNull Player player, @NonNull final UUID profileUserUUID) {
 		super(parent, player, TranslationManager.string(player, Translations.GUI_USER_PROFILE_TITLE,
-				"player_name", profileUser.getUniqueId().equals(UUID.fromString(Settings.SERVER_MARKET_UUID.getString()))
+				"player_name", profileUserUUID.equals(UUID.fromString(Settings.SERVER_MARKET_UUID.getString()))
 					? TranslationManager.string(Translations.SERVER_MARKET_NAME)
-					: Markets.getPlayerManager().get(profileUser.getUniqueId()).getLastKnownName()
-		), 6, Markets.getRatingManager().getRatingsByOrFor(profileUser));
-		this.profileUser = profileUser;
-		this.profileUserName = Markets.getPlayerManager().get(profileUser.getUniqueId()).getLastKnownName();
-		this.serverProfile = profileUser.getUniqueId().equals(UUID.fromString(Settings.SERVER_MARKET_UUID.getString()));
+					: Markets.getPlayerManager().get(profileUserUUID).getLastKnownName()
+		), 6, Markets.getRatingManager().getRatingsByOrFor(Bukkit.getOfflinePlayer(profileUserUUID)));
+		this.profileUserUUID = profileUserUUID;
+		this.profileUserName = Markets.getPlayerManager().get(profileUserUUID).getLastKnownName();
+		this.serverProfile = profileUserUUID.equals(UUID.fromString(Settings.SERVER_MARKET_UUID.getString()));
 		setAsync(true);
 		setDefaultItem(QuickItem.bg(Settings.GUI_USER_PROFILE_BACKGROUND.getItemStack()));
 		draw();
@@ -51,7 +51,7 @@ public final class UserProfileGUI extends MarketsPagedGUI<Rating> {
 
 	@Override
 	protected void drawFixed() {
-		final MarketUser user = Markets.getPlayerManager().get(this.profileUser.getUniqueId());
+		final MarketUser user = Markets.getPlayerManager().get(this.profileUserUUID);
 
 		// For server market, show texture immediately
 		if (user.isServerMarket()) {
@@ -66,23 +66,26 @@ public final class UserProfileGUI extends MarketsPagedGUI<Rating> {
 			);
 		} else {
 			// For player profile, show placeholder first, then load async
+			final boolean isOnline = Bukkit.getPlayer(this.profileUserUUID) != null;
 			setItem(1, 4, QuickItem
 					.of(CompMaterial.PLAYER_HEAD)
 					.name(TranslationManager.string(this.player, Translations.GUI_USER_PROFILE_ITEMS_USER_NAME, "player_name", this.profileUserName))
 					.lore(TranslationManager.list(this.player, Translations.GUI_USER_PROFILE_ITEMS_USER_LORE,
 							"user_last_seen", TimeUtil.convertToReadableDate(user.getLastSeenAt(), Settings.DATETIME_FORMAT.getString()),
-							"true", TranslationManager.string(this.player, this.profileUser.isOnline() ? Translations.TRUE : Translations.FALSE)
+							"true", TranslationManager.string(this.player, isOnline ? Translations.TRUE : Translations.FALSE)
 					))
 					.make()
 			);
 
 			// Load player head asynchronously
-			QuickItem.asyncPlayerHead(this.profileUser).thenAccept(skull -> {
+			final OfflinePlayer profilePlayer = Bukkit.getOfflinePlayer(this.profileUserUUID);
+			QuickItem.asyncPlayerHead(profilePlayer).thenAccept(skull -> {
+				final boolean isOnlineNow = Bukkit.getPlayer(this.profileUserUUID) != null;
 				ItemStack finalItem = QuickItem.of(skull)
 						.name(TranslationManager.string(this.player, Translations.GUI_USER_PROFILE_ITEMS_USER_NAME, "player_name", this.profileUserName))
 						.lore(TranslationManager.list(this.player, Translations.GUI_USER_PROFILE_ITEMS_USER_LORE,
 								"user_last_seen", TimeUtil.convertToReadableDate(user.getLastSeenAt(), Settings.DATETIME_FORMAT.getString()),
-								"true", TranslationManager.string(this.player, this.profileUser.isOnline() ? Translations.TRUE : Translations.FALSE)
+								"true", TranslationManager.string(this.player, isOnlineNow ? Translations.TRUE : Translations.FALSE)
 						))
 						.make();
 
@@ -181,7 +184,7 @@ public final class UserProfileGUI extends MarketsPagedGUI<Rating> {
 
 						// Log admin action
 						AdminActionLogger.log(click.player.getName(), "Removed rating from user profile" +
-							"Profile User: " + this.profileUserName + " (" + this.profileUser.getUniqueId() + ")" +
+							"Profile User: " + this.profileUserName + " (" + this.profileUserUUID + ")" +
 							"Market: " + (market != null ? market.getDisplayName() : "Unknown") + " (" + rating.getMarketID() + ")" +
 							"Rater: " + rating.getRaterName() + " (" + rating.getRaterUUID() + ")" +
 							"Stars: " + rating.getStars() +
@@ -201,7 +204,7 @@ public final class UserProfileGUI extends MarketsPagedGUI<Rating> {
 							}
 
 							// Refresh GUI with updated ratings list
-							click.manager.showGUI(click.player, new UserProfileGUI(this.parent, click.player, this.profileUser));
+							click.manager.showGUI(click.player, new UserProfileGUI(this.parent, click.player, this.profileUserUUID));
 							Common.tell(click.player, TranslationManager.string(click.player, Translations.ADMIN_REMOVED_RATING, "rater_name", rating.getRaterName()));
 						});
 					} else {
