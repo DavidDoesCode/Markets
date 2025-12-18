@@ -140,6 +140,24 @@ public final class Markets extends FlightPlugin {
 		// start database backup scheduler
 		this.databaseBackupTask = new DatabaseBackupTask(this, this.databaseConnector);
 		this.databaseBackupTask.start();
+
+		// warm-up task to pre-load systems and reduce first-time lag
+		getServer().getScheduler().runTaskLater(this, () -> {
+			// Warm up managers by accessing their content
+			// This pre-loads data from database and caches it in memory
+			this.marketManager.getManagerContent();
+			this.playerManager.getManagerContent();
+			this.categoryManager.getManagerContent();
+			this.categoryItemManager.getManagerContent();
+			this.offerManager.getManagerContent();
+			this.ratingManager.getManagerContent();
+			this.requestManager.getManagerContent();
+			this.transactionManager.getManagerContent();
+			this.bankManager.getManagerContent();
+			this.offlineItemPaymentManager.getManagerContent();
+
+			Common.log("&aWarmed up all managers - first /markets command will be instant!");
+		}, 40L); // Wait 2 seconds after server starts
 	}
 
 	@Override
