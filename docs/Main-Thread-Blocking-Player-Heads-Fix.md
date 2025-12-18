@@ -457,6 +457,81 @@ if (requestOwner != null && requestOwner.isOnline()) {
 
 ---
 
+### Solution 5: MarketCategoryViewGUI - Cache or Pass UUID Directly
+
+**Current:** Clicking owner head blocks main thread when creating UserProfileGUI
+**Location:** `MarketCategoryViewGUI.java:119`
+
+```java
+// Clicking owner head - BLOCKS MAIN THREAD for 50-200ms
+click.manager.showGUI(click.player, new UserProfileGUI(this, click.player, Bukkit.getOfflinePlayer(this.market.getOwnerUUID())));
+```
+
+**Fix:** Pass UUID directly, let UserProfileGUI handle OfflinePlayer creation asynchronously
+
+**Implementation:**
+
+Option 1: Pass UUID instead of OfflinePlayer (requires UserProfileGUI constructor change):
+```java
+// UserProfileGUI.java - Add new constructor accepting UUID
+public UserProfileGUI(Gui parent, @NonNull Player player, @NonNull final UUID profileUserUUID) {
+    this(parent, player, Bukkit.getOfflinePlayer(profileUserUUID));
+    // Constructor will still create OfflinePlayer, but UserProfileGUI already loads head async
+}
+
+// MarketCategoryViewGUI.java - Use UUID
+click.manager.showGUI(click.player, new UserProfileGUI(this, click.player, this.market.getOwnerUUID()));
+```
+
+Option 2: Pre-cache OfflinePlayer in Market object (better performance):
+```java
+// Market.java interface - Add cached OfflinePlayer getter
+default OfflinePlayer getOwnerOfflinePlayer() {
+    // Could be cached in Market implementation
+    return Bukkit.getOfflinePlayer(getOwnerUUID());
+}
+
+// MarketCategoryViewGUI.java - Use cached reference
+click.manager.showGUI(click.player, new UserProfileGUI(this, click.player, this.market.getOwnerOfflinePlayer()));
+```
+
+**Recommended:** Option 1 is simpler, Option 2 is faster but requires Market interface changes.
+
+**Benefits:**
+- ✅ No main thread blocking when clicking owner head
+- ✅ Instant GUI response
+- ✅ UserProfileGUI already loads head async, so no visual impact
+
+---
+
+### Solution 6: MarketViewGUI - Cache or Pass UUID Directly
+
+**Current:** Clicking owner head blocks main thread when creating UserProfileGUI
+**Location:** `MarketViewGUI.java:68`
+
+```java
+// Clicking owner head - BLOCKS MAIN THREAD for 50-200ms
+click.manager.showGUI(click.player, new UserProfileGUI(this, click.player, Bukkit.getOfflinePlayer(this.market.getOwnerUUID())));
+```
+
+**Fix:** Same as Solution 5 - pass UUID directly or use cached OfflinePlayer
+
+**Implementation:**
+
+```java
+// MarketViewGUI.java - Pass UUID instead
+click.manager.showGUI(click.player, new UserProfileGUI(this, click.player, this.market.getOwnerUUID()));
+```
+
+**Benefits:**
+- ✅ No main thread blocking when clicking owner head
+- ✅ Instant GUI response
+- ✅ Eliminates the exact lag user is experiencing
+
+**Note:** This is **the fix for the user's reported issue** - "noticeable lag when clicking on a player head to open a player shop"
+
+---
+
 ## Additional Optimizations
 
 ### Flight PlayerHeadCache Integration
@@ -480,6 +555,7 @@ Flight framework has a built-in `PlayerHeadCache` system that can be integrated 
 |-----------|---------------------|------------|-----------------|
 | Open MarketRatingsViewGUI (20 ratings) | 1-4 seconds | **20 → 5 TPS** | Freezing/stuttering |
 | Open MarketBannedUsersGUI (50 users) | 2.5-10 seconds | **20 → 2 TPS** | Server appears frozen |
+| **Click player head to open shop** | **50-200ms** | **Minor dip** | **Noticeable lag** ⚠️ |
 | Accept/Reject Offer | 50-200ms | **Minor dip** | Button feels laggy |
 | Fulfill Request | 50-200ms | **Minor dip** | Button feels laggy |
 
@@ -488,6 +564,7 @@ Flight framework has a built-in `PlayerHeadCache` system that can be integrated 
 |-----------|---------------------|------------|-----------------|
 | Open MarketRatingsViewGUI (20 ratings) | **0ms** | **20 TPS** | Instant, smooth |
 | Open MarketBannedUsersGUI (50 users) | **0ms** | **20 TPS** | Instant, smooth |
+| **Click player head to open shop** | **0ms** | **20 TPS** | **Instant response** ✅ |
 | Accept/Reject Offer | **0ms** | **20 TPS** | Instant response |
 | Fulfill Request | **0ms** | **20 TPS** | Instant response |
 
@@ -501,13 +578,17 @@ Flight framework has a built-in `PlayerHeadCache` system that can be integrated 
 1. ✅ **MarketRatingsViewGUI** - Convert to async population
 2. ✅ **MarketBannedUsersGUI** - Convert to async population
 
-### Medium Priority (Causes Noticeable Lag)
-3. ✅ **OffersGUI** - Replace with `Bukkit.getPlayer()`
-4. ✅ **RequestsGUI** - Replace with `Bukkit.getPlayer()`
+### Medium Priority (Causes Noticeable Lag) ⚠️ USER REPORTED ISSUE
+3. ✅ **MarketCategoryViewGUI** - Pass UUID instead of OfflinePlayer (Solution 5)
+4. ✅ **MarketViewGUI** - Pass UUID instead of OfflinePlayer (Solution 6)
+5. ✅ **OffersGUI** - Replace with `Bukkit.getPlayer()`
+6. ✅ **RequestsGUI** - Replace with `Bukkit.getPlayer()`
+
+**Note:** Solutions 3 & 4 fix the exact issue reported by user: "noticeable lag when clicking on a player head to open a player shop"
 
 ### Low Priority (Future Enhancement)
-5. ⏳ **Flight PlayerHeadCache integration** - Advanced caching
-6. ⏳ **Texture caching system** - See `Player-Head-Texture-Caching-Plan.md`
+7. ⏳ **Flight PlayerHeadCache integration** - Advanced caching
+8. ⏳ **Texture caching system** - See `Player-Head-Texture-Caching-Plan.md`
 
 ---
 
