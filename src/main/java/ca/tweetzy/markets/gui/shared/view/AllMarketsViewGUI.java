@@ -156,22 +156,25 @@ public final class AllMarketsViewGUI extends MarketsPagedGUI<Market> {
 				continue;
 			}
 
-			// Load the player head asynchronously
-			final OfflinePlayer owner = Bukkit.getOfflinePlayer(market.getOwnerUUID());
-			QuickItem.asyncPlayerHead(owner).thenAccept(skull -> {
-				// Build the final item with the loaded skull
-				ItemStack finalItem = QuickItem.of(skull)
-						.name(market.getDisplayName())
-						.lore(market.getDescription())
-						.lore(TranslationManager.list(this.player, Translations.GUI_ALL_MARKETS_ITEMS_MARKET_LORE,
-								"left_click", TranslationManager.string(this.player, Translations.MOUSE_LEFT_CLICK),
-								"market_ratings_total", market.getRatings().size(),
-								"market_ratings_stars", StringUtils.repeat("★", (int) market.getReviewAvg())
-						)).make();
+			// Load the OfflinePlayer and then the player head asynchronously
+			// This prevents blocking the main thread
+			Bukkit.getScheduler().runTaskAsynchronously(Markets.getInstance(), () -> {
+				final OfflinePlayer owner = Bukkit.getOfflinePlayer(market.getOwnerUUID());
+				QuickItem.asyncPlayerHead(owner).thenAccept(skull -> {
+					// Build the final item with the loaded skull
+					ItemStack finalItem = QuickItem.of(skull)
+							.name(market.getDisplayName())
+							.lore(market.getDescription())
+							.lore(TranslationManager.list(this.player, Translations.GUI_ALL_MARKETS_ITEMS_MARKET_LORE,
+									"left_click", TranslationManager.string(this.player, Translations.MOUSE_LEFT_CLICK),
+									"market_ratings_total", market.getRatings().size(),
+									"market_ratings_stars", StringUtils.repeat("★", (int) market.getReviewAvg())
+							)).make();
 
-				// Update the slot on the main thread
-				Bukkit.getScheduler().runTask(Markets.getInstance(), () -> {
-					setItem(slotIndex, finalItem);
+					// Update the slot on the main thread
+					Bukkit.getScheduler().runTask(Markets.getInstance(), () -> {
+						setItem(slotIndex, finalItem);
+					});
 				});
 			});
 		}
