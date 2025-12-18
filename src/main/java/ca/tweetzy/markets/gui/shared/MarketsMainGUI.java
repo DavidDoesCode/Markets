@@ -1,5 +1,6 @@
 package ca.tweetzy.markets.gui.shared;
 
+import ca.tweetzy.flight.comp.enums.CompMaterial;
 import ca.tweetzy.flight.settings.TranslationManager;
 import ca.tweetzy.flight.utils.Common;
 import ca.tweetzy.flight.utils.QuickItem;
@@ -19,7 +20,9 @@ import ca.tweetzy.markets.gui.user.market.MarketStatsGUI;
 import ca.tweetzy.markets.settings.Settings;
 import ca.tweetzy.markets.settings.Translations;
 import lombok.NonNull;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
 public final class MarketsMainGUI extends MarketsBaseGUI {
 
@@ -55,9 +58,12 @@ public final class MarketsMainGUI extends MarketsBaseGUI {
 						.make(), click -> click.manager.showGUI(click.player, new AllReviewsGUI(new MarketsMainGUI(click.player), click.player)));
 
 		// your market
-		setButton(Settings.GUI_MAIN_VIEW_ITEMS_YOUR_MARKET_SLOT.getInt(),
+		final int yourMarketSlot = Settings.GUI_MAIN_VIEW_ITEMS_YOUR_MARKET_SLOT.getInt();
+
+		// Show placeholder first
+		setButton(yourMarketSlot,
 				QuickItem
-						.of(this.player)
+						.of(CompMaterial.PLAYER_HEAD)
 						.hideTags(true)
 						.name(TranslationManager.string(player, Translations.GUI_MAIN_VIEW_ITEMS_YOUR_MARKET_NAME))
 						.lore(playerMarket == null ? TranslationManager.list(player, Translations.GUI_MAIN_VIEW_ITEMS_YOUR_MARKET_LORE_CREATE, "market_cost", String.format("%,.2f", Settings.CREATION_COST_COST.getDouble())) : TranslationManager.list(player, Translations.GUI_MAIN_VIEW_ITEMS_YOUR_MARKET_LORE_VIEW))
@@ -93,6 +99,21 @@ public final class MarketsMainGUI extends MarketsBaseGUI {
 					// open market
 					click.manager.showGUI(click.player, new MarketOverviewGUI(click.player, playerMarket));
 				});
+
+		// Load actual player head asynchronously
+		Bukkit.getScheduler().runTaskAsynchronously(Markets.getInstance(), () -> {
+			QuickItem.asyncPlayerHead(this.player).thenAccept(skull -> {
+				ItemStack finalItem = QuickItem.of(skull)
+						.hideTags(true)
+						.name(TranslationManager.string(player, Translations.GUI_MAIN_VIEW_ITEMS_YOUR_MARKET_NAME))
+						.lore(playerMarket == null ? TranslationManager.list(player, Translations.GUI_MAIN_VIEW_ITEMS_YOUR_MARKET_LORE_CREATE, "market_cost", String.format("%,.2f", Settings.CREATION_COST_COST.getDouble())) : TranslationManager.list(player, Translations.GUI_MAIN_VIEW_ITEMS_YOUR_MARKET_LORE_VIEW))
+						.make();
+
+				Bukkit.getScheduler().runTask(Markets.getInstance(), () -> {
+					setItem(yourMarketSlot, finalItem);
+				});
+			});
+		});
 
 		// requests
 		setButton(Settings.ALLOW_REQUESTS.getBoolean() ? Settings.GUI_MAIN_VIEW_ITEMS_REQUESTS_SLOT.getInt() : -1,
