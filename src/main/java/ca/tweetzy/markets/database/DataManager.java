@@ -41,8 +41,8 @@ public final class DataManager extends DataManagerAbstract {
 			final String query = "INSERT INTO " + this.getTablePrefix() + "markets (id, type, display_name, description, owner, owner_name, created_at, updated_at, banned_users, open, close_when_out_of_stock, home_layout, category_layout) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 			final String fetchQuery = "SELECT * FROM " + this.getTablePrefix() + "markets WHERE id = ?";
 
-			try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
-				final PreparedStatement fetch = connection.prepareStatement(fetchQuery);
+			try (PreparedStatement preparedStatement = connection.prepareStatement(query);
+			     PreparedStatement fetch = connection.prepareStatement(fetchQuery)) {
 
 				fetch.setString(1, market.getId().toString());
 
@@ -145,8 +145,8 @@ public final class DataManager extends DataManagerAbstract {
 			final String query = "INSERT INTO " + this.getTablePrefix() + "category (id, owning_market, name, icon, display_name, description, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 			final String fetchQuery = "SELECT * FROM " + this.getTablePrefix() + "category WHERE id = ?";
 
-			try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
-				final PreparedStatement fetch = connection.prepareStatement(fetchQuery);
+			try (PreparedStatement preparedStatement = connection.prepareStatement(query);
+			     PreparedStatement fetch = connection.prepareStatement(fetchQuery)) {
 
 				fetch.setString(1, category.getId().toString());
 
@@ -237,8 +237,8 @@ public final class DataManager extends DataManagerAbstract {
 			final String query = "INSERT INTO " + this.getTablePrefix() + "category_item (id, owning_category, item, currency, currency_item, price, stock, price_is_for_all, accepting_offers, infinite) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 			final String fetchQuery = "SELECT * FROM " + this.getTablePrefix() + "category_item WHERE id = ?";
 
-			try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
-				final PreparedStatement fetch = connection.prepareStatement(fetchQuery);
+			try (PreparedStatement preparedStatement = connection.prepareStatement(query);
+			     PreparedStatement fetch = connection.prepareStatement(fetchQuery)) {
 
 				fetch.setString(1, marketItem.getId().toString());
 
@@ -371,8 +371,8 @@ public final class DataManager extends DataManagerAbstract {
 			final String query = "INSERT INTO " + this.getTablePrefix() + "user (id, last_known_name, bio, preferred_language, currency_format_country, last_seen_at) VALUES (?, ?, ?, ?, ?, ?)";
 			final String fetchQuery = "SELECT * FROM " + this.getTablePrefix() + "user WHERE id = ?";
 
-			try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
-				final PreparedStatement fetch = connection.prepareStatement(fetchQuery);
+			try (PreparedStatement preparedStatement = connection.prepareStatement(query);
+			     PreparedStatement fetch = connection.prepareStatement(fetchQuery)) {
 
 				fetch.setString(1, marketUser.getUUID().toString());
 
@@ -447,8 +447,8 @@ public final class DataManager extends DataManagerAbstract {
 			final String query = "INSERT INTO " + this.getTablePrefix() + "offline_payment (id, payment_for, currency, amount, reason, received_at) VALUES (?, ?, ?, ?, ?, ?)";
 			final String fetchQuery = "SELECT * FROM " + this.getTablePrefix() + "offline_payment WHERE id = ?";
 
-			try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
-				final PreparedStatement fetch = connection.prepareStatement(fetchQuery);
+			try (PreparedStatement preparedStatement = connection.prepareStatement(query);
+			     PreparedStatement fetch = connection.prepareStatement(fetchQuery)) {
 
 				fetch.setString(1, payment.getId().toString());
 
@@ -513,8 +513,8 @@ public final class DataManager extends DataManagerAbstract {
 			final String query = "INSERT INTO " + this.getTablePrefix() + "offer (id, sender, sender_name, offer_to, market_item, currency, currency_item, offered_amount, offered_at, request_amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 			final String fetchQuery = "SELECT * FROM " + this.getTablePrefix() + "offer WHERE id = ?";
 
-			try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
-				final PreparedStatement fetch = connection.prepareStatement(fetchQuery);
+			try (PreparedStatement preparedStatement = connection.prepareStatement(query);
+			     PreparedStatement fetch = connection.prepareStatement(fetchQuery)) {
 
 				fetch.setString(1, offer.getId().toString());
 
@@ -583,8 +583,8 @@ public final class DataManager extends DataManagerAbstract {
 			final String query = "INSERT INTO " + this.getTablePrefix() + "bank_entry (id, owner, item, quantity, price, currency, currency_item) VALUES (?, ?, ?, ?, ?, ?, ?)";
 			final String fetchQuery = "SELECT * FROM " + this.getTablePrefix() + "bank_entry WHERE id = ?";
 
-			try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
-				final PreparedStatement fetch = connection.prepareStatement(fetchQuery);
+			try (PreparedStatement preparedStatement = connection.prepareStatement(query);
+			     PreparedStatement fetch = connection.prepareStatement(fetchQuery)) {
 
 				fetch.setString(1, bankEntry.getId().toString());
 
@@ -675,8 +675,8 @@ public final class DataManager extends DataManagerAbstract {
 			final String query = "INSERT INTO " + this.getTablePrefix() + "review (id, market, rater, rater_name, feedback, stars, posted_on) VALUES (?, ?, ?, ?, ?, ?, ?)";
 			final String fetchQuery = "SELECT * FROM " + this.getTablePrefix() + "review WHERE id = ?";
 
-			try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
-				final PreparedStatement fetch = connection.prepareStatement(fetchQuery);
+			try (PreparedStatement preparedStatement = connection.prepareStatement(query);
+			     PreparedStatement fetch = connection.prepareStatement(fetchQuery)) {
 
 				fetch.setString(1, rating.getId().toString());
 
@@ -832,8 +832,8 @@ public final class DataManager extends DataManagerAbstract {
 			final String query = "INSERT INTO " + this.getTablePrefix() + "transaction (id, buyer, buyer_name, seller, seller_name, type, item, currency, quantity, price, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 			final String fetchQuery = "SELECT * FROM " + this.getTablePrefix() + "transaction WHERE id = ?";
 
-			try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
-				final PreparedStatement fetch = connection.prepareStatement(fetchQuery);
+			try (PreparedStatement preparedStatement = connection.prepareStatement(query);
+			     PreparedStatement fetch = connection.prepareStatement(fetchQuery)) {
 
 				fetch.setString(1, transaction.getId().toString());
 
