@@ -135,6 +135,16 @@ public class PlayerMarket extends AbstractMarket {
 	}
 
 	@Override
+	public void setHomeLayout(@NonNull Layout homeLayout) {
+		this.homeLayout = homeLayout;
+	}
+
+	@Override
+	public void setCategoryLayout(@NonNull Layout categoryLayout) {
+		this.categoryLayout = categoryLayout;
+	}
+
+	@Override
 	public void setOwnerName(@NonNull String ownerName) {
 		this.ownerName = ownerName;
 	}

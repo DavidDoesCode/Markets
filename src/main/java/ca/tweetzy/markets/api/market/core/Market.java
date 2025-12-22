@@ -38,6 +38,10 @@ public interface Market extends Identifiable, Displayable, Trackable, Synchroniz
 
 	Layout getCategoryLayout();
 
+	void setHomeLayout(@NonNull final Layout homeLayout);
+
+	void setCategoryLayout(@NonNull final Layout categoryLayout);
+
 	void setOpen(final boolean open);
 
 	void setCloseWhenOutOfStock(final boolean closeWhenOutOfStock);

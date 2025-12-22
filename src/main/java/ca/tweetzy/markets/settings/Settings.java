@@ -220,6 +220,7 @@ public final class Settings extends FlightSettings {
 	public static ConfigEntry GUI_MARKET_SETTINGS_ITEMS_BANNED_USERS_ITEM = create("gui.market settings.items.banned users.item", CompMaterial.SHIELD.name());
 	public static ConfigEntry GUI_MARKET_SETTINGS_ITEMS_HOME_LAYOUT_ITEM = create("gui.market settings.items.home layout.item", CompMaterial.PINK_BED.name());
 	public static ConfigEntry GUI_MARKET_SETTINGS_ITEMS_CATEGORY_LAYOUT_ITEM = create("gui.market settings.items.category layout.item.item", CompMaterial.CHEST.name());
+	public static ConfigEntry GUI_MARKET_SETTINGS_ITEMS_RESET_LAYOUTS_ITEM = create("gui.market settings.items.reset layouts.item", CompMaterial.BARRIER.name());
 	public static ConfigEntry GUI_MARKET_BANNED_USERS_BACKGROUND = create("gui.market banned users.items.background", CompMaterial.BLACK_STAINED_GLASS_PANE.name());
 	public static ConfigEntry GUI_MARKET_BANNED_USERS_ITEMS_NEW_BAN = create("gui.market banned users.items.new ban.item", CompMaterial.LIME_DYE.name());
 

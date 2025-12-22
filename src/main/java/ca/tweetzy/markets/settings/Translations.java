@@ -561,6 +561,20 @@ public final class Translations extends TranslationManager {
 			"&7to set this layout's background"
 	);
 
+	public static TranslationEntry GUI_MARKET_SETTINGS_ITEMS_RESET_LAYOUTS_NAME = create("gui.market settings.items.reset layouts.name", "<GRADIENT:E74C3C>&lReset Layouts</GRADIENT:C0392B>");
+	public static TranslationEntry GUI_MARKET_SETTINGS_ITEMS_RESET_LAYOUTS_LORE = create("gui.market settings.items.reset layouts.lore",
+			"&7Reset both home and category",
+			"&7layouts back to default settings.",
+			"",
+			"&cThis will remove all customizations:",
+			"&c- Custom button positions",
+			"&c- Custom decorations",
+			"&c- Custom backgrounds",
+			"&c- Custom fill slots",
+			"",
+			"&e&l%left_click% &7to reset all layouts"
+	);
+
 	public static TranslationEntry GUI_MARKET_BANNED_USERS_TITLE = create("gui.market banned users.title", "&eMarkets &f- &7Settings &F- &cBans");
 	public static TranslationEntry GUI_MARKET_BANNED_USERS_ITEMS_PLAYER_NAME = create("gui.market banned users.items.player.name", "<GRADIENT:65B1B4>&l%player_name%</GRADIENT:2B6F8A>");
 	public static TranslationEntry GUI_MARKET_BANNED_USERS_ITEMS_PLAYER_LORE = create("gui.market banned users.items.player.lore",

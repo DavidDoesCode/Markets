@@ -8,8 +8,10 @@ import ca.tweetzy.markets.api.SynchronizeResult;
 import ca.tweetzy.markets.api.market.core.Market;
 import ca.tweetzy.markets.api.market.layout.MarketLayoutType;
 import ca.tweetzy.markets.gui.MarketsBaseGUI;
+import ca.tweetzy.markets.gui.shared.selector.ConfirmGUI;
 import ca.tweetzy.markets.gui.shared.selector.ItemSelectorGUI;
 import ca.tweetzy.markets.gui.user.layout.MarketLayoutEditorGUI;
+import ca.tweetzy.markets.impl.layout.HomeLayout;
 import ca.tweetzy.markets.settings.Settings;
 import ca.tweetzy.markets.settings.Translations;
 import lombok.NonNull;
@@ -48,6 +50,7 @@ public final class MarketSettingsGUI extends MarketsBaseGUI {
 		if (!Settings.DISABLE_LAYOUT_EDITING.getBoolean()) {
 			drawHomeLayoutButton();
 			drawCategoryLayoutButton();
+			drawResetLayoutsButton();
 		}
 
 		applyBackExit();
@@ -161,6 +164,33 @@ public final class MarketSettingsGUI extends MarketsBaseGUI {
 			}));
 		}
 		return;
+	}
+
+	private void drawResetLayoutsButton() {
+		setButton(3, 7, QuickItem
+				.of(Settings.GUI_MARKET_SETTINGS_ITEMS_RESET_LAYOUTS_ITEM.getItemStack())
+				.name(TranslationManager.string(player, Translations.GUI_MARKET_SETTINGS_ITEMS_RESET_LAYOUTS_NAME))
+				.lore(TranslationManager.list(player, Translations.GUI_MARKET_SETTINGS_ITEMS_RESET_LAYOUTS_LORE,
+						"left_click", TranslationManager.string(this.player, Translations.MOUSE_LEFT_CLICK)
+				))
+				.make(), click -> {
+
+			click.manager.showGUI(click.player, new ConfirmGUI(this, this.player, confirmed -> {
+				if (confirmed) {
+					// Reset both layouts to defaults
+					this.market.setHomeLayout(new HomeLayout());
+					this.market.setCategoryLayout(new HomeLayout());
+
+					this.market.sync(result -> {
+						if (result == SynchronizeResult.SUCCESS) {
+							click.manager.showGUI(click.player, new MarketSettingsGUI(this.player, this.market));
+						}
+					});
+				} else {
+					click.manager.showGUI(click.player, new MarketSettingsGUI(this.player, this.market));
+				}
+			}));
+		});
 	}
 
 }
