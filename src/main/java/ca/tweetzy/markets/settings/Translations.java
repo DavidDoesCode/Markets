@@ -1107,6 +1107,16 @@ public final class Translations extends TranslationManager {
 			"&e&l%left_click% &7to toggle wholesale"
 	);
 
+	public static TranslationEntry GUI_EDIT_ITEM_ITEMS_ADD_ONE_NAME = create("gui.edit market item.items.add one.name", "<GRADIENT:65B1B4>&lAdd 1 to Stock</GRADIENT:2B6F8A>");
+	public static TranslationEntry GUI_EDIT_ITEM_ITEMS_ADD_ONE_LORE = create("gui.edit market item.items.add one.lore",
+			"&7Quickly add 1 item to stock from",
+			"&7your inventory if you have it available.",
+			"",
+			"&7Current Stock&F: &e%market_item_stock%",
+			"",
+			"&e%left_click% &7to add 1 to stock"
+	);
+
 	public static TranslationEntry GUI_EDIT_ITEM_ITEMS_STOCK_NAME = create("gui.edit market item.items.stock.name", "<GRADIENT:65B1B4>&lStock</GRADIENT:2B6F8A>");
 	public static TranslationEntry GUI_EDIT_ITEM_ITEMS_STOCK_LORE = create("gui.edit market item.items.stock.lore",
 			"&7If you have any of this item in your",

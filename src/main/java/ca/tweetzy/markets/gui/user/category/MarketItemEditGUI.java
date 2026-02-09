@@ -54,6 +54,7 @@ public final class MarketItemEditGUI extends MarketsBaseGUI {
 		drawItemDisplay();
 		drawWholesaleButton();
 		drawOffersButton();
+		drawAddOneButton();
 		drawStockButton();
 		drawPriceButton();
 		drawCurrencyButton();
@@ -107,6 +108,51 @@ public final class MarketItemEditGUI extends MarketsBaseGUI {
 		click.manager.showGUI(click.player, new MarketItemEditGUI(click.player, MarketItemEditGUI.this.market, MarketItemEditGUI.this.category, MarketItemEditGUI.this.marketItem));
 	}
 
+	private void drawAddOneButton() {
+		setButton(2, 7, QuickItem
+				.of(CompMaterial.LIME_CANDLE)
+				.name(TranslationManager.string(this.player, Translations.GUI_EDIT_ITEM_ITEMS_ADD_ONE_NAME))
+				.lore(TranslationManager.list(this.player, Translations.GUI_EDIT_ITEM_ITEMS_ADD_ONE_LORE,
+						"market_item_stock", this.marketItem.getStock(),
+						"left_click", TranslationManager.string(this.player, Translations.MOUSE_LEFT_CLICK)
+				))
+				.make(), click -> {
+
+			if (click.clickType == ClickType.LEFT || FloodGateCheck.isBedrock(this.player)) {
+				synchronized (this) {
+					if (playerLock) {
+						Bukkit.getLogger().severe(click.player.getName() + " attempting to add one twice.");
+						return;
+					} else
+						playerLock = true;
+				}
+
+				// Check if player has at least 1 of the item in their inventory
+				int itemCount = PlayerUtil.getItemCountInPlayerInventory(click.player, this.marketItem.getItem());
+				if (itemCount == 0) {
+					Common.tell(click.player, "&cYou don't have any of this item in your inventory!");
+					playerLock = false;
+					return;
+				}
+
+				// Remove 1 from player inventory and add to stock
+				this.marketItem.setStock(this.marketItem.getStock() + 1);
+				PlayerUtil.removeSpecificItemQuantityFromPlayer(click.player, this.marketItem.getItem(), 1);
+
+				this.marketItem.sync(result -> {
+					if (result == SynchronizeResult.FAILURE) {
+						playerLock = false;
+						return;
+					}
+					drawItemDisplay();
+					drawAddOneButton();
+					drawStockButton();
+					playerLock = false;
+				});
+			}
+		});
+	}
+
 	private synchronized void drawStockButton() {
 		setButton(3, 7, QuickItem.of(Settings.GUI_EDIT_ITEM_ITEMS_STOCK_ITEM.getItemStack())
 				.name(TranslationManager.string(this.player, Translations.GUI_EDIT_ITEM_ITEMS_STOCK_NAME))
@@ -139,6 +185,7 @@ public final class MarketItemEditGUI extends MarketsBaseGUI {
 
 						click.player.setItemOnCursor(CompMaterial.AIR.parseItem());
 						drawItemDisplay();
+						drawAddOneButton();
 						drawStockButton();
 						playerLock = false;
 					});
@@ -167,6 +214,7 @@ public final class MarketItemEditGUI extends MarketsBaseGUI {
 				this.marketItem.sync(result -> {
 					if (result == SynchronizeResult.FAILURE) return;
 					drawItemDisplay();
+					drawAddOneButton();
 					drawStockButton();
 					playerLock = false;
 				});
