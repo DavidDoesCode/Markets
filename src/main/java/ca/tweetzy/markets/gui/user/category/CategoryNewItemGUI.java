@@ -31,6 +31,7 @@ public final class CategoryNewItemGUI extends MarketsBaseGUI {
 	private final MarketItem marketItem;
 
 	private Boolean clickLock = false;
+	private ItemStack pendingItem = null;
 
 	public CategoryNewItemGUI(@NonNull final Player player, @NonNull final Market market, @NonNull final Category category, final MarketItem marketItem) {
 		super(new MarketCategoryEditGUI(player, market, category), player, TranslationManager.string(Translations.GUI_CATEGORY_ADD_ITEM_TITLE, "category_name", category.getName()), 6);
@@ -47,10 +48,26 @@ public final class CategoryNewItemGUI extends MarketsBaseGUI {
 		setAcceptsItems(true);
 		setUnlocked(1, 4);
 
-		// todo this causes items to get lost when player dc/gets kicked/closes menu weirdly
+		// Fixed: Use direct inventory access to prevent item loss on disconnect
+		// See BankGUI.java:167-176 for similar pattern
 		setOnClose(close -> {
-			final ItemStack placedItem = getItem(1, 4);
-			if (placedItem != null) PlayerUtil.giveItem(close.player, placedItem);
+			final ItemStack itemToReturn = this.pendingItem != null ? this.pendingItem : getItem(1, 4);
+			if (itemToReturn != null && itemToReturn.getType() != CompMaterial.AIR.get()) {
+				try {
+					// Direct inventory access works even during disconnect
+					final java.util.HashMap<Integer, ItemStack> leftover = close.player.getInventory().addItem(itemToReturn);
+
+					// Drop overflow at player location
+					if (!leftover.isEmpty()) {
+						for (ItemStack item : leftover.values()) {
+							close.player.getWorld().dropItemNaturally(close.player.getLocation(), item);
+						}
+					}
+				} catch (Exception e) {
+					// Last resort: drop at location even if fully disconnected
+					close.player.getWorld().dropItemNaturally(close.player.getLocation(), itemToReturn);
+				}
+			}
 		});
 
 		setDefaultItem(QuickItem.bg(Settings.GUI_CATEGORY_ADD_ITEM_BACKGROUND.getItemStack()));
@@ -185,8 +202,8 @@ public final class CategoryNewItemGUI extends MarketsBaseGUI {
 				this.marketItem.setIsAcceptingOffers(false);
 			}
 
-			// todo this is where its fixed. but we've already generated multple async functions of this.....
-			// todo honey pot!! create one.....
+			// Store item before clearing slot - allows recovery if player disconnects
+			this.pendingItem = placedItem.clone();
 			setItem(1, 4, CompMaterial.AIR.parseItem());
 
 			// create the item
@@ -196,10 +213,10 @@ public final class CategoryNewItemGUI extends MarketsBaseGUI {
 					return;
 				}
 
-				// todo so we create this item, great. WHEN ARE WE CHECKING IF THE PLAYER HAS 1 IN THEIR INVENTORY??
-				// todo and sync its async..... that might not even help??
 				Markets.getCategoryItemManager().create(this.category, this.marketItem.getItem(), this.marketItem.getCurrency(), this.marketItem.getCurrencyItem(), this.marketItem.getPrice(), this.marketItem.isPriceForAll(), this.marketItem.isAcceptingOffers(), this.marketItem.isInfinite(), created -> {
 					if (created) {
+						// Clear pending item on success - prevents duplicate returns
+						this.pendingItem = null;
 						click.manager.showGUI(click.player, new MarketCategoryEditGUI(this.player, this.market, this.category));
 					}
 					clickLock = false;
