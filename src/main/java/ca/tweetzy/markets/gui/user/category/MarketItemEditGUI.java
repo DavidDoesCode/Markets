@@ -261,6 +261,11 @@ public final class MarketItemEditGUI extends MarketsBaseGUI {
 
 						int qty = Integer.parseInt(string);
 
+						if(qty <= 0) {
+							Common.tell(click.player, "Enter a valid amount to withdraw");
+							return false;
+						}
+
 						if (qty > 640) {
 							Common.tell(click.player, "You may only withdraw 10 stacks at a time.");
 							return false;
