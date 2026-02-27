@@ -273,6 +273,7 @@ public final class MarketItemEditGUI extends MarketsBaseGUI {
 						int qty = Integer.parseInt(string);
 
 						if(qty <= 0) {
+							Bukkit.getLogger().warning(click.player.getName() + " attempted to withdraw negative amount: " + qty);
 							Common.tell(click.player, "Enter a valid amount to withdraw");
 							return false;
 						}
