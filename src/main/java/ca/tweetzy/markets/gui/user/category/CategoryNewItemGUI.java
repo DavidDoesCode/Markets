@@ -122,7 +122,11 @@ public final class CategoryNewItemGUI extends MarketsBaseGUI {
 					final double price = Double.parseDouble(string);
 					if (price <= 0) {
 						Common.tell(click.player, TranslationManager.string(click.player, Translations.MUST_BE_HIGHER_THAN_ZERO, "value", string));
+						return false;
+					}
 
+					if(price > 10000000) {
+						Common.tell(click.player, "Price must be below 10,000,000");
 						return false;
 					}
 
