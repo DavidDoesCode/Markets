@@ -17,16 +17,32 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
+import java.util.UUID;
 
 public final class OfflinePaymentsGUI extends MarketsPagedGUI<Payment> {
 
 	private final Player player;
+	private final UUID targetUuid;
+	private final String targetName;
 
 	public OfflinePaymentsGUI(Gui parent, @NonNull final Player player) {
-		super(parent, player, TranslationManager.string(player, Translations.GUI_OFFLINE_PAYMENTS_TITLE), 6, Markets.getOfflineItemPaymentManager().getPaymentsFor(player.getUniqueId()));
+		this(parent, player, player.getUniqueId(), null);
+	}
+
+	public OfflinePaymentsGUI(Gui parent, @NonNull final Player player, @NonNull final UUID targetUuid, final String targetName) {
+		super(parent, player, buildTitle(player, targetName), 6, Markets.getOfflineItemPaymentManager().getPaymentsFor(targetUuid));
 		this.player = player;
+		this.targetUuid = targetUuid;
+		this.targetName = targetName;
 		setDefaultItem(QuickItem.bg(Settings.GUI_OFFLINE_PAYMENTS_BACKGROUND.getItemStack()));
 		draw();
+	}
+
+	private static String buildTitle(@NonNull final Player viewer, final String targetName) {
+		if (targetName != null) {
+			return TranslationManager.string(viewer, Translations.GUI_OFFLINE_PAYMENTS_TITLE) + " - " + targetName;
+		}
+		return TranslationManager.string(viewer, Translations.GUI_OFFLINE_PAYMENTS_TITLE);
 	}
 
 	@Override
@@ -48,7 +64,7 @@ public final class OfflinePaymentsGUI extends MarketsPagedGUI<Payment> {
 	protected void onClick(Payment payment, GuiClickEvent click) {
 		payment.unStore(result -> {
 			if (result == SynchronizeResult.FAILURE) return;
-			click.manager.showGUI(click.player, new OfflinePaymentsGUI(this.parent, click.player));
+			click.manager.showGUI(click.player, new OfflinePaymentsGUI(this.parent, click.player, this.targetUuid, this.targetName));
 			Markets.getCurrencyManager().deposit(click.player, payment.getCurrency(), (int) payment.getAmount());
 		});
 	}

@@ -101,7 +101,7 @@ public class TransactionsGUI extends MarketsPagedGUI<Transaction> {
 	}
 
 	private boolean isStillOpen() {
-		return this.player.isOnline() && this.player.getOpenInventory().getTopInventory().equals(this.getInventory());
+		return this.player.isOnline() && this.player.getOpenInventory().getTopInventory().equals(this.inventory);
 	}
 
 	@Override

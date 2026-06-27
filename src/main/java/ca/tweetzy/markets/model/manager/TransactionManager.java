@@ -184,7 +184,7 @@ public final class TransactionManager extends ListManager<Transaction> {
 
 	private void runFilterAsync(@NonNull final Consumer<List<Transaction>> callback, @NonNull final Supplier<List<Transaction>> filter, @NonNull final String context, UUID playerUUID) {
 		Bukkit.getScheduler().runTaskAsynchronously(Markets.getInstance(), () -> {
-			final List<Transaction> transactions;
+			List<Transaction> transactions;
 			try {
 				transactions = filter.get();
 			} catch (final Exception exception) {

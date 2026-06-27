@@ -28,6 +28,9 @@ permissions:
   markets.admin.stats:
     description: Allows viewing any player's market statistics with /markets stats <player>
     default: op
+  markets.admin.payments:
+    description: Allows viewing and collecting any player's pending payments with /markets payments <player>
+    default: op
   markets.admin.removerating:
     description: Allows removing market ratings/reviews in the ratings GUI
     default: op
