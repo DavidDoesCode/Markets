@@ -43,22 +43,20 @@ public final class MarketBannedUsersGUI extends MarketsPagedGUI<UUID> {
 				.of(Settings.GUI_MARKET_BANNED_USERS_ITEMS_NEW_BAN.getItemStack())
 				.name(TranslationManager.string(this.player, Translations.GUI_MARKET_BANNED_USERS_ITEMS_NEW_BAN_NAME))
 				.lore(TranslationManager.list(this.player, Translations.GUI_MARKET_BANNED_USERS_ITEMS_NEW_BAN_LORE, "left_click", TranslationManager.string(this.player, Translations.MOUSE_LEFT_CLICK)))
-				.make(), click -> click.manager.showGUI(click.player, new PlayerPickerGUI(this, this.player, this.market.getBannedUsers(), selected -> {
+				.make(), click -> click.manager.showGUI(click.player, new PlayerPickerGUI(this, this.player, this.market.getBannedUsers(), uuid -> banUser(uuid, click.player))));
+	}
 
-			if (selected != null) {
-				if (!this.market.getBannedUsers().contains(selected.getUniqueId())) {
-					this.market.getBannedUsers().add(selected.getUniqueId());
+	private void banUser(UUID uuid, Player opener) {
+		if (this.market.getBannedUsers().contains(uuid)) return;
 
-					this.market.sync(result -> {
-						if (result == SynchronizeResult.FAILURE)
-							this.market.getBannedUsers().remove(selected.getUniqueId());
+		this.market.getBannedUsers().add(uuid);
 
-						click.manager.showGUI(click.player, new MarketBannedUsersGUI(this.player, this.market));
+		this.market.sync(result -> {
+			if (result == SynchronizeResult.FAILURE)
+				this.market.getBannedUsers().remove(uuid);
 
-					});
-				}
-			}
-		})));
+			Markets.getGuiManager().showGUI(opener, new MarketBannedUsersGUI(opener, this.market));
+		});
 	}
 
 	@Override

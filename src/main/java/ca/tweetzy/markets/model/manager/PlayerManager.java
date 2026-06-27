@@ -11,9 +11,12 @@ import ca.tweetzy.markets.api.market.core.MarketUser;
 import ca.tweetzy.markets.impl.MarketPlayer;
 import ca.tweetzy.markets.settings.Settings;
 import lombok.NonNull;
+import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
@@ -33,6 +36,28 @@ public final class PlayerManager extends KeyValueManager<UUID, MarketUser> {
 
 	public PlayerManager() {
 		super("Player");
+	}
+
+	public Optional<UUID> lookupUUIDByName(@NonNull final String name) {
+		final Player online = Bukkit.getPlayer(name);
+		if (online != null)
+			return Optional.of(online.getUniqueId());
+
+		final MarketUser marketUser = getManagerContent()
+				.values()
+				.stream()
+				.filter(user -> user.getLastKnownName().equalsIgnoreCase(name))
+				.findFirst()
+				.orElse(null);
+
+		if (marketUser != null)
+			return Optional.of(marketUser.getUUID());
+
+		final OfflinePlayer offline = Bukkit.getOfflinePlayer(name);
+		if (offline.hasPlayedBefore())
+			return Optional.of(offline.getUniqueId());
+
+		return Optional.empty();
 	}
 
 	public int getMaxLimitOf(@NonNull final Player player, @NonNull final MarketLimitPermission limitPermission) {

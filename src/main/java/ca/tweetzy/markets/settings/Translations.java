@@ -41,6 +41,9 @@ public final class Translations extends TranslationManager {
 	public static TranslationEntry NOT_ENOUGH_STOCK = create("error.not enough stock", "&cSorry there is not enough stock");
 	public static TranslationEntry ITEM_NO_LONGER_AVAILABLE = create("error.item no longer available", "&cSorry that item is no longer available");
 	public static TranslationEntry BANNED_FROM_MARKET = create("error.banned from market", "&4%market_owner% &chas banned you from viewing their market!");
+	public static TranslationEntry ERROR_PLAYER_NOT_FOUND = create("error.player not found", "&cPlayer not found: &e%player_name%");
+	public static TranslationEntry ERROR_CANNOT_BAN_SELF = create("error.cannot ban self", "&cYou cannot ban yourself from your own market!");
+	public static TranslationEntry ERROR_PLAYER_ALREADY_BANNED = create("error.player already banned", "&cThat player is already on your ban list!");
 	public static TranslationEntry MARKET_IS_CLOSED = create("error.market is closed", "&4%market_owner%&c's market is currently closed!");
 	public static TranslationEntry PROVIDE_REQUESTED_ITEM = create("error.provide requested item", "&cYou need to place/select a requested item first");
 	public static TranslationEntry MAX_STACK_SIZE = create("error.max stack size", "&cCannot request that many, max stack size is &4%max_stack_size%");
@@ -134,6 +137,8 @@ public final class Translations extends TranslationManager {
 	public static TranslationEntry PROMPT_OFFER_PRICE_SUBTITLE = create("prompts.offer price.subtitle", "&fEnter how much you want to offer");
 	public static TranslationEntry PROMPT_WITHDRAW_ENTRY_TITLE = create("prompts.withdraw bank entry.title", "<GRADIENT:65B1B4>&LEnter Amount</GRADIENT:2B6F8A>");
 	public static TranslationEntry PROMPT_WITHDRAW_ENTRY_SUBTITLE = create("prompts.withdraw bank entry.subtitle", "&fEnter how much you want to withdraw");
+	public static TranslationEntry PROMPT_BAN_PLAYER_TITLE = create("prompts.ban player.title", "<GRADIENT:65B1B4>&LBan Player</GRADIENT:2B6F8A>");
+	public static TranslationEntry PROMPT_BAN_PLAYER_SUBTITLE = create("prompts.ban player.subtitle", "&fEnter the player name into chat");
 
 	public static TranslationEntry PROMPT_CATEGORY_NAME_TITLE = create("prompts.category name.title", "<GRADIENT:65B1B4>&LCategory Name</GRADIENT:2B6F8A>");
 	public static TranslationEntry PROMPT_CATEGORY_NAME_SUBTITLE = create("prompts.category name.subtitle", "&fEnter new name for category into chat");
@@ -482,6 +487,13 @@ public final class Translations extends TranslationManager {
 	);
 
 	public static TranslationEntry GUI_USER_PICKER_TITLE = create("gui.user picker.title", "&eMarkets &f- &7Pick a user");
+	public static TranslationEntry GUI_USER_PICKER_ITEMS_ENTER_NAME_NAME = create("gui.user picker.items.enter name.name", "<GRADIENT:65B1B4>&lEnter Name</GRADIENT:2B6F8A>");
+	public static TranslationEntry GUI_USER_PICKER_ITEMS_ENTER_NAME_LORE = create("gui.user picker.items.enter name.lore",
+			"&7Ban a player who is offline by",
+			"&7typing their name into chat.",
+			"",
+			"&e&l%left_click% &7to enter a player name"
+	);
 	public static TranslationEntry GUI_CONFIRM_ACTION_TITLE = create("gui.confirm action.title", "&eMarkets &f- &7Are you sure?");
 	public static TranslationEntry GUI_CONFIRM_ACTION_ITEMS_YES_NAME = create("gui.confirm action.items.confirm.name", "<GRADIENT:4ab310>&lConfirm</GRADIENT:7ed664>");
 	public static TranslationEntry GUI_CONFIRM_ACTION_ITEMS_YES_LORE = create("gui.confirm action.items.confirm.lore", "&e&lClick &7to confirm action");
