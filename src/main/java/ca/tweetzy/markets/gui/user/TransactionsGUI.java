@@ -1,6 +1,5 @@
 package ca.tweetzy.markets.gui.user;
 
-import ca.tweetzy.flight.comp.enums.CompMaterial;
 import ca.tweetzy.flight.gui.Gui;
 import ca.tweetzy.flight.gui.events.GuiClickEvent;
 import ca.tweetzy.flight.gui.helper.InventoryBorder;
@@ -24,13 +23,13 @@ import java.util.UUID;
 public class TransactionsGUI extends MarketsPagedGUI<Transaction> {
 
 	private final Player player;
-	private final UUID targetUuid;        // UUID of player whose transactions to view (null = viewer's own)
-	private final String targetName;      // Name of target player for display
+	private final UUID targetUuid;
+	private final String targetName;
 	private boolean viewAll;
 	private PlayerRole filterType = PlayerRole.SELLER;
-	protected boolean isLoading = false;  // Track loading state
-	private boolean dataLoaded = false;   // Track if initial data has been loaded
-	private boolean guiShown = false;     // Track if GUI has been shown to player
+	protected boolean isLoading = false;
+	private boolean guiShown = false;
+	private int loadRequestId = 0;
 
 	private enum PlayerRole {
 		BUYER, SELLER
@@ -49,7 +48,6 @@ public class TransactionsGUI extends MarketsPagedGUI<Transaction> {
 		setAcceptsItems(true);
 		setDefaultItem(QuickItem.bg(Settings.GUI_TRANSACTIONS_BACKGROUND.getItemStack()));
 
-		// Load data initially
 		loadTransactionsAsync();
 		this.guiShown = true;
 	}
@@ -63,84 +61,65 @@ public class TransactionsGUI extends MarketsPagedGUI<Transaction> {
 
 	@Override
 	protected void prePopulate() {
-		// Don't reload data here - it's loaded in constructor and when filters change
-		// This prevents infinite loop when draw() is called from async callback
+		// Loaded in constructor and when filters change to avoid async draw loops
 	}
 
-	/**
-	 * Load transactions asynchronously based on current filter type
-	 */
 	private void loadTransactionsAsync() {
+		final int requestId = ++this.loadRequestId;
 		this.isLoading = true;
-		this.dataLoaded = false;
-		this.items = new ArrayList<>();  // Clear items immediately
 
-		// Determine which player's transactions to load
+		if (this.guiShown) {
+			draw();
+		}
+
 		final UUID playerUuid = this.targetUuid != null ? this.targetUuid : this.player.getUniqueId();
 
 		if (this.viewAll) {
-			// For "view all", use synchronous (already in memory, no filtering needed)
-			this.items = new ArrayList<>(Markets.getTransactionManager().getManagerContent());
-			this.items.sort(Comparator.comparing(Transaction::getTimeCreated).reversed());
-			this.isLoading = false;
-			this.dataLoaded = true;
-			draw();
-		} else {
-			// Show loading indicator for async operations (only if GUI already shown)
-			if (this.guiShown) {
-				draw();
-			}
-
-			if (this.filterType == PlayerRole.SELLER) {
-				// Load sales transactions async
-				Markets.getTransactionManager().getSalesTransactionsForAsync(playerUuid, transactions -> {
-					// This callback runs on main thread
-					this.items = new ArrayList<>(transactions);
-					this.items.sort(Comparator.comparing(Transaction::getTimeCreated).reversed());
-					this.isLoading = false;
-					this.dataLoaded = true;
-
-					// Redraw GUI with loaded data
-					draw();
-				});
-			} else {
-				// Load purchase transactions async
-				Markets.getTransactionManager().getPurchaseTransactionsForAsync(playerUuid, transactions -> {
-					// This callback runs on main thread
-					this.items = new ArrayList<>(transactions);
-					this.items.sort(Comparator.comparing(Transaction::getTimeCreated).reversed());
-					this.isLoading = false;
-					this.dataLoaded = true;
-
-					// Redraw GUI with loaded data
-					draw();
-				});
-			}
+			Markets.getTransactionManager().getAllTransactionsForAsync(transactions ->
+					applyTransactionResult(requestId, transactions));
+			return;
 		}
+
+		if (this.filterType == PlayerRole.SELLER) {
+			Markets.getTransactionManager().getSalesTransactionsForAsync(playerUuid, transactions ->
+					applyTransactionResult(requestId, transactions));
+			return;
+		}
+
+		Markets.getTransactionManager().getPurchaseTransactionsForAsync(playerUuid, transactions ->
+				applyTransactionResult(requestId, transactions));
+	}
+
+	private void applyTransactionResult(final int requestId, @NonNull final List<Transaction> transactions) {
+		if (requestId != this.loadRequestId) return;
+		if (!isStillOpen()) return;
+
+		this.items = new ArrayList<>(transactions);
+		this.items.sort(Comparator.comparing(Transaction::getTimeCreated).reversed());
+		this.isLoading = false;
+		draw();
+	}
+
+	private boolean isStillOpen() {
+		return this.player.isOnline() && this.player.getOpenInventory().getTopInventory().equals(this.getInventory());
 	}
 
 	@Override
 	protected void drawFixed() {
 		if (!Settings.USE_ADDITIONAL_CONFIRMS.getBoolean()) {
 			setTransactionViewButton();
-		} else {
-			if (this.player.hasPermission("markets.viewalltransactions"))
-				setTransactionViewButton();
+		} else if (this.player.hasPermission("markets.viewalltransactions")) {
+			setTransactionViewButton();
 		}
 
 		setTransactionTypeToggle();
 
-		// Show loading indicator if data is still loading
 		if (this.isLoading) {
 			showLoadingIndicator();
 		}
 	}
 
-	/**
-	 * Display a loading indicator in the GUI center
-	 */
 	private void showLoadingIndicator() {
-		// Place loading indicator in center of GUI
 		setButton(2, 4, QuickItem
 				.of(new ItemStack(Material.HOPPER))
 				.name(TranslationManager.string(Translations.GUI_LOADING_INDICATOR_NAME))
@@ -154,11 +133,10 @@ public class TransactionsGUI extends MarketsPagedGUI<Transaction> {
 				.name(TranslationManager.string(Translations.GUI_TRANSACTIONS_ITEMS_VIEW_ALL_NAME))
 				.lore(TranslationManager.list(Translations.GUI_TRANSACTIONS_ITEMS_VIEW_ALL_LORE, "is_true", TranslationManager.string(this.viewAll ? Translations.TRUE : Translations.FALSE), "left_click", TranslationManager.string(Translations.MOUSE_LEFT_CLICK)))
 				.make(), click -> {
+			if (this.isLoading) return;
 
 			this.viewAll = !this.viewAll;
-			// Reset to page 1 when changing filters
 			this.page = 1;
-			// Reload data with new filter
 			loadTransactionsAsync();
 		});
 	}
@@ -170,19 +148,17 @@ public class TransactionsGUI extends MarketsPagedGUI<Transaction> {
 				.of(new ItemStack(Material.LEVER))
 				.name(TranslationManager.string(Translations.GUI_TRANSACTIONS_ITEMS_TYPE_TOGGLE_NAME))
 				.lore(TranslationManager.list(Translations.GUI_TRANSACTIONS_ITEMS_TYPE_TOGGLE_LORE,
-					"current_filter", currentFilter,
-					"left_click", TranslationManager.string(Translations.MOUSE_LEFT_CLICK)))
+						"current_filter", currentFilter,
+						"left_click", TranslationManager.string(Translations.MOUSE_LEFT_CLICK)))
 				.make(), click -> {
+			if (this.isLoading) return;
 
-			// Toggle between seller and buyer view
 			if (this.filterType == PlayerRole.SELLER) {
 				this.filterType = PlayerRole.BUYER;
 			} else {
 				this.filterType = PlayerRole.SELLER;
 			}
-			// Reset to page 1 when changing filters
 			this.page = 1;
-			// Reload data with new filter
 			loadTransactionsAsync();
 		});
 	}
