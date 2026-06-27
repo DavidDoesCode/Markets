@@ -1,6 +1,7 @@
 package ca.tweetzy.markets.gui.user.market;
 
 import ca.tweetzy.flight.comp.enums.CompMaterial;
+import ca.tweetzy.flight.gui.Gui;
 import ca.tweetzy.flight.gui.events.GuiClickEvent;
 import ca.tweetzy.flight.gui.helper.InventoryBorder;
 import ca.tweetzy.flight.settings.TranslationManager;
@@ -8,6 +9,7 @@ import ca.tweetzy.flight.utils.QuickItem;
 import ca.tweetzy.markets.Markets;
 import ca.tweetzy.markets.api.SynchronizeResult;
 import ca.tweetzy.markets.api.market.core.Market;
+import ca.tweetzy.markets.api.market.core.MarketUser;
 import ca.tweetzy.markets.gui.MarketsPagedGUI;
 import ca.tweetzy.markets.gui.shared.selector.PlayerPickerGUI;
 import ca.tweetzy.markets.settings.Settings;
@@ -27,10 +29,11 @@ public final class MarketBannedUsersGUI extends MarketsPagedGUI<UUID> {
 	private final Market market;
 
 
-	public MarketBannedUsersGUI(@NonNull final Player player, @NonNull final Market market) {
-		super(new MarketSettingsGUI(player, market), player, TranslationManager.string(player, Translations.GUI_MARKET_BANNED_USERS_TITLE), 6, market.getBannedUsers());
+	public MarketBannedUsersGUI(@NonNull final Gui parent, @NonNull final Player player, @NonNull final Market market) {
+		super(parent, player, TranslationManager.string(player, Translations.GUI_MARKET_BANNED_USERS_TITLE), 6, market.getBannedUsers());
 		this.player = player;
 		this.market = market;
+		setAsync(true);
 		setDefaultItem(QuickItem.bg(Settings.GUI_MARKET_BANNED_USERS_BACKGROUND.getItemStack()));
 
 		draw();
@@ -55,7 +58,7 @@ public final class MarketBannedUsersGUI extends MarketsPagedGUI<UUID> {
 			if (result == SynchronizeResult.FAILURE)
 				this.market.getBannedUsers().remove(uuid);
 
-			Markets.getGuiManager().showGUI(opener, new MarketBannedUsersGUI(opener, this.market));
+			Markets.getGuiManager().showGUI(opener, new MarketBannedUsersGUI(this.parent, opener, this.market));
 		});
 	}
 
@@ -67,8 +70,7 @@ public final class MarketBannedUsersGUI extends MarketsPagedGUI<UUID> {
 
 	@Override
 	protected ItemStack makeDisplayItem(UUID uuid) {
-		// Get cached player name from MarketUser instead of blocking with getOfflinePlayer()
-		final String playerName = Markets.getPlayerManager().get(uuid).getLastKnownName();
+		final String playerName = resolveDisplayName(uuid);
 
 		// Return placeholder head immediately
 		// The actual player head will be loaded asynchronously in onPopulateComplete()
@@ -77,6 +79,13 @@ public final class MarketBannedUsersGUI extends MarketsPagedGUI<UUID> {
 				.name(TranslationManager.string(this.player, Translations.GUI_MARKET_BANNED_USERS_ITEMS_PLAYER_NAME, "player_name", playerName))
 				.lore(TranslationManager.list(this.player, Translations.GUI_MARKET_BANNED_USERS_ITEMS_PLAYER_LORE, "left_click", TranslationManager.string(this.player, Translations.MOUSE_LEFT_CLICK)))
 				.make();
+	}
+
+	private String resolveDisplayName(UUID uuid) {
+		final MarketUser user = Markets.getPlayerManager().get(uuid);
+		if (user != null && user.getLastKnownName() != null)
+			return user.getLastKnownName();
+		return uuid.toString().substring(0, 8);
 	}
 
 	private void loadPlayerHeadsAsync() {
@@ -90,7 +99,7 @@ public final class MarketBannedUsersGUI extends MarketsPagedGUI<UUID> {
 		for (int i = 0; i < itemsToDisplay.size(); i++) {
 			final UUID uuid = itemsToDisplay.get(i);
 			final int slotIndex = fillSlots().get(i);
-			final String playerName = Markets.getPlayerManager().get(uuid).getLastKnownName();
+			final String playerName = resolveDisplayName(uuid);
 
 			// Load the OfflinePlayer and then the player head asynchronously
 			// This prevents blocking the main thread
@@ -122,7 +131,7 @@ public final class MarketBannedUsersGUI extends MarketsPagedGUI<UUID> {
 			if (result == SynchronizeResult.FAILURE)
 				this.market.getBannedUsers().add(uuid);
 			else
-				click.manager.showGUI(click.player, new MarketBannedUsersGUI(this.player, this.market));
+				click.manager.showGUI(click.player, new MarketBannedUsersGUI(this.parent, this.player, this.market));
 		});
 	}
 

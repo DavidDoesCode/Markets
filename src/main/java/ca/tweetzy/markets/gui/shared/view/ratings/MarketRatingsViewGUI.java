@@ -35,6 +35,7 @@ public final class MarketRatingsViewGUI extends MarketsPagedGUI<Rating> {
 	public MarketRatingsViewGUI(Gui parent, @NonNull final Player player, @NonNull final Market market) {
 		super(parent, player, TranslationManager.string(player, Translations.GUI_RATINGS_TITLE, "market_display_name", market.getDisplayName()), 6, market.getRatings());
 		this.market = market;
+		setAsync(true);
 		setDefaultItem(QuickItem.bg(Settings.GUI_RATINGS_BACKGROUND.getItemStack()));
 		draw();
 	}

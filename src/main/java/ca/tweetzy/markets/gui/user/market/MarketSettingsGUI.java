@@ -99,7 +99,7 @@ public final class MarketSettingsGUI extends MarketsBaseGUI {
 				.lore(TranslationManager.list(player, Translations.GUI_MARKET_SETTINGS_ITEMS_BANNED_USERS_LORE,
 						"left_click", TranslationManager.string(this.player, Translations.MOUSE_LEFT_CLICK)
 				))
-				.make(), click -> click.manager.showGUI(click.player, new MarketBannedUsersGUI(this.player, this.market)));
+				.make(), click -> click.manager.showGUI(click.player, new MarketBannedUsersGUI(this, this.player, this.market)));
 	}
 
 	private void drawHomeLayoutButton() {
