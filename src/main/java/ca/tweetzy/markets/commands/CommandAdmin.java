@@ -19,6 +19,7 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -37,14 +38,19 @@ public final class CommandAdmin extends Command {
 		}// 0 1 2
 
 		if (args.length == 1) {
-			if (!(sender instanceof final Player player)) return ReturnType.FAIL;
-
 			switch (args[0].toLowerCase()) {
 				case "collecttax":
+					if (!(sender instanceof final Player player)) return ReturnType.FAIL;
 					Markets.getGuiManager().showGUI(player, new BankGUI(null, player, true));
+					break;
+				case "shipping":
+					return ShippingAdminCommand.execute(sender, args);
 			}
 			return ReturnType.SUCCESS;
 		}
+
+		if (args.length >= 2 && args[0].equalsIgnoreCase("shipping"))
+			return ShippingAdminCommand.execute(sender, args);
 
 		if (args.length >= 2) {
 			final Player target = Bukkit.getPlayerExact(args[0]);
@@ -90,8 +96,17 @@ public final class CommandAdmin extends Command {
 
 	@Override
 	protected List<String> tab(CommandSender sender, String... args) {
-		if (args.length == 1)
-			return Bukkit.getOnlinePlayers().stream().map(OfflinePlayer::getName).collect(Collectors.toList());
+		if (args.length == 1) {
+			final List<String> options = new ArrayList<>(List.of("collecttax", "shipping"));
+			options.addAll(Bukkit.getOnlinePlayers().stream().map(OfflinePlayer::getName).collect(Collectors.toList()));
+			return options;
+		}
+
+		if (args[0].equalsIgnoreCase("shipping")) {
+			final List<String> shippingTab = ShippingAdminCommand.tab(args);
+			if (shippingTab != null)
+				return shippingTab;
+		}
 
 		if (args.length == 2)
 			return List.of("openmain");

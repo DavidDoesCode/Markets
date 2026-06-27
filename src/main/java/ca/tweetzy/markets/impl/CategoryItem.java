@@ -14,6 +14,9 @@ import ca.tweetzy.markets.api.market.core.Market;
 import ca.tweetzy.markets.api.market.core.MarketItem;
 import ca.tweetzy.markets.model.DupeDetector;
 import ca.tweetzy.markets.model.Taxer;
+import ca.tweetzy.markets.model.shipping.ShippingBreakdown;
+import ca.tweetzy.markets.model.shipping.ShippingCalculator;
+import ca.tweetzy.markets.model.shipping.ShippingMoney;
 import ca.tweetzy.markets.settings.Settings;
 import ca.tweetzy.markets.settings.Translations;
 import lombok.NonNull;
@@ -263,11 +266,17 @@ public final class CategoryItem implements MarketItem {
 
 		final double subtotal = this.priceIsForAll ? this.price : this.price * newPurchaseAmount;
 		final double total = subtotal;
+		final double itemTotalWithTax = Taxer.getTaxedTotal(total);
 
 		final String currencyPlugin = this.currency.split("/")[0];
 		final String currencyName = this.currency.split("/")[1];
 
-		final boolean hasEnoughMoney = this.isCurrencyOfItem() ? Markets.getCurrencyManager().has(buyer, this.currencyItem, (int) Taxer.getTaxedTotal(total)) : Markets.getCurrencyManager().has(buyer, currencyPlugin, currencyName, Taxer.getTaxedTotal(total));
+		final ShippingBreakdown shippingBreakdown = ShippingCalculator.calculate(buyer);
+		final double shippingTotal = shippingBreakdown.getTotalAsDouble();
+
+		final boolean hasEnoughMoney = this.isCurrencyOfItem()
+				? Markets.getCurrencyManager().has(buyer, this.currencyItem, (int) itemTotalWithTax)
+				: Markets.getCurrencyManager().has(buyer, currencyPlugin, currencyName, itemTotalWithTax);
 
 		if (!hasEnoughMoney) {
 			Common.tell(buyer, TranslationManager.string(buyer, Translations.NO_MONEY));
@@ -275,10 +284,40 @@ public final class CategoryItem implements MarketItem {
 			return;
 		}
 
-		final boolean withdrawResult = this.isCurrencyOfItem() ? Markets.getCurrencyManager().withdraw(buyer, this.currencyItem, (int) Taxer.getTaxedTotal(total)) : Markets.getCurrencyManager().withdraw(buyer, currencyPlugin, currencyName, Taxer.getTaxedTotal(total));
+		if (shippingTotal > 0 && !Markets.getCurrencyManager().has(buyer, "Vault", "Vault", shippingTotal)) {
+			Common.tell(buyer, TranslationManager.string(buyer, Translations.SHIPPING_NO_MONEY, "shipping_total", ShippingMoney.format(shippingTotal)));
+			transactionResult.accept(TransactionResult.FAILED_NO_MONEY);
+			return;
+		}
+
+		final boolean withdrawResult = this.isCurrencyOfItem()
+				? Markets.getCurrencyManager().withdraw(buyer, this.currencyItem, (int) itemTotalWithTax)
+				: Markets.getCurrencyManager().withdraw(buyer, currencyPlugin, currencyName, itemTotalWithTax);
 		final double tax = this.isCurrencyOfItem() ? (int) Taxer.calculateTaxAmount(total) : Taxer.calculateTaxAmount(total);
 
 		if (withdrawResult) {
+			if (shippingTotal > 0) {
+				final boolean shippingWithdrawn = Markets.getCurrencyManager().withdraw(buyer, "Vault", "Vault", shippingTotal);
+				if (!shippingWithdrawn) {
+					refundItemPayment(buyer, currencyPlugin, currencyName, itemTotalWithTax);
+					transactionResult.accept(TransactionResult.ERROR);
+					return;
+				}
+
+				Markets.getCurrencyManager().deposit(
+						Bukkit.getOfflinePlayer(Settings.SHIPPING_RECEIVER.getString()),
+						"Vault",
+						"Vault",
+						shippingTotal
+				);
+
+				Common.tell(buyer, TranslationManager.string(buyer, Translations.SHIPPING_PURCHASE_BREAKDOWN,
+						"shipping_total", ShippingMoney.format(shippingBreakdown.getTotal()),
+						"shipping_base", ShippingMoney.format(shippingBreakdown.getBaseCharge()),
+						"shipping_distance", ShippingMoney.format(shippingBreakdown.getDistanceCharge()),
+						"world_name", shippingBreakdown.getWorldName()
+				));
+			}
 			final ItemStack updatedItem = this.item.clone();
 			updatedItem.setAmount(1);
 
@@ -404,6 +443,13 @@ public final class CategoryItem implements MarketItem {
 				this.beingEdited = false;
 			}
 		}
+	}
+
+	private void refundItemPayment(@NonNull final Player buyer, @NonNull final String currencyPlugin, @NonNull final String currencyName, final double amount) {
+		if (isCurrencyOfItem())
+			Markets.getCurrencyManager().deposit(buyer, this.currencyItem, (int) amount);
+		else
+			Markets.getCurrencyManager().deposit(buyer, currencyPlugin, currencyName, amount);
 	}
 
 	private void alertOutOfStock(final OfflinePlayer seller, @NonNull final Player buyer, final int newPurchaseAmount) {

@@ -932,6 +932,65 @@ public final class Translations extends TranslationManager {
 			"&a%purchase_total%"
 	);
 
+	public static TranslationEntry GUI_PURCHASE_ITEM_ITEMS_PRICE_BREAKDOWN_LORE_SHIPPING = create("gui.purchase item.items.price breakdown.lore.shipping",
+			"&b&lShipping &7(Vault)",
+			"&a%shipping_total%"
+	);
+
+	public static TranslationEntry GUI_PURCHASE_ITEM_ITEMS_PRICE_BREAKDOWN_LORE_SHIPPING_BASE = create("gui.purchase item.items.price breakdown.lore.shipping.base",
+			"&7Base charge&f: &a%shipping_base%"
+	);
+
+	public static TranslationEntry GUI_PURCHASE_ITEM_ITEMS_PRICE_BREAKDOWN_LORE_SHIPPING_DISTANCE = create("gui.purchase item.items.price breakdown.lore.shipping.distance",
+			"&7Distance charge&f: &a%shipping_distance%"
+	);
+
+	public static TranslationEntry GUI_PURCHASE_ITEM_ITEMS_PRICE_BREAKDOWN_LORE_SHIPPING_WAIVED = create("gui.purchase item.items.price breakdown.lore.shipping.waived",
+			"&7%shipping_component%&f: &eWaived"
+	);
+
+	public static TranslationEntry GUI_PURCHASE_ITEM_ITEMS_PRICE_BREAKDOWN_LORE_SHIPPING_NA = create("gui.purchase item.items.price breakdown.lore.shipping.na",
+			"&b&lShipping",
+			"&7Not applicable in this world"
+	);
+
+	public static TranslationEntry GUI_PURCHASE_ITEM_ITEMS_PRICE_BREAKDOWN_LORE_GRAND_TOTAL = create("gui.purchase item.items.price breakdown.lore.grand total",
+			"&b&lGrand Total",
+			"&a%grand_total%"
+	);
+
+	public static TranslationEntry SHIPPING_NO_MONEY = create("error.shipping no money", "&cYou don't have enough Vault money to cover shipping (&a%shipping_total%&c).");
+
+	public static TranslationEntry SHIPPING_INFO_HEADER = create("info.shipping.header", "&e&lShipping Information");
+	public static TranslationEntry SHIPPING_INFO_DISABLED = create("info.shipping.disabled", "&7Shipping is currently &cdisabled&7.");
+	public static TranslationEntry SHIPPING_INFO_ENABLED = create("info.shipping.enabled", "&7Shipping is &aenabled&7.");
+	public static TranslationEntry SHIPPING_INFO_WORLD = create("info.shipping.world", "&7Your world&f: &e%world_name%");
+	public static TranslationEntry SHIPPING_INFO_UNCONFIGURED = create("info.shipping.unconfigured", "&7Shipping does &cnot apply &7in this world.");
+	public static TranslationEntry SHIPPING_INFO_CONFIGURED = create("info.shipping.configured", "&7Shipping &aapplies &7in this world.");
+	public static TranslationEntry SHIPPING_INFO_REGION = create("info.shipping.region", "&7Region (XZ)&f: &e%region_min_x%&7, &e%region_min_z% &7to &e%region_max_x%&7, &e%region_max_z%");
+	public static TranslationEntry SHIPPING_INFO_ORIGIN = create("info.shipping.origin", "&7Origin (XZ)&f: &e%origin_x%&7, &e%origin_z%");
+	public static TranslationEntry SHIPPING_INFO_BASE = create("info.shipping.base", "&7Base charge (outside region)&f: &a$%base_charge%");
+	public static TranslationEntry SHIPPING_INFO_FREE_DISTANCE = create("info.shipping.free distance", "&7Free distance&f: &e%free_distance% &7blocks");
+	public static TranslationEntry SHIPPING_INFO_RATE = create("info.shipping.rate", "&7Distance rate&f: &a$%rate_per_unit% &7per &e%distance_unit% &7blocks");
+	public static TranslationEntry SHIPPING_INFO_YOUR_COST = create("info.shipping.your cost", "&7Your current shipping&f: &a$%shipping_total%");
+	public static TranslationEntry SHIPPING_INFO_YOUR_DISTANCE = create("info.shipping.your distance", "&7Your distance&f: &e%distance% &7blocks (&e%billable_distance% &7billable)");
+	public static TranslationEntry SHIPPING_INFO_EXEMPT_FLAT = create("info.shipping.exempt flat", "&7Flat fee exemption&f: &aActive");
+	public static TranslationEntry SHIPPING_INFO_EXEMPT_DISTANCE = create("info.shipping.exempt distance", "&7Distance fee exemption&f: &aActive");
+	public static TranslationEntry SHIPPING_INFO_MARKET_WORLDS = create("info.shipping.market worlds", "&7Markets are available from &eworld &7and &epocket1&7.");
+	public static TranslationEntry SHIPPING_PURCHASE_BREAKDOWN = create("info.shipping.purchase breakdown",
+			"&eShipping paid&f: &a$%shipping_total%",
+			"&7Base&f: &a$%shipping_base% &7| Distance&f: &a$%shipping_distance%",
+			"&7World&f: &e%world_name%"
+	);
+
+	public static TranslationEntry SHIPPING_ADMIN_UPDATED = create("info.shipping.admin.updated", "&aShipping setting updated.");
+	public static TranslationEntry SHIPPING_ADMIN_INVALID = create("error.shipping.admin.invalid", "&cInvalid value. Check your command syntax.");
+	public static TranslationEntry SHIPPING_ADMIN_WORLD_EXISTS = create("error.shipping.admin.world exists", "&cThat world is already configured.");
+	public static TranslationEntry SHIPPING_ADMIN_WORLD_MISSING = create("error.shipping.admin.world missing", "&cThat world is not configured.");
+	public static TranslationEntry SHIPPING_ADMIN_WORLD_ADDED = create("info.shipping.admin.world added", "&aAdded shipping config for world &e%world_name%&a.");
+	public static TranslationEntry SHIPPING_ADMIN_WORLD_REMOVED = create("info.shipping.admin.world removed", "&aRemoved shipping config for world &e%world_name%&a.");
+	public static TranslationEntry SHIPPING_ADMIN_WORLD_LIST = create("info.shipping.admin.world list", "&7Configured worlds&f: &e%world_list%");
+
 	public static TranslationEntry GUI_OFFLINE_PAYMENTS_TITLE = create("gui.offline payments.title", "&eMarkets &f- &7Collect Payments");
 	public static TranslationEntry GUI_OFFLINE_PAYMENTS_ITEMS_PROFILE_LORE = create("gui.offline payments.items.payment.lore",
 			"",

@@ -8,6 +8,9 @@ import ca.tweetzy.markets.api.market.core.MarketItem;
 import ca.tweetzy.markets.gui.MarketsBaseGUI;
 import ca.tweetzy.markets.gui.shared.view.content.MarketCategoryViewGUI;
 import ca.tweetzy.markets.model.Taxer;
+import ca.tweetzy.markets.model.shipping.ShippingBreakdown;
+import ca.tweetzy.markets.model.shipping.ShippingCalculator;
+import ca.tweetzy.markets.model.shipping.ShippingMoney;
 import ca.tweetzy.markets.settings.Settings;
 import ca.tweetzy.markets.settings.Translations;
 import lombok.NonNull;
@@ -127,6 +130,9 @@ public final class MarketItemPurchaseGUI extends MarketsBaseGUI {
 		final QuickItem quickItem = QuickItem.of(Settings.GUI_PURCHASE_ITEM_ITEMS_PRICE_BREAKDOWN.getItemStack());
 		quickItem.name(TranslationManager.string(this.player, Translations.GUI_PURCHASE_ITEM_ITEMS_PRICE_BREAKDOWN_NAME));
 
+		final double subtotalValue = this.marketItem.isPriceForAll() ? this.marketItem.getPrice() : this.marketItem.getPrice() * this.purchaseQty;
+		final double purchaseTotal = Taxer.getTaxedTotal(subtotalValue);
+
 		quickItem.lore(TranslationManager.list(this.player, Translations.GUI_PURCHASE_ITEM_ITEMS_PRICE_BREAKDOWN_LORE_INFO,
 				"purchase_quantity", this.purchaseQty,
 				"market_item_price", String.format("%,.2f", this.marketItem.getPrice()),
@@ -134,19 +140,54 @@ public final class MarketItemPurchaseGUI extends MarketsBaseGUI {
 		));
 
 		quickItem.lore(TranslationManager.list(this.player, Translations.GUI_PURCHASE_ITEM_ITEMS_PRICE_BREAKDOWN_LORE_SUBTOTAL,
-				"purchase_sub_total", String.format("%,.2f", this.marketItem.isPriceForAll() ? this.marketItem.getPrice() : this.marketItem.getPrice() * this.purchaseQty)
+				"purchase_sub_total", String.format("%,.2f", subtotalValue)
 		));
 
 		if (Settings.TAX_ENABLED.getBoolean())
 			quickItem.lore(TranslationManager.list(this.player, Translations.GUI_PURCHASE_ITEM_ITEMS_PRICE_BREAKDOWN_LORE_TAX,
-					"sales_tax", String.format("%,.2f", Taxer.calculateTaxAmount(this.marketItem.isPriceForAll() ? this.marketItem.getPrice() : this.marketItem.getPrice() * this.purchaseQty))
+					"sales_tax", String.format("%,.2f", Taxer.calculateTaxAmount(subtotalValue))
 			));
 
 		quickItem.lore(TranslationManager.list(this.player, Translations.GUI_PURCHASE_ITEM_ITEMS_PRICE_BREAKDOWN_LORE_TOTAL,
-				"purchase_total", String.format("%,.2f", Taxer.getTaxedTotal(this.marketItem.isPriceForAll() ? this.marketItem.getPrice() : this.marketItem.getPrice() * this.purchaseQty))
+				"purchase_total", String.format("%,.2f", purchaseTotal)
 		));
 
+		appendShippingLore(quickItem, purchaseTotal);
+
 		setItem(4, 4, quickItem.make());
+	}
+
+	private void appendShippingLore(@NonNull final QuickItem quickItem, final double purchaseTotal) {
+		if (!Settings.SHIPPING_ENABLED.getBoolean())
+			return;
+
+		final ShippingBreakdown shipping = ShippingCalculator.calculate(this.player);
+
+		if (shipping.getNoChargeReason() == ShippingBreakdown.NoChargeReason.UNCONFIGURED_WORLD) {
+			quickItem.lore(TranslationManager.list(this.player, Translations.GUI_PURCHASE_ITEM_ITEMS_PRICE_BREAKDOWN_LORE_SHIPPING_NA));
+			return;
+		}
+
+		if (shipping.isFlatExempt())
+			quickItem.lore(TranslationManager.list(this.player, Translations.GUI_PURCHASE_ITEM_ITEMS_PRICE_BREAKDOWN_LORE_SHIPPING_WAIVED, "shipping_component", "Base charge"));
+		else if (shipping.getBaseCharge().compareTo(java.math.BigDecimal.ZERO) > 0)
+			quickItem.lore(TranslationManager.list(this.player, Translations.GUI_PURCHASE_ITEM_ITEMS_PRICE_BREAKDOWN_LORE_SHIPPING_BASE, "shipping_base", ShippingMoney.format(shipping.getBaseCharge())));
+
+		if (shipping.isDistanceExempt())
+			quickItem.lore(TranslationManager.list(this.player, Translations.GUI_PURCHASE_ITEM_ITEMS_PRICE_BREAKDOWN_LORE_SHIPPING_WAIVED, "shipping_component", "Distance charge"));
+		else if (shipping.getDistanceCharge().compareTo(java.math.BigDecimal.ZERO) > 0)
+			quickItem.lore(TranslationManager.list(this.player, Translations.GUI_PURCHASE_ITEM_ITEMS_PRICE_BREAKDOWN_LORE_SHIPPING_DISTANCE, "shipping_distance", ShippingMoney.format(shipping.getDistanceCharge())));
+
+		quickItem.lore(TranslationManager.list(this.player, Translations.GUI_PURCHASE_ITEM_ITEMS_PRICE_BREAKDOWN_LORE_SHIPPING,
+				"shipping_total", ShippingMoney.format(shipping.getTotal())
+		));
+
+		if (shipping.appliesCharge()) {
+			final double grandTotal = purchaseTotal + shipping.getTotalAsDouble();
+			quickItem.lore(TranslationManager.list(this.player, Translations.GUI_PURCHASE_ITEM_ITEMS_PRICE_BREAKDOWN_LORE_GRAND_TOTAL,
+					"grand_total", String.format("%,.2f", grandTotal)
+			));
+		}
 	}
 
 	private void adjustPurchaseQty(@NonNull final AdjustmentType adjustmentType, final int amount) {

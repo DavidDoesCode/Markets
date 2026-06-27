@@ -47,6 +47,7 @@ public final class Markets extends FlightPlugin {
 	private final RequestManager requestManager = new RequestManager();
 	private final OfflineItemPaymentManager offlineItemPaymentManager = new OfflineItemPaymentManager();
 	private final TransactionManager transactionManager = new TransactionManager();
+	private final ShippingManager shippingManager = new ShippingManager();
 
 	// database backup task
 	private DatabaseBackupTask databaseBackupTask;
@@ -115,6 +116,7 @@ public final class Markets extends FlightPlugin {
 		this.offerManager.load();
 		this.requestManager.load();
 		this.transactionManager.load();
+		this.shippingManager.load();
 
 		// listeners
 		getServer().getPluginManager().registerEvents(new PlayerJoinListener(), this);
@@ -134,7 +136,8 @@ public final class Markets extends FlightPlugin {
 				new CommandStats(),
 				new CommandReviews(),
 				new CommandBackup(),
-				new CommandReload()
+				new CommandReload(),
+				new CommandShipping()
 		);
 
 		// start database backup scheduler
@@ -209,6 +212,10 @@ public final class Markets extends FlightPlugin {
 
 	public static TransactionManager getTransactionManager() {
 		return getInstance().transactionManager;
+	}
+
+	public static ShippingManager getShippingManager() {
+		return getInstance().shippingManager;
 	}
 
 	public static OfferManager getOfferManager() {

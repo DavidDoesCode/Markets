@@ -95,6 +95,12 @@ public final class Settings extends FlightSettings {
 	public static ConfigEntry BANNED_OWNER_CACHE_TTL = create("settings.banned owner cache ttl", 60).withComment("How many seconds the server ban list is cached before it is rebuilt. Higher values are more efficient on large servers but reflect new bans/unbans more slowly.");
 
 	/*
+	========================= Shipping Settings =========================
+	 */
+	public static ConfigEntry SHIPPING_ENABLED = create("settings.shipping.enabled", false).withComment("If true, shipping charges will be applied to market purchases based on per-world settings.");
+	public static ConfigEntry SHIPPING_RECEIVER = create("settings.shipping.receiver", "MCVerseCity").withComment("The username that receives Vault shipping payments.");
+
+	/*
 	========================= COMMAND ALIASES =========================
 	 */
 	public static ConfigEntry CMD_ALIAS_MAIN = create("command aliases.main", List.of("markets", "market")).withComment("Aliases for the main command, please ensure this doesn't conflict with other plugin commands.");
@@ -110,6 +116,7 @@ public final class Settings extends FlightSettings {
 	public static ConfigEntry CMD_ALIAS_SUB_STATS = create("command aliases.subcommands.stats", List.of("stats", "statistics")).withComment("Aliases for the stats command");
 	public static ConfigEntry CMD_ALIAS_SUB_REVIEWS = create("command aliases.subcommands.reviews", List.of("reviews", "ratings")).withComment("Aliases for the reviews command");
 	public static ConfigEntry CMD_ALIAS_SUB_BACKUP = create("command aliases.subcommands.backup", List.of("backup")).withComment("Aliases for the backup command");
+	public static ConfigEntry CMD_ALIAS_SUB_SHIPPING = create("command aliases.subcommands.shipping", List.of("shipping")).withComment("Aliases for the shipping command");
 
 
 	/*

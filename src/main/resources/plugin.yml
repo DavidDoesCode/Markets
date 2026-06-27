@@ -40,6 +40,18 @@ permissions:
   markets.command.reviews:
     description: Allows access to the /markets reviews command
     default: true
+  markets.command.shipping:
+    description: Allows access to the /markets shipping command
+    default: true
+  markets.admin.shipping:
+    description: Allows configuring shipping settings via /markets admin shipping
+    default: op
+  markets.shipping.exempt.flat:
+    description: Exempts the player from flat/base shipping charges
+    default: false
+  markets.shipping.exempt.distance:
+    description: Exempts the player from distance-based shipping charges
+    default: false
   markets.alerts.dupe:
     description: Receive alerts when dupe exploits are detected or prevented
     default: op
