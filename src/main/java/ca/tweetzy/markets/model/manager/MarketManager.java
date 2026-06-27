@@ -15,6 +15,9 @@ import ca.tweetzy.markets.impl.layout.HomeLayout;
 import ca.tweetzy.markets.settings.Settings;
 import ca.tweetzy.markets.settings.Translations;
 import lombok.NonNull;
+import org.bukkit.BanEntry;
+import org.bukkit.BanList;
+import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.enchantments.Enchantment;
@@ -25,18 +28,86 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.profile.PlayerProfile;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 public final class MarketManager extends ListManager<Market> {
 
+	private final Set<UUID> bannedOwnerUUIDs = ConcurrentHashMap.newKeySet();
+	private final Set<String> bannedOwnerNames = ConcurrentHashMap.newKeySet();
+	private long bannedCacheLastRefresh = 0L;
+
 	public MarketManager() {
 		super("Market");
+	}
+
+	/**
+	 * Rebuilds the cached set of server-banned owners from the Bukkit ban lists, but only
+	 * if the cache is older than {@link Settings#BANNED_OWNER_CACHE_TTL}. This keeps per-market
+	 * ban checks an O(1) set lookup instead of querying the ban list (or OfflinePlayer) per market.
+	 */
+	private void refreshBanCacheIfStale() {
+		final long ttlMillis = Settings.BANNED_OWNER_CACHE_TTL.getInt() * 1000L;
+		if (System.currentTimeMillis() - this.bannedCacheLastRefresh < ttlMillis)
+			return;
+
+		final Set<UUID> uuids = new HashSet<>();
+		final Set<String> names = new HashSet<>();
+
+		// profile bans (modern, UUID based)
+		try {
+			final BanList<PlayerProfile> profileBanList = Bukkit.getBanList(BanList.Type.PROFILE);
+			for (BanEntry<PlayerProfile> entry : profileBanList.getBanEntries()) {
+				final PlayerProfile profile = entry.getBanTarget();
+				if (profile == null) continue;
+
+				if (profile.getUniqueId() != null)
+					uuids.add(profile.getUniqueId());
+				if (profile.getName() != null)
+					names.add(profile.getName().toLowerCase());
+			}
+		} catch (Exception ignored) {
+			// API not available / unexpected ban list shape, fall back to name bans only
+		}
+
+		// legacy name bans
+		try {
+			final BanList<?> nameBanList = Bukkit.getBanList(BanList.Type.NAME);
+			for (BanEntry<?> entry : nameBanList.getBanEntries()) {
+				final Object target = entry.getBanTarget();
+				if (target != null)
+					names.add(target.toString().toLowerCase());
+			}
+		} catch (Exception ignored) {
+			// ignore, name bans are best-effort
+		}
+
+		this.bannedOwnerUUIDs.clear();
+		this.bannedOwnerUUIDs.addAll(uuids);
+		this.bannedOwnerNames.clear();
+		this.bannedOwnerNames.addAll(names);
+		this.bannedCacheLastRefresh = System.currentTimeMillis();
+	}
+
+	/**
+	 * @return true if the owner of the given market is currently banned from the server. Returns
+	 * false when the feature is disabled via {@link Settings#HIDE_BANNED_OWNER_MARKETS}.
+	 */
+	public boolean isOwnerServerBanned(@NonNull final Market market) {
+		if (!Settings.HIDE_BANNED_OWNER_MARKETS.getBoolean())
+			return false;
+
+		refreshBanCacheIfStale();
+		return this.bannedOwnerUUIDs.contains(market.getOwnerUUID()) || this.bannedOwnerNames.contains(market.getOwnerName().toLowerCase());
 	}
 
 	/**
@@ -138,7 +209,8 @@ public final class MarketManager extends ListManager<Market> {
 	}
 
 	public List<Market> getOpenMarketsExclusive(@NonNull final OfflinePlayer ignoredUser) {
-		return getManagerContent().stream().filter(market -> !market.getOwnerUUID().equals(ignoredUser.getUniqueId()) && market.isOpen() && !market.isEmpty()).collect(Collectors.toList());
+		refreshBanCacheIfStale();
+		return getManagerContent().stream().filter(market -> !market.getOwnerUUID().equals(ignoredUser.getUniqueId()) && market.isOpen() && !market.isEmpty() && !isOwnerServerBanned(market)).collect(Collectors.toList());
 	}
 
 	public ServerMarket getServerMarket() {
@@ -151,7 +223,8 @@ public final class MarketManager extends ListManager<Market> {
 	}
 
 	public List<Market> getOpenMarketsInclusive() {
-		return getManagerContent().stream().filter(Market::isOpen).collect(Collectors.toList());
+		refreshBanCacheIfStale();
+		return getManagerContent().stream().filter(market -> market.isOpen() && !isOwnerServerBanned(market)).collect(Collectors.toList());
 	}
 
 	public Market getByOwner(@NonNull final UUID uuid) {

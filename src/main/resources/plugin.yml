@@ -31,6 +31,9 @@ permissions:
   markets.admin.removerating:
     description: Allows removing market ratings/reviews in the ratings GUI
     default: op
+  markets.admin.viewrestricted:
+    description: Allows opening closed or server-banned-owner markets via /markets view <player>
+    default: op
   markets.command.reviews:
     description: Allows access to the /markets reviews command
     default: true
