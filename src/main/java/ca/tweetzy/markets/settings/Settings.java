@@ -88,6 +88,8 @@ public final class Settings extends FlightSettings {
 	public static ConfigEntry DISABLE_WHOLESALE = create("settings.disable wholesale", false).withComment("If true, wholesale will be disabled");
 	public static ConfigEntry DISABLE_LAYOUT_EDITING = create("settings.disable layout editing", false).withComment("If true, users will not be able to change the layout of their markets");
 	public static ConfigEntry PURCHASE_ITEM_SHIFT_MULTI_AMT = create("settings.purchase item.shift multiply amount", 10).withComment("Ex. if the player shift clicks the increase 5 button it becomes 50, 1 -> 10, 10 -> 100");
+	public static ConfigEntry PURCHASE_HIGH_AMOUNT_PER_UNIT = create("settings.purchase item.high amount per unit", 1000).withComment("Per-unit price above this value triggers a high-amount warning on checkout");
+	public static ConfigEntry PURCHASE_HIGH_AMOUNT_TOTAL = create("settings.purchase item.high amount total", 5000).withComment("Grand total above this value triggers a high-amount warning on checkout");
 	public static ConfigEntry REQUEST_MENU_SHOWS_OWN_FIRST = create("settings.request menu shows own first", true).withComment("If false, the request menu will show global requests by default instead of your own.");
 	public static ConfigEntry USE_ADDITIONAL_CONFIRMS = create("settings.additional confirmations.enabled", true).withComment("If true, markets will ask the player to confirm sensitive actions (ie. deleting, creating) ");
 	public static ConfigEntry TRANSACTION_VIEW_ALL_NEEDS_PERM = create("settings.require permission to view all transactions", true).withComment("If true, players will need the perm: markets.viewalltransactions to see the toggle button.");
@@ -235,6 +237,9 @@ public final class Settings extends FlightSettings {
 	public static ConfigEntry GUI_MARKET_BANNED_USERS_ITEMS_NEW_BAN = create("gui.market banned users.items.new ban.item", CompMaterial.LIME_DYE.name());
 
 	public static ConfigEntry GUI_MARKET_STATS_BACKGROUND = create("gui.market stats.items.background", CompMaterial.BLACK_STAINED_GLASS_PANE.name());
+	public static ConfigEntry GUI_MARKET_STATS_ITEMS_WEBSITE_ENABLED = create("gui.market stats.items.website.enabled", true);
+	public static ConfigEntry GUI_MARKET_STATS_ITEMS_WEBSITE_URL = create("gui.market stats.items.website.url", "https://markets.example.com");
+	public static ConfigEntry GUI_MARKET_STATS_ITEMS_WEBSITE_ITEM = create("gui.market stats.items.website.item", CompMaterial.KNOWLEDGE_BOOK.name());
 
 	public static ConfigEntry GUI_LAYOUT_CONTROL_PICKER_BACKGROUND = create("gui.layout control picker.items.background", CompMaterial.BLACK_STAINED_GLASS_PANE.name());
 	public static ConfigEntry GUI_LAYOUT_CONTROL_PICKER_ITEMS_EXIT = create("gui.layout control picker.items.exit.item", CompMaterial.BARRIER.name());
@@ -255,6 +260,7 @@ public final class Settings extends FlightSettings {
 	public static ConfigEntry GUI_PURCHASE_ITEM_ITEMS_INCREMENT = create("gui.purchase item.items.increment.item", CompMaterial.LIME_STAINED_GLASS_PANE.name());
 	public static ConfigEntry GUI_PURCHASE_ITEM_ITEMS_DECREMENT = create("gui.purchase item.items.decrement.item", CompMaterial.RED_STAINED_GLASS_PANE.name());
 	public static ConfigEntry GUI_PURCHASE_ITEM_ITEMS_PRICE_BREAKDOWN = create("gui.purchase item.items.price breakdown.item", CompMaterial.PAPER.name());
+	public static ConfigEntry GUI_PURCHASE_ITEM_ITEMS_HIGH_AMOUNT_WARNING = create("gui.purchase item.items.high amount warning.item", CompMaterial.BELL.name());
 
 	public static ConfigEntry GUI_OFFER_CREATE_BACKGROUND = create("gui.offer creation.items.background", CompMaterial.BLACK_STAINED_GLASS_PANE.name());
 	public static ConfigEntry GUI_OFFER_CREATE_ITEMS_CREATE_OFFER = create("gui.offer creation.items.create offer.item", CompMaterial.LIME_DYE.name());

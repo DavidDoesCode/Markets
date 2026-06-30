@@ -52,24 +52,16 @@ public final class MarketItemPurchaseGUI extends MarketsBaseGUI {
 					.make()
 			);
 
-		drawPriceBreakdown();
+		final CheckoutTotals totals = calculateCheckoutTotals();
+		drawPriceBreakdown(totals);
+		drawHighAmountWarning(totals);
 
 		if (this.marketItem.isInfinite() || this.marketItem.getStock() != 1 && !this.marketItem.isPriceForAll()) {
 			drawDecrementButtons();
 			drawIncrementButtons();
 		}
 
-		setButton(getRows() - 1, 4, QuickItem
-				.of(Settings.GUI_PURCHASE_ITEM_ITEMS_BUY.getItemStack())
-				.name(TranslationManager.string(this.player, Translations.GUI_PURCHASE_ITEM_ITEMS_BUY_NAME))
-				.lore(TranslationManager.list(this.player, Translations.GUI_PURCHASE_ITEM_ITEMS_BUY_LORE, "left_click", TranslationManager.string(this.player, Translations.MOUSE_LEFT_CLICK)))
-				.make(), click -> {
-
-			this.marketItem.performPurchase(this.market, click.player, this.purchaseQty, result -> {
-				this.marketItem.getViewingPlayers().remove(click.player);
-				click.manager.showGUI(click.player, new MarketCategoryViewGUI(this.player, this.market, Markets.getCategoryManager().getByUUID(marketItem.getOwningCategory()), false));
-			});
-		});
+		drawBuyButton(totals);
 
 		applyBackExit();
 		setAction(getRows() - 1, 0, click -> {
@@ -126,12 +118,42 @@ public final class MarketItemPurchaseGUI extends MarketsBaseGUI {
 				.make());
 	}
 
-	private void drawPriceBreakdown() {
+	private void drawBuyButton(@NonNull final CheckoutTotals totals) {
+		setButton(getRows() - 1, 4, QuickItem
+				.of(Settings.GUI_PURCHASE_ITEM_ITEMS_BUY.getItemStack())
+				.name(TranslationManager.string(this.player, Translations.GUI_PURCHASE_ITEM_ITEMS_BUY_NAME))
+				.lore(TranslationManager.list(this.player, Translations.GUI_PURCHASE_ITEM_ITEMS_BUY_LORE,
+						"purchase_total", String.format("%,.2f", totals.grandTotal()),
+						"purchase_quantity", this.purchaseQty,
+						"left_click", TranslationManager.string(this.player, Translations.MOUSE_LEFT_CLICK)))
+				.make(), click -> {
+
+			this.marketItem.performPurchase(this.market, click.player, this.purchaseQty, result -> {
+				this.marketItem.getViewingPlayers().remove(click.player);
+				click.manager.showGUI(click.player, new MarketCategoryViewGUI(this.player, this.market, Markets.getCategoryManager().getByUUID(marketItem.getOwningCategory()), false));
+			});
+		});
+	}
+
+	private void drawHighAmountWarning(@NonNull final CheckoutTotals totals) {
+		if (totals.highAmount()) {
+			final QuickItem warningItem = QuickItem
+					.of(Settings.GUI_PURCHASE_ITEM_ITEMS_HIGH_AMOUNT_WARNING.getItemStack())
+					.lore(TranslationManager.list(this.player, Translations.GUI_PURCHASE_ITEM_ITEMS_HIGH_AMOUNT_WARNING_LORE));
+
+			setItem(4, 3, warningItem.make());
+			setItem(4, 5, warningItem.make());
+			return;
+		}
+
+		final QuickItem background = QuickItem.bg(Settings.GUI_PURCHASE_ITEM_BACKGROUND.getItemStack());
+		setItem(4, 3, background.make());
+		setItem(4, 5, background.make());
+	}
+
+	private void drawPriceBreakdown(@NonNull final CheckoutTotals totals) {
 		final QuickItem quickItem = QuickItem.of(Settings.GUI_PURCHASE_ITEM_ITEMS_PRICE_BREAKDOWN.getItemStack());
 		quickItem.name(TranslationManager.string(this.player, Translations.GUI_PURCHASE_ITEM_ITEMS_PRICE_BREAKDOWN_NAME));
-
-		final double subtotalValue = this.marketItem.isPriceForAll() ? this.marketItem.getPrice() : this.marketItem.getPrice() * this.purchaseQty;
-		final double purchaseTotal = Taxer.getTaxedTotal(subtotalValue);
 
 		quickItem.lore(TranslationManager.list(this.player, Translations.GUI_PURCHASE_ITEM_ITEMS_PRICE_BREAKDOWN_LORE_INFO,
 				"purchase_quantity", this.purchaseQty,
@@ -140,24 +162,41 @@ public final class MarketItemPurchaseGUI extends MarketsBaseGUI {
 		));
 
 		quickItem.lore(TranslationManager.list(this.player, Translations.GUI_PURCHASE_ITEM_ITEMS_PRICE_BREAKDOWN_LORE_SUBTOTAL,
-				"purchase_sub_total", String.format("%,.2f", subtotalValue)
+				"purchase_sub_total", String.format("%,.2f", totals.subtotal())
 		));
 
 		if (Settings.TAX_ENABLED.getBoolean())
 			quickItem.lore(TranslationManager.list(this.player, Translations.GUI_PURCHASE_ITEM_ITEMS_PRICE_BREAKDOWN_LORE_TAX,
-					"sales_tax", String.format("%,.2f", Taxer.calculateTaxAmount(subtotalValue))
+					"sales_tax", String.format("%,.2f", Taxer.calculateTaxAmount(totals.subtotal()))
 			));
 
 		quickItem.lore(TranslationManager.list(this.player, Translations.GUI_PURCHASE_ITEM_ITEMS_PRICE_BREAKDOWN_LORE_TOTAL,
-				"purchase_total", String.format("%,.2f", purchaseTotal)
+				"purchase_total", String.format("%,.2f", totals.purchaseTotal())
 		));
 
-		appendShippingLore(quickItem, purchaseTotal);
+		appendShippingLore(quickItem, totals);
 
 		setItem(4, 4, quickItem.make());
 	}
 
-	private void appendShippingLore(@NonNull final QuickItem quickItem, final double purchaseTotal) {
+	private CheckoutTotals calculateCheckoutTotals() {
+		final double subtotal = this.marketItem.isPriceForAll() ? this.marketItem.getPrice() : this.marketItem.getPrice() * this.purchaseQty;
+		final double purchaseTotal = Taxer.getTaxedTotal(subtotal);
+		double grandTotal = purchaseTotal;
+
+		if (Settings.SHIPPING_ENABLED.getBoolean()) {
+			final ShippingBreakdown shipping = ShippingCalculator.calculate(this.player);
+			if (shipping.appliesCharge())
+				grandTotal = purchaseTotal + shipping.getTotalAsDouble();
+		}
+
+		final boolean highAmount = this.marketItem.getPrice() > Settings.PURCHASE_HIGH_AMOUNT_PER_UNIT.getInt()
+				|| grandTotal > Settings.PURCHASE_HIGH_AMOUNT_TOTAL.getInt();
+
+		return new CheckoutTotals(subtotal, purchaseTotal, grandTotal, highAmount);
+	}
+
+	private void appendShippingLore(@NonNull final QuickItem quickItem, @NonNull final CheckoutTotals totals) {
 		if (!Settings.SHIPPING_ENABLED.getBoolean())
 			return;
 
@@ -183,9 +222,8 @@ public final class MarketItemPurchaseGUI extends MarketsBaseGUI {
 		));
 
 		if (shipping.appliesCharge()) {
-			final double grandTotal = purchaseTotal + shipping.getTotalAsDouble();
 			quickItem.lore(TranslationManager.list(this.player, Translations.GUI_PURCHASE_ITEM_ITEMS_PRICE_BREAKDOWN_LORE_GRAND_TOTAL,
-					"grand_total", String.format("%,.2f", grandTotal)
+					"grand_total", String.format("%,.2f", totals.grandTotal())
 			));
 		}
 	}
@@ -208,8 +246,14 @@ public final class MarketItemPurchaseGUI extends MarketsBaseGUI {
 			this.purchaseQty = newAmt;
 		}
 
+		final CheckoutTotals totals = calculateCheckoutTotals();
 		drawPurchasingItem();
-		drawPriceBreakdown();
+		drawPriceBreakdown(totals);
+		drawHighAmountWarning(totals);
+		drawBuyButton(totals);
+	}
+
+	private record CheckoutTotals(double subtotal, double purchaseTotal, double grandTotal, boolean highAmount) {
 	}
 
 	private enum AdjustmentType {

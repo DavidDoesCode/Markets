@@ -683,6 +683,144 @@ public final class Translations extends TranslationManager {
 			"&7Great reviews lead to more customers!"
 	);
 
+	public static TranslationEntry GUI_MARKET_STATS_LOADING_LORE = create("gui.market stats.loading.lore", "&7Loading...");
+
+	public static TranslationEntry GUI_MARKET_STATS_ITEMS_SHOP_YESTERDAY_NAME = create("gui.market stats.items.shop.yesterday.name", "<GRADIENT:65B1B4>&lYour Shop: Yesterday</GRADIENT:2B6F8A>");
+	public static TranslationEntry GUI_MARKET_STATS_ITEMS_SHOP_YESTERDAY_LORE = create("gui.market stats.items.shop.yesterday.lore",
+			"&7Your shop's completed sales from yesterday",
+			"&7(Today is excluded)",
+			"",
+			"&8▪ &7Orders&f: &e%orders%",
+			"&8▪ &7Items Sold&f: &e%items_sold%",
+			"&8▪ &7Revenue&f: &a$%revenue%",
+			"&8▪ &7Unique Buyers&f: &e%unique_buyers%"
+	);
+
+	public static TranslationEntry GUI_MARKET_STATS_ITEMS_SHOP_SEVEN_DAY_NAME = create("gui.market stats.items.shop.seven day.name", "<GRADIENT:65B1B4>&lYour Shop: 7-Day Sales</GRADIENT:2B6F8A>");
+	public static TranslationEntry GUI_MARKET_STATS_ITEMS_SHOP_SEVEN_DAY_LORE = create("gui.market stats.items.shop.seven day.lore",
+			"&7Your shop's sales over the last 7 completed days",
+			"&7(Today is excluded)",
+			"",
+			"&8▪ &7Orders&f: &e%orders%",
+			"&8▪ &7Items Sold&f: &e%items_sold%",
+			"&8▪ &7Revenue&f: &a$%revenue%",
+			"&8▪ &7Unique Buyers&f: &e%unique_buyers%",
+			"&8▪ &7Avg Order Value&f: &a$%avg_order_value%"
+	);
+
+	public static TranslationEntry GUI_MARKET_STATS_ITEMS_SHOP_THIRTY_DAY_NAME = create("gui.market stats.items.shop.thirty day.name", "<GRADIENT:65B1B4>&lYour Shop: 30-Day Sales</GRADIENT:2B6F8A>");
+	public static TranslationEntry GUI_MARKET_STATS_ITEMS_SHOP_THIRTY_DAY_LORE = create("gui.market stats.items.shop.thirty day.lore",
+			"&7Your shop's sales over the last 30 completed days",
+			"&7(Today is excluded)",
+			"",
+			"&8▪ &7Orders&f: &e%orders%",
+			"&8▪ &7Items Sold&f: &e%items_sold%",
+			"&8▪ &7Revenue&f: &a$%revenue%",
+			"&8▪ &7Unique Buyers&f: &e%unique_buyers%",
+			"&8▪ &7Avg Order Value&f: &a$%avg_order_value%"
+	);
+
+	public static TranslationEntry GUI_MARKET_STATS_ITEMS_SHOP_BUYERS_NAME = create("gui.market stats.items.shop.buyers.name", "<GRADIENT:65B1B4>&lYour Shop: Buyers</GRADIENT:2B6F8A>");
+	public static TranslationEntry GUI_MARKET_STATS_ITEMS_SHOP_BUYERS_LORE = create("gui.market stats.items.shop.buyers.lore",
+			"&7Customers who bought from your shop (7 days)",
+			"",
+			"&8▪ &7Unique Buyers&f: &e%unique_buyers%",
+			"&8▪ &7Repeat Buyers&f: &e%repeat_buyers%",
+			"&8▪ &7New Buyers&f: &e%new_buyers%"
+	);
+
+	public static TranslationEntry GUI_MARKET_STATS_ITEMS_SHOP_AVG_ORDER_NAME = create("gui.market stats.items.shop.avg order.name", "<GRADIENT:65B1B4>&lYour Shop: Avg Order</GRADIENT:2B6F8A>");
+	public static TranslationEntry GUI_MARKET_STATS_ITEMS_SHOP_AVG_ORDER_LORE = create("gui.market stats.items.shop.avg order.lore",
+			"&7Your shop's average completed order value",
+			"",
+			"&8▪ &7Avg Order&f: &a$%avg_order_value%",
+			"&8▪ &7Median Order&f: &a$%median_order_value%",
+			"&8▪ &7Largest Order&f: &a$%largest_order%"
+	);
+
+	public static TranslationEntry GUI_MARKET_STATS_ITEMS_SHOP_TREND_NAME = create("gui.market stats.items.shop.trend.name", "<GRADIENT:65B1B4>&lYour Shop: Trend</GRADIENT:2B6F8A>");
+	public static TranslationEntry GUI_MARKET_STATS_ITEMS_SHOP_TREND_LORE = create("gui.market stats.items.shop.trend.lore",
+			"&7Your shop vs the previous 7 completed days",
+			"",
+			"&8▪ &7Current 7d Revenue&f: &a$%current_revenue%",
+			"&8▪ &7Previous 7d Revenue&f: &7$%previous_revenue%",
+			"&8▪ &7Change&f: &e%change_percent%% &7(%change_direction%)"
+	);
+
+	public static TranslationEntry GUI_MARKET_STATS_ITEMS_SERVER_YESTERDAY_NAME = create("gui.market stats.items.server.yesterday.name", "<GRADIENT:65B1B4>&lServer: Yesterday</GRADIENT:2B6F8A>");
+	public static TranslationEntry GUI_MARKET_STATS_ITEMS_SERVER_YESTERDAY_LORE = create("gui.market stats.items.server.yesterday.lore",
+			"&7All marketplace sales from yesterday",
+			"&7(Today is excluded)",
+			"",
+			"&8▪ &7Orders&f: &e%orders%",
+			"&8▪ &7Items Sold&f: &e%items_sold%",
+			"&8▪ &7Revenue&f: &a$%revenue%",
+			"&8▪ &7Unique Buyers&f: &e%unique_buyers%"
+	);
+
+	public static TranslationEntry GUI_MARKET_STATS_ITEMS_SERVER_SEVEN_DAY_NAME = create("gui.market stats.items.server.seven day.name", "<GRADIENT:65B1B4>&lServer: 7-Day Sales</GRADIENT:2B6F8A>");
+	public static TranslationEntry GUI_MARKET_STATS_ITEMS_SERVER_SEVEN_DAY_LORE = create("gui.market stats.items.server.seven day.lore",
+			"&7All marketplace sales over the last 7 completed days",
+			"&7(Today is excluded)",
+			"",
+			"&8▪ &7Orders&f: &e%orders%",
+			"&8▪ &7Items Sold&f: &e%items_sold%",
+			"&8▪ &7Revenue&f: &a$%revenue%",
+			"&8▪ &7Unique Buyers&f: &e%unique_buyers%",
+			"&8▪ &7Avg Order Value&f: &a$%avg_order_value%"
+	);
+
+	public static TranslationEntry GUI_MARKET_STATS_ITEMS_SERVER_THIRTY_DAY_NAME = create("gui.market stats.items.server.thirty day.name", "<GRADIENT:65B1B4>&lServer: 30-Day Sales</GRADIENT:2B6F8A>");
+	public static TranslationEntry GUI_MARKET_STATS_ITEMS_SERVER_THIRTY_DAY_LORE = create("gui.market stats.items.server.thirty day.lore",
+			"&7All marketplace sales over the last 30 completed days",
+			"&7(Today is excluded)",
+			"",
+			"&8▪ &7Orders&f: &e%orders%",
+			"&8▪ &7Items Sold&f: &e%items_sold%",
+			"&8▪ &7Revenue&f: &a$%revenue%",
+			"&8▪ &7Unique Buyers&f: &e%unique_buyers%",
+			"&8▪ &7Avg Order Value&f: &a$%avg_order_value%"
+	);
+
+	public static TranslationEntry GUI_MARKET_STATS_ITEMS_SERVER_BUYERS_NAME = create("gui.market stats.items.server.buyers.name", "<GRADIENT:65B1B4>&lServer: Buyers</GRADIENT:2B6F8A>");
+	public static TranslationEntry GUI_MARKET_STATS_ITEMS_SERVER_BUYERS_LORE = create("gui.market stats.items.server.buyers.lore",
+			"&7All marketplace buyers in the last 7 days",
+			"",
+			"&8▪ &7Unique Buyers&f: &e%unique_buyers%",
+			"&8▪ &7Repeat Buyers&f: &e%repeat_buyers%",
+			"&8▪ &7New Buyers&f: &e%new_buyers%"
+	);
+
+	public static TranslationEntry GUI_MARKET_STATS_ITEMS_SERVER_AVG_ORDER_NAME = create("gui.market stats.items.server.avg order.name", "<GRADIENT:65B1B4>&lServer: Avg Order</GRADIENT:2B6F8A>");
+	public static TranslationEntry GUI_MARKET_STATS_ITEMS_SERVER_AVG_ORDER_LORE = create("gui.market stats.items.server.avg order.lore",
+			"&7Server-wide average completed order value",
+			"",
+			"&8▪ &7Avg Order&f: &a$%avg_order_value%",
+			"&8▪ &7Median Order&f: &a$%median_order_value%",
+			"&8▪ &7Largest Order&f: &a$%largest_order%"
+	);
+
+	public static TranslationEntry GUI_MARKET_STATS_ITEMS_SERVER_TREND_NAME = create("gui.market stats.items.server.trend.name", "<GRADIENT:65B1B4>&lServer: Trend</GRADIENT:2B6F8A>");
+	public static TranslationEntry GUI_MARKET_STATS_ITEMS_SERVER_TREND_LORE = create("gui.market stats.items.server.trend.lore",
+			"&7Server market vs the previous 7 completed days",
+			"",
+			"&8▪ &7Current 7d Revenue&f: &a$%current_revenue%",
+			"&8▪ &7Previous 7d Revenue&f: &7$%previous_revenue%",
+			"&8▪ &7Change&f: &e%change_percent%% &7(%change_direction%)"
+	);
+
+	public static TranslationEntry GUI_MARKET_STATS_ITEMS_WEBSITE_NAME = create("gui.market stats.items.website.name", "<GRADIENT:65B1B4>&lView Market Insights Online</GRADIENT:2B6F8A>");
+	public static TranslationEntry GUI_MARKET_STATS_ITEMS_WEBSITE_LORE = create("gui.market stats.items.website.lore",
+			"&7Open the Markets website for deeper analytics",
+			"&7Find profitable items, pricing trends, and demand data",
+			"",
+			"&8▪ &7Includes item profitability tools",
+			"&8▪ &7Includes historical market trends",
+			"",
+			"&e&l%left_click% &7to open website link in chat"
+	);
+	public static TranslationEntry GUI_MARKET_STATS_ITEMS_WEBSITE_LINK = create("gui.market stats.items.website.link", "&a&lClick here &7to open Market Insights");
+
 	public static TranslationEntry STORE_TIER_LEGENDARY = create("store.tier.legendary", "&6&lLEGENDARY");
 	public static TranslationEntry STORE_TIER_MASTER = create("store.tier.master", "&5&lMASTER");
 	public static TranslationEntry STORE_TIER_EXPERT = create("store.tier.expert", "&b&lEXPERT");
@@ -902,8 +1040,14 @@ public final class Translations extends TranslationManager {
 
 	public static TranslationEntry GUI_PURCHASE_ITEM_ITEMS_BUY_NAME = create("gui.purchase item.items.buy.name", "<GRADIENT:65B1B4>&lPurchase</GRADIENT:2B6F8A>");
 	public static TranslationEntry GUI_PURCHASE_ITEM_ITEMS_BUY_LORE = create("gui.purchase item.items.buy.lore",
+			"&a%purchase_total% &7Total",
+			"&e%purchase_quantity% &7Items",
 			"",
 			"&e&l%left_click% &7to purchase item(s)"
+	);
+
+	public static TranslationEntry GUI_PURCHASE_ITEM_ITEMS_HIGH_AMOUNT_WARNING_LORE = create("gui.purchase item.items.high amount warning.lore",
+			"&c&lHigh transaction amount, please review your purchase offer"
 	);
 
 	public static TranslationEntry GUI_PURCHASE_ITEM_ITEMS_PRICE_BREAKDOWN_NAME = create("gui.purchase item.items.price breakdown.name", "<GRADIENT:65B1B4>&lPrice Breakdown</GRADIENT:2B6F8A>");
