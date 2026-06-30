@@ -47,6 +47,7 @@ public class TransactionsGUI extends MarketsPagedGUI<Transaction> {
 		this.viewAll = viewAll;
 		setAcceptsItems(true);
 		setDefaultItem(QuickItem.bg(Settings.GUI_TRANSACTIONS_BACKGROUND.getItemStack()));
+		setOnOpen(open -> draw());
 
 		loadTransactionsAsync();
 		this.guiShown = true;
@@ -92,12 +93,14 @@ public class TransactionsGUI extends MarketsPagedGUI<Transaction> {
 
 	private void applyTransactionResult(final int requestId, @NonNull final List<Transaction> transactions) {
 		if (requestId != this.loadRequestId) return;
-		if (!isStillOpen()) return;
 
 		this.items = new ArrayList<>(transactions);
 		this.items.sort(Comparator.comparing(Transaction::getTimeCreated).reversed());
 		this.isLoading = false;
-		draw();
+
+		if (isStillOpen()) {
+			draw();
+		}
 	}
 
 	private boolean isStillOpen() {

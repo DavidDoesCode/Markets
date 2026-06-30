@@ -146,9 +146,8 @@ public final class MarketItemPurchaseGUI extends MarketsBaseGUI {
 			return;
 		}
 
-		final QuickItem background = QuickItem.bg(Settings.GUI_PURCHASE_ITEM_BACKGROUND.getItemStack());
-		setItem(4, 3, background.make());
-		setItem(4, 5, background.make());
+		setItem(4, 3, QuickItem.bg(Settings.GUI_PURCHASE_ITEM_BACKGROUND.getItemStack()));
+		setItem(4, 5, QuickItem.bg(Settings.GUI_PURCHASE_ITEM_BACKGROUND.getItemStack()));
 	}
 
 	private void drawPriceBreakdown(@NonNull final CheckoutTotals totals) {

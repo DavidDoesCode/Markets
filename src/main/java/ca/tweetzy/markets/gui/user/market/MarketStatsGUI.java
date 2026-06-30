@@ -1,6 +1,7 @@
 package ca.tweetzy.markets.gui.user.market;
 
 import ca.tweetzy.flight.comp.enums.CompMaterial;
+import ca.tweetzy.flight.settings.TranslationEntry;
 import ca.tweetzy.flight.settings.TranslationManager;
 import ca.tweetzy.flight.utils.QuickItem;
 import ca.tweetzy.markets.Markets;
@@ -10,13 +11,20 @@ import ca.tweetzy.markets.gui.MarketsBaseGUI;
 import ca.tweetzy.markets.gui.shared.MarketsMainGUI;
 import ca.tweetzy.markets.settings.Settings;
 import ca.tweetzy.markets.settings.Translations;
+import ca.tweetzy.markets.util.MarketSalesPeriodStatsCalculator;
+import ca.tweetzy.markets.util.MarketSalesPeriodStatsCalculator.PeriodStats;
+import ca.tweetzy.markets.util.MarketSalesPeriodStatsCalculator.SalesPeriodSnapshot;
+import ca.tweetzy.markets.util.MessageLinks;
 import lombok.NonNull;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import java.text.DecimalFormat;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 public final class MarketStatsGUI extends MarketsBaseGUI {
@@ -24,39 +32,282 @@ public final class MarketStatsGUI extends MarketsBaseGUI {
 	private final Player player;
 	private final Market market;
 
-	private final List<Transaction> sales;
+	private List<Transaction> sales = List.of();
+	private List<Transaction> purchases = List.of();
+	private SalesPeriodSnapshot shopSnapshot;
+	private SalesPeriodSnapshot serverSnapshot;
+
+	private boolean isLoading = true;
+	private int loadRequestId = 0;
 
 	public MarketStatsGUI(@NonNull final Player player, @NonNull final Market market) {
 		super(new MarketsMainGUI(player), player, TranslationManager.string(player, Translations.GUI_MARKET_STATS_TITLE), 6);
 		this.player = player;
 		this.market = market;
 		setDefaultItem(QuickItem.bg(Settings.GUI_MARKET_STATS_BACKGROUND.getItemStack()));
-
-		this.sales = Markets.getTransactionManager().getManagerContent().stream()
-				.filter(t -> t.getSeller().equals(this.market.getOwnerUUID())).toList();
-
-		draw();
+		setOnOpen(open -> draw());
+		loadDataAsync();
 	}
 
 	@Override
 	protected void draw() {
-		// Check permission
 		if (!this.player.hasPermission("markets.viewstats")) {
 			this.player.closeInventory();
 			return;
 		}
 
-		drawStoreLevelRating();
-		drawSalesStats();
-		drawPurchaseStats();
 		drawInventoryStats();
-//		drawCustomerStats();
+		drawWebsiteButton();
+
+		if (this.isLoading || this.shopSnapshot == null || this.serverSnapshot == null) {
+			drawLoadingWing();
+			drawLoadingCenterStats();
+		} else {
+			drawStoreLevelRating();
+			drawSalesStats();
+			drawPurchaseStats();
+			drawShopPeriodStats();
+			drawServerPeriodStats();
+			drawShopInsightStats();
+			drawServerInsightStats();
+		}
 
 		applyBackExit();
 	}
 
+	private void loadDataAsync() {
+		final int requestId = ++this.loadRequestId;
+		this.isLoading = true;
+		this.shopSnapshot = null;
+		this.serverSnapshot = null;
+
+		final AtomicInteger pending = new AtomicInteger(3);
+		final Runnable tryFinish = () -> {
+			if (pending.decrementAndGet() != 0) return;
+			if (requestId != this.loadRequestId) return;
+
+			this.isLoading = false;
+			if (isStillOpen()) {
+				draw();
+			}
+		};
+
+		Markets.getTransactionManager().getSalesTransactionsForAsync(this.market.getOwnerUUID(), transactions -> {
+			if (requestId != this.loadRequestId) return;
+			this.sales = transactions;
+			this.shopSnapshot = MarketSalesPeriodStatsCalculator.calculate(transactions);
+			tryFinish.run();
+		});
+
+		Markets.getTransactionManager().getAllTransactionsForAsync(transactions -> {
+			if (requestId != this.loadRequestId) return;
+			this.serverSnapshot = MarketSalesPeriodStatsCalculator.calculate(transactions);
+			tryFinish.run();
+		});
+
+		Markets.getTransactionManager().getPurchaseTransactionsForAsync(this.market.getOwnerUUID(), transactions -> {
+			if (requestId != this.loadRequestId) return;
+			this.purchases = transactions;
+			tryFinish.run();
+		});
+	}
+
+	private boolean isStillOpen() {
+		return this.player.isOnline() && this.player.getOpenInventory().getTopInventory().equals(this.inventory);
+	}
+
+	private void drawLoadingWing() {
+		final List<String> loadingLore = TranslationManager.list(this.player, Translations.GUI_MARKET_STATS_LOADING_LORE);
+
+		setDisplayButton(1, 4, Material.SUNFLOWER, Translations.GUI_MARKET_STATS_ITEMS_SHOP_YESTERDAY_NAME, loadingLore);
+		setDisplayButton(2, 4, Material.CLOCK, Translations.GUI_MARKET_STATS_ITEMS_SHOP_SEVEN_DAY_NAME, loadingLore);
+		setDisplayButton(3, 4, Material.PAPER, Translations.GUI_MARKET_STATS_ITEMS_SHOP_THIRTY_DAY_NAME, loadingLore);
+		setDisplayButton(1, 5, Material.GOLD_INGOT, Translations.GUI_MARKET_STATS_ITEMS_SERVER_YESTERDAY_NAME, loadingLore);
+		setDisplayButton(2, 5, Material.HOPPER, Translations.GUI_MARKET_STATS_ITEMS_SERVER_SEVEN_DAY_NAME, loadingLore);
+		setDisplayButton(3, 5, Material.ENDER_CHEST, Translations.GUI_MARKET_STATS_ITEMS_SERVER_THIRTY_DAY_NAME, loadingLore);
+		setDisplayButton(1, 7, Material.PLAYER_HEAD, Translations.GUI_MARKET_STATS_ITEMS_SHOP_BUYERS_NAME, loadingLore);
+		setDisplayButton(2, 7, Material.EMERALD, Translations.GUI_MARKET_STATS_ITEMS_SHOP_AVG_ORDER_NAME, loadingLore);
+		setDisplayButton(3, 7, Material.COMPARATOR, Translations.GUI_MARKET_STATS_ITEMS_SHOP_TREND_NAME, loadingLore);
+		setDisplayButton(1, 8, Material.SKELETON_SKULL, Translations.GUI_MARKET_STATS_ITEMS_SERVER_BUYERS_NAME, loadingLore);
+		setDisplayButton(2, 8, Material.DIAMOND, Translations.GUI_MARKET_STATS_ITEMS_SERVER_AVG_ORDER_NAME, loadingLore);
+		setDisplayButton(3, 8, Material.REDSTONE_TORCH, Translations.GUI_MARKET_STATS_ITEMS_SERVER_TREND_NAME, loadingLore);
+	}
+
+	private void drawLoadingCenterStats() {
+		final List<String> loadingLore = TranslationManager.list(this.player, Translations.GUI_MARKET_STATS_LOADING_LORE);
+
+		setDisplayButton(1, 2, CompMaterial.DIRT, Translations.GUI_MARKET_STATS_ITEMS_LEVEL_NAME,
+				TranslationManager.list(this.player, Translations.GUI_MARKET_STATS_ITEMS_LEVEL_LORE,
+						"store_level", "...",
+						"store_tier", "...",
+						"total_sales", "...",
+						"total_reviews", "...",
+						"avg_rating", "...",
+						"total_customers", "...",
+						"active_bans", "..."
+				));
+		setDisplayButton(3, 2, Material.GOLD_INGOT, Translations.GUI_MARKET_STATS_ITEMS_SALES_NAME, loadingLore);
+		setDisplayButton(4, 2, Material.BLACK_WOOL, Translations.GUI_MARKET_STATS_ITEMS_PURCHASES_NAME, loadingLore);
+	}
+
+	private void drawShopPeriodStats() {
+		drawPeriodStatsButton(1, 4, Material.SUNFLOWER,
+				Translations.GUI_MARKET_STATS_ITEMS_SHOP_YESTERDAY_NAME,
+				Translations.GUI_MARKET_STATS_ITEMS_SHOP_YESTERDAY_LORE,
+				this.shopSnapshot.getYesterday(), false);
+		drawPeriodStatsButton(2, 4, Material.CLOCK,
+				Translations.GUI_MARKET_STATS_ITEMS_SHOP_SEVEN_DAY_NAME,
+				Translations.GUI_MARKET_STATS_ITEMS_SHOP_SEVEN_DAY_LORE,
+				this.shopSnapshot.getSevenDay(), true);
+		drawPeriodStatsButton(3, 4, Material.PAPER,
+				Translations.GUI_MARKET_STATS_ITEMS_SHOP_THIRTY_DAY_NAME,
+				Translations.GUI_MARKET_STATS_ITEMS_SHOP_THIRTY_DAY_LORE,
+				this.shopSnapshot.getThirtyDay(), true);
+	}
+
+	private void drawServerPeriodStats() {
+		drawPeriodStatsButton(1, 5, Material.GOLD_INGOT,
+				Translations.GUI_MARKET_STATS_ITEMS_SERVER_YESTERDAY_NAME,
+				Translations.GUI_MARKET_STATS_ITEMS_SERVER_YESTERDAY_LORE,
+				this.serverSnapshot.getYesterday(), false);
+		drawPeriodStatsButton(2, 5, Material.HOPPER,
+				Translations.GUI_MARKET_STATS_ITEMS_SERVER_SEVEN_DAY_NAME,
+				Translations.GUI_MARKET_STATS_ITEMS_SERVER_SEVEN_DAY_LORE,
+				this.serverSnapshot.getSevenDay(), true);
+		drawPeriodStatsButton(3, 5, Material.ENDER_CHEST,
+				Translations.GUI_MARKET_STATS_ITEMS_SERVER_THIRTY_DAY_NAME,
+				Translations.GUI_MARKET_STATS_ITEMS_SERVER_THIRTY_DAY_LORE,
+				this.serverSnapshot.getThirtyDay(), true);
+	}
+
+	private void drawShopInsightStats() {
+		setDisplayButton(1, 7, Material.PLAYER_HEAD,
+				Translations.GUI_MARKET_STATS_ITEMS_SHOP_BUYERS_NAME,
+				TranslationManager.list(this.player, Translations.GUI_MARKET_STATS_ITEMS_SHOP_BUYERS_LORE,
+						"unique_buyers", this.shopSnapshot.getSevenDayUniqueBuyers(),
+						"repeat_buyers", this.shopSnapshot.getSevenDayRepeatBuyers(),
+						"new_buyers", this.shopSnapshot.getSevenDayNewBuyers()
+				));
+
+		setDisplayButton(2, 7, Material.EMERALD,
+				Translations.GUI_MARKET_STATS_ITEMS_SHOP_AVG_ORDER_NAME,
+				TranslationManager.list(this.player, Translations.GUI_MARKET_STATS_ITEMS_SHOP_AVG_ORDER_LORE,
+						"avg_order_value", formatCurrency(this.shopSnapshot.getSevenDayAvgOrderValue()),
+						"median_order_value", formatCurrency(this.shopSnapshot.getSevenDayMedianOrderValue()),
+						"largest_order", formatCurrency(this.shopSnapshot.getSevenDayLargestOrder())
+				));
+
+		setDisplayButton(3, 7, Material.COMPARATOR,
+				Translations.GUI_MARKET_STATS_ITEMS_SHOP_TREND_NAME,
+				TranslationManager.list(this.player, Translations.GUI_MARKET_STATS_ITEMS_SHOP_TREND_LORE,
+						"current_revenue", formatCurrency(this.shopSnapshot.getCurrentSevenDayRevenue()),
+						"previous_revenue", formatCurrency(this.shopSnapshot.getPreviousSevenDayRevenue()),
+						"change_percent", formatPercent(this.shopSnapshot.getChangePercent()),
+						"change_direction", this.shopSnapshot.getChangeDirection()
+				));
+	}
+
+	private void drawServerInsightStats() {
+		setDisplayButton(1, 8, Material.SKELETON_SKULL,
+				Translations.GUI_MARKET_STATS_ITEMS_SERVER_BUYERS_NAME,
+				TranslationManager.list(this.player, Translations.GUI_MARKET_STATS_ITEMS_SERVER_BUYERS_LORE,
+						"unique_buyers", this.serverSnapshot.getSevenDayUniqueBuyers(),
+						"repeat_buyers", this.serverSnapshot.getSevenDayRepeatBuyers(),
+						"new_buyers", this.serverSnapshot.getSevenDayNewBuyers()
+				));
+
+		setDisplayButton(2, 8, Material.DIAMOND,
+				Translations.GUI_MARKET_STATS_ITEMS_SERVER_AVG_ORDER_NAME,
+				TranslationManager.list(this.player, Translations.GUI_MARKET_STATS_ITEMS_SERVER_AVG_ORDER_LORE,
+						"avg_order_value", formatCurrency(this.serverSnapshot.getSevenDayAvgOrderValue()),
+						"median_order_value", formatCurrency(this.serverSnapshot.getSevenDayMedianOrderValue()),
+						"largest_order", formatCurrency(this.serverSnapshot.getSevenDayLargestOrder())
+				));
+
+		setDisplayButton(3, 8, Material.REDSTONE_TORCH,
+				Translations.GUI_MARKET_STATS_ITEMS_SERVER_TREND_NAME,
+				TranslationManager.list(this.player, Translations.GUI_MARKET_STATS_ITEMS_SERVER_TREND_LORE,
+						"current_revenue", formatCurrency(this.serverSnapshot.getCurrentSevenDayRevenue()),
+						"previous_revenue", formatCurrency(this.serverSnapshot.getPreviousSevenDayRevenue()),
+						"change_percent", formatPercent(this.serverSnapshot.getChangePercent()),
+						"change_direction", this.serverSnapshot.getChangeDirection()
+				));
+	}
+
+	private void drawPeriodStatsButton(
+			final int row,
+			final int col,
+			@NonNull final Material material,
+			@NonNull final TranslationEntry nameEntry,
+			@NonNull final TranslationEntry loreEntry,
+			@NonNull final PeriodStats stats,
+			final boolean includeAvgOrder
+	) {
+		if (includeAvgOrder) {
+			setDisplayButton(row, col, material, nameEntry,
+					TranslationManager.list(this.player, loreEntry,
+							"orders", stats.getOrders(),
+							"items_sold", stats.getItemsSold(),
+							"revenue", formatCurrency(stats.getRevenue()),
+							"unique_buyers", stats.getUniqueBuyers(),
+							"avg_order_value", formatCurrency(stats.getAvgOrderValue())
+					));
+			return;
+		}
+
+		setDisplayButton(row, col, material, nameEntry,
+				TranslationManager.list(this.player, loreEntry,
+						"orders", stats.getOrders(),
+						"items_sold", stats.getItemsSold(),
+						"revenue", formatCurrency(stats.getRevenue()),
+						"unique_buyers", stats.getUniqueBuyers()
+				));
+	}
+
+	private void drawWebsiteButton() {
+		if (!Settings.GUI_MARKET_STATS_ITEMS_WEBSITE_ENABLED.getBoolean()) return;
+
+		final String url = Settings.GUI_MARKET_STATS_ITEMS_WEBSITE_URL.getString();
+		setButton(4, 0, QuickItem
+				.of(Settings.GUI_MARKET_STATS_ITEMS_WEBSITE_ITEM.getItemStack())
+				.name(TranslationManager.string(this.player, Translations.GUI_MARKET_STATS_ITEMS_WEBSITE_NAME))
+				.lore(TranslationManager.list(this.player, Translations.GUI_MARKET_STATS_ITEMS_WEBSITE_LORE,
+						"left_click", TranslationManager.string(this.player, Translations.MOUSE_LEFT_CLICK)))
+				.make(), click -> {
+			final String linkText = TranslationManager.string(this.player, Translations.GUI_MARKET_STATS_ITEMS_WEBSITE_LINK);
+			MessageLinks.openUrl(click.player, url, linkText);
+		});
+	}
+
+	private void setDisplayButton(
+			final int row,
+			final int col,
+			@NonNull final Material material,
+			@NonNull final TranslationEntry nameEntry,
+			@NonNull final List<String> lore
+	) {
+		setButton(row, col, QuickItem
+				.of(new ItemStack(material))
+				.name(TranslationManager.string(this.player, nameEntry))
+				.lore(lore)
+				.make(), click -> {});
+	}
+
+	private void setDisplayButton(
+			final int row,
+			final int col,
+			@NonNull final CompMaterial material,
+			@NonNull final TranslationEntry nameEntry,
+			@NonNull final List<String> lore
+	) {
+		setButton(row, col, QuickItem
+				.of(material)
+				.name(TranslationManager.string(this.player, nameEntry, "store_level", "..."))
+				.lore(lore)
+				.make(), click -> {});
+	}
+
 	private void drawStoreLevelRating() {
-		// Calculate store level based on multiple factors
 		int totalSales = getSalesTotalQuantity();
 		int totalListings = getTotalListings();
 		double avgRating = this.market.getRatings().isEmpty() ? 0 : this.market.getReviewAvg();
@@ -64,7 +315,6 @@ public final class MarketStatsGUI extends MarketsBaseGUI {
 		int totalReviews = this.market.getRatings().size();
 		int activeBans = this.market.getBannedUsers().size();
 
-		// Level calculation (0-10 scale)
 		int level = calculateStoreLevel(totalSales, totalListings, avgRating, totalCustomers);
 		String levelTier = getStoreLevelTier(level);
 		CompMaterial levelIcon = getStoreLevelIcon(level);
@@ -85,14 +335,11 @@ public final class MarketStatsGUI extends MarketsBaseGUI {
 	}
 
 	private void drawSalesStats() {
-		int totalSales = sales.size();
-		int totalQuantity = sales.stream().mapToInt(Transaction::getQuantity).sum();
-		double totalRevenue = sales.stream().mapToDouble(Transaction::getPrice).sum();
+		int totalSales = this.sales.size();
+		int totalQuantity = this.sales.stream().mapToInt(Transaction::getQuantity).sum();
+		double totalRevenue = this.sales.stream().mapToDouble(Transaction::getPrice).sum();
 
-		// Get top 3 sold items by quantity
 		List<String> topSoldItems = getTopSoldItems(3);
-
-		// Get top 3 sales by price
 		List<String> topSalesByPrice = getTopSalesByPrice(3);
 
 		setButton(3, 2, QuickItem
@@ -102,10 +349,10 @@ public final class MarketStatsGUI extends MarketsBaseGUI {
 						"total_sales", totalSales,
 						"total_quantity", totalQuantity,
 						"total_revenue", formatCurrency(totalRevenue),
-						"top_item_1", topSoldItems.size() > 0 ? topSoldItems.get(0) : "None",
+						"top_item_1", !topSoldItems.isEmpty() ? topSoldItems.get(0) : "None",
 						"top_item_2", topSoldItems.size() > 1 ? topSoldItems.get(1) : "None",
 						"top_item_3", topSoldItems.size() > 2 ? topSoldItems.get(2) : "None",
-						"top_sale_1", topSalesByPrice.size() > 0 ? topSalesByPrice.get(0) : "None",
+						"top_sale_1", !topSalesByPrice.isEmpty() ? topSalesByPrice.get(0) : "None",
 						"top_sale_2", topSalesByPrice.size() > 1 ? topSalesByPrice.get(1) : "None",
 						"top_sale_3", topSalesByPrice.size() > 2 ? topSalesByPrice.get(2) : "None"
 				))
@@ -113,19 +360,12 @@ public final class MarketStatsGUI extends MarketsBaseGUI {
 	}
 
 	private void drawPurchaseStats() {
-		List<Transaction> purchases = Markets.getTransactionManager().getManagerContent().stream()
-				.filter(t -> t.getBuyer().equals(this.market.getOwnerUUID()))
-				.toList();
+		int totalPurchases = this.purchases.size();
+		int totalQuantity = this.purchases.stream().mapToInt(Transaction::getQuantity).sum();
+		double totalSpent = this.purchases.stream().mapToDouble(Transaction::getPrice).sum();
 
-		int totalPurchases = purchases.size();
-		int totalQuantity = purchases.stream().mapToInt(Transaction::getQuantity).sum();
-		double totalSpent = purchases.stream().mapToDouble(Transaction::getPrice).sum();
-
-		// Get top 3 bought items by quantity
-		List<String> topBoughtItems = getTopBoughtItems(purchases, 3);
-
-		// Get top 3 purchases by price
-		List<String> topPurchasesByPrice = getTopPurchasesByPrice(purchases, 3);
+		List<String> topBoughtItems = getTopBoughtItems(this.purchases, 3);
+		List<String> topPurchasesByPrice = getTopPurchasesByPrice(this.purchases, 3);
 
 		setButton(4, 2, QuickItem
 				.of(new ItemStack(Material.BLACK_WOOL))
@@ -134,10 +374,10 @@ public final class MarketStatsGUI extends MarketsBaseGUI {
 						"total_purchases", totalPurchases,
 						"total_quantity", totalQuantity,
 						"total_spent", formatCurrency(totalSpent),
-						"top_item_1", topBoughtItems.size() > 0 ? topBoughtItems.get(0) : "None",
+						"top_item_1", !topBoughtItems.isEmpty() ? topBoughtItems.get(0) : "None",
 						"top_item_2", topBoughtItems.size() > 1 ? topBoughtItems.get(1) : "None",
 						"top_item_3", topBoughtItems.size() > 2 ? topBoughtItems.get(2) : "None",
-						"top_purchase_1", topPurchasesByPrice.size() > 0 ? topPurchasesByPrice.get(0) : "None",
+						"top_purchase_1", !topPurchasesByPrice.isEmpty() ? topPurchasesByPrice.get(0) : "None",
 						"top_purchase_2", topPurchasesByPrice.size() > 1 ? topPurchasesByPrice.get(1) : "None",
 						"top_purchase_3", topPurchasesByPrice.size() > 2 ? topPurchasesByPrice.get(2) : "None"
 				))
@@ -162,25 +402,6 @@ public final class MarketStatsGUI extends MarketsBaseGUI {
 				.make(), click -> {});
 	}
 
-	private void drawCustomerStats() {
-		int uniqueCustomers = getUniqueCustomers();
-		int totalReviews = this.market.getRatings().size();
-		double avgRating = this.market.getRatings().isEmpty() ? 0 : this.market.getReviewAvg();
-		int activeBans = this.market.getBannedUsers().size();
-
-		setButton(3, 3, QuickItem
-				.of(new ItemStack(Material.PLAYER_HEAD))
-				.name(TranslationManager.string(this.player, Translations.GUI_MARKET_STATS_ITEMS_CUSTOMERS_NAME))
-				.lore(TranslationManager.list(this.player, Translations.GUI_MARKET_STATS_ITEMS_CUSTOMERS_LORE,
-						"unique_customers", uniqueCustomers,
-						"total_reviews", totalReviews,
-						"avg_rating", String.format("%.1f", avgRating),
-						"active_bans", activeBans
-				))
-				.make(), click -> {});
-	}
-
-	// Helper methods for stats calculation
 	private int getTotalListings() {
 		return this.market.getCategories().stream()
 				.mapToInt(category -> category.getItems().size())
@@ -188,40 +409,37 @@ public final class MarketStatsGUI extends MarketsBaseGUI {
 	}
 
 	private int getInStockCount() {
-		return this.market.getCategories().stream()
+		return (int) this.market.getCategories().stream()
 				.flatMap(category -> category.getItems().stream())
 				.filter(item -> item.getStock() > 0)
-				.toList()
-				.size();
+				.count();
 	}
 
 	private int getOutOfStockCount() {
-		return this.market.getCategories().stream()
+		return (int) this.market.getCategories().stream()
 				.flatMap(category -> category.getItems().stream())
 				.filter(item -> item.getStock() == 0)
-				.toList()
-				.size();
+				.count();
 	}
 
 	private int getSalesTotalQuantity() {
-		return sales.stream()
+		return this.sales.stream()
 				.mapToInt(Transaction::getQuantity)
 				.sum();
 	}
 
 	private int getUniqueCustomers() {
-		return (int) sales.stream()
+		return (int) this.sales.stream()
 				.map(Transaction::getBuyer)
 				.distinct()
 				.count();
 	}
 
 	private int calculateStoreLevel(int totalSales, int totalListings, double avgRating, int totalCustomers) {
-		// Weighted scoring system
-		int salesScore = Math.min(totalSales / 50, 3);  // 0-3 points (max at 150 sales)
-		int listingsScore = Math.min(totalListings / 10, 2);  // 0-2 points (max at 20 listings)
-		int ratingScore = (int) Math.min(avgRating, 3);  // 0-3 points (based on 5-star rating)
-		int customerScore = Math.min(totalCustomers / 5, 2);  // 0-2 points (max at 10 customers)
+		int salesScore = Math.min(totalSales / 50, 3);
+		int listingsScore = Math.min(totalListings / 10, 2);
+		int ratingScore = (int) Math.min(avgRating, 3);
+		int customerScore = Math.min(totalCustomers / 5, 2);
 
 		return salesScore + listingsScore + ratingScore + customerScore;
 	}
@@ -245,18 +463,13 @@ public final class MarketStatsGUI extends MarketsBaseGUI {
 	}
 
 	private List<String> getTopSoldItems(int limit) {
-		// Group transactions by item name and sum quantities
 		Map<String, Integer> itemSales = new HashMap<>();
 
-		for (Transaction transaction : sales) {
-			String itemName = transaction.getItem().getType().name();
-			if (transaction.getItem().hasItemMeta() && transaction.getItem().getItemMeta().hasDisplayName()) {
-				itemName = transaction.getItem().getItemMeta().getDisplayName();
-			}
+		for (Transaction transaction : this.sales) {
+			String itemName = getItemName(transaction);
 			itemSales.merge(itemName, transaction.getQuantity(), Integer::sum);
 		}
 
-		// Sort by quantity and get top items
 		return itemSales.entrySet().stream()
 				.sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
 				.limit(limit)
@@ -264,19 +477,14 @@ public final class MarketStatsGUI extends MarketsBaseGUI {
 				.collect(Collectors.toList());
 	}
 
-	private List<String> getTopBoughtItems(List<Transaction> purchases, int limit) {
-		// Group transactions by item name and sum quantities
+	private List<String> getTopBoughtItems(List<Transaction> purchaseList, int limit) {
 		Map<String, Integer> itemPurchases = new HashMap<>();
 
-		for (Transaction transaction : purchases) {
-			String itemName = transaction.getItem().getType().name();
-			if (transaction.getItem().hasItemMeta() && transaction.getItem().getItemMeta().hasDisplayName()) {
-				itemName = transaction.getItem().getItemMeta().getDisplayName();
-			}
+		for (Transaction transaction : purchaseList) {
+			String itemName = getItemName(transaction);
 			itemPurchases.merge(itemName, transaction.getQuantity(), Integer::sum);
 		}
 
-		// Sort by quantity and get top items
 		return itemPurchases.entrySet().stream()
 				.sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
 				.limit(limit)
@@ -284,25 +492,14 @@ public final class MarketStatsGUI extends MarketsBaseGUI {
 				.collect(Collectors.toList());
 	}
 
-	private String formatCurrency(double amount) {
-		DecimalFormat formatter = new DecimalFormat("#,##0.00");
-		return formatter.format(amount);
-	}
-
 	private List<String> getTopSalesByPrice(int limit) {
-		// Group transactions by item name and sum total revenue (price * quantity)
 		Map<String, Double> itemRevenue = new HashMap<>();
 
-		for (Transaction transaction : sales) {
-			String itemName = transaction.getItem().getType().name();
-			if (transaction.getItem().hasItemMeta() && transaction.getItem().getItemMeta().hasDisplayName()) {
-				itemName = transaction.getItem().getItemMeta().getDisplayName();
-			}
-			double revenue = transaction.getPrice();
-			itemRevenue.merge(itemName, revenue, Double::sum);
+		for (Transaction transaction : this.sales) {
+			String itemName = getItemName(transaction);
+			itemRevenue.merge(itemName, transaction.getPrice(), Double::sum);
 		}
 
-		// Sort by revenue and get top items
 		return itemRevenue.entrySet().stream()
 				.sorted(Map.Entry.<String, Double>comparingByValue().reversed())
 				.limit(limit)
@@ -310,24 +507,34 @@ public final class MarketStatsGUI extends MarketsBaseGUI {
 				.collect(Collectors.toList());
 	}
 
-	private List<String> getTopPurchasesByPrice(List<Transaction> purchases, int limit) {
-		// Group transactions by item name and sum total spent
+	private List<String> getTopPurchasesByPrice(List<Transaction> purchaseList, int limit) {
 		Map<String, Double> itemSpent = new HashMap<>();
 
-		for (Transaction transaction : purchases) {
-			String itemName = transaction.getItem().getType().name();
-			if (transaction.getItem().hasItemMeta() && transaction.getItem().getItemMeta().hasDisplayName()) {
-				itemName = transaction.getItem().getItemMeta().getDisplayName();
-			}
-			double spent = transaction.getPrice();
-			itemSpent.merge(itemName, spent, Double::sum);
+		for (Transaction transaction : purchaseList) {
+			String itemName = getItemName(transaction);
+			itemSpent.merge(itemName, transaction.getPrice(), Double::sum);
 		}
 
-		// Sort by amount spent and get top items
 		return itemSpent.entrySet().stream()
 				.sorted(Map.Entry.<String, Double>comparingByValue().reversed())
 				.limit(limit)
 				.map(entry -> entry.getKey() + " ($" + formatCurrency(entry.getValue()) + ")")
 				.collect(Collectors.toList());
+	}
+
+	private String getItemName(@NonNull final Transaction transaction) {
+		String itemName = transaction.getItem().getType().name();
+		if (transaction.getItem().hasItemMeta() && transaction.getItem().getItemMeta().hasDisplayName()) {
+			itemName = transaction.getItem().getItemMeta().getDisplayName();
+		}
+		return itemName;
+	}
+
+	private String formatCurrency(double amount) {
+		return new DecimalFormat("#,##0.00").format(amount);
+	}
+
+	private String formatPercent(double percent) {
+		return new DecimalFormat("#,##0.0").format(percent);
 	}
 }
