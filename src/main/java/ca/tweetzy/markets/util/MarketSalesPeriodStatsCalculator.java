@@ -158,6 +158,7 @@ public final class MarketSalesPeriodStatsCalculator {
 		}
 	}
 
+	@Getter
 	private static final class WindowAccumulator {
 		private final boolean trackOrderPrices;
 		private int orders;
