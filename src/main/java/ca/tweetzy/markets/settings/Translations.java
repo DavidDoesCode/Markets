@@ -1076,7 +1076,7 @@ public final class Translations extends TranslationManager {
 			"&a%purchase_total%"
 	);
 
-	public static TranslationEntry GUI_PURCHASE_ITEM_ITEMS_PRICE_BREAKDOWN_LORE_SHIPPING = create("gui.purchase item.items.price breakdown.lore.shipping",
+	public static TranslationEntry GUI_PURCHASE_ITEM_ITEMS_PRICE_BREAKDOWN_LORE_SHIPPING = create("gui.purchase item.items.price breakdown.lore.shipping total",
 			"&b&lShipping &7(Vault)",
 			"&a%shipping_total%"
 	);
