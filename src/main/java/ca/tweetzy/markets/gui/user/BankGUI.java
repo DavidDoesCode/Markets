@@ -11,6 +11,7 @@ import ca.tweetzy.markets.Markets;
 import ca.tweetzy.markets.api.SynchronizeResult;
 import ca.tweetzy.markets.api.market.BankEntry;
 import ca.tweetzy.markets.gui.MarketsPagedGUI;
+import ca.tweetzy.markets.model.DupeDetector;
 import ca.tweetzy.markets.settings.Settings;
 import ca.tweetzy.markets.settings.Translations;
 import lombok.NonNull;
@@ -137,6 +138,16 @@ public final class BankGUI extends MarketsPagedGUI<BankEntry> {
 						final int withdrawAmount = Integer.parseInt(string);
 
 						if (withdrawAmount <= 0) {
+							DupeDetector.logPreventedAttempt(
+									"BANK_WITHDRAW_INVALID_QTY",
+									click.player,
+									null,
+									bankEntry.getItem(),
+									withdrawAmount,
+									null,
+									null,
+									"requested=" + withdrawAmount + ",available=" + bankEntry.getQuantity()
+							);
 							Common.tell(click.player, TranslationManager.string(click.player, Translations.MUST_BE_HIGHER_THAN_ZERO, "value", string));
 							return false;
 						}
@@ -147,6 +158,16 @@ public final class BankGUI extends MarketsPagedGUI<BankEntry> {
 						}
 
 						if (withdrawAmount > bankEntry.getQuantity()) {
+							DupeDetector.logPreventedAttempt(
+									"BANK_WITHDRAW_INVALID_QTY",
+									click.player,
+									null,
+									bankEntry.getItem(),
+									withdrawAmount,
+									null,
+									null,
+									"requested=" + withdrawAmount + ",available=" + bankEntry.getQuantity()
+							);
 							Common.tell(click.player, TranslationManager.string(click.player, Translations.INSUFFICIENT_ENTRY_AMOUNT));
 							return false;
 						}

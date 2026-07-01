@@ -1,5 +1,6 @@
 package ca.tweetzy.markets.model;
 
+import ca.tweetzy.flight.comp.enums.CompMaterial;
 import ca.tweetzy.flight.settings.TranslationManager;
 import ca.tweetzy.flight.utils.Common;
 import ca.tweetzy.flight.utils.ItemUtil;
@@ -13,6 +14,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -43,7 +45,40 @@ public final class DupeDetector {
 	}
 
 	/**
-	 * Log a dupe attempt with full details
+	 * Unified entry point for logging a prevented dupe attempt.
+	 */
+	public static void logPreventedAttempt(
+			@NonNull final String attemptType,
+			@Nullable final Player actor,
+			@Nullable final Player otherParty,
+			@Nullable final ItemStack item,
+			final int quantity,
+			@Nullable final Market market,
+			@Nullable final MarketItem marketItem,
+			@Nullable final String detail
+	) {
+		final boolean prevented = !ALLOW_POTTED_DUPE;
+		final String actorName = resolveName(actor, market);
+		final String otherName = otherParty != null ? otherParty.getName() : actorName;
+		final ItemStack alertItem = item != null ? item : CompMaterial.BARRIER.parseItem();
+
+		alertAdmins(attemptType, actorName, otherName, alertItem, quantity, prevented);
+		logPreventedToFile(attemptType, actor, otherParty, item, quantity, market, marketItem, detail, prevented);
+
+		Markets.getInstance().getLogger().warning(
+				String.format("[DUPE %s] Type: %s | Actor: %s | Item: %s x%d | Market: %s%s",
+						prevented ? "PREVENTED" : "DETECTED",
+						attemptType,
+						actorName,
+						ItemUtil.getItemName(alertItem),
+						quantity,
+						market != null ? market.getDisplayName() : "N/A",
+						detail != null ? " | " + detail : "")
+		);
+	}
+
+	/**
+	 * Log a dupe attempt with full details (purchase/delete race — legacy API).
 	 */
 	public static void logDupeAttempt(
 			@NonNull final String attemptType,
@@ -56,26 +91,71 @@ public final class DupeDetector {
 			final double price,
 			@NonNull final Market market
 	) {
-		final boolean prevented = !ALLOW_POTTED_DUPE;
-
-		// Alert online admins
-		alertAdmins(attemptType, buyerName, sellerName, item.getItem(), quantity, prevented);
-
-		// Log to file
-		logToFile(attemptType, buyerUUID, buyerName, sellerUUID, sellerName, item, quantity, price, market, prevented);
-
-		// Log to console
-		Markets.getInstance().getLogger().warning(
-				String.format("[DUPE %s] Type: %s | Buyer: %s | Seller: %s | Item: %s x%d | Market: %s",
-						prevented ? "PREVENTED" : "DETECTED",
-						attemptType,
-						buyerName,
-						sellerName,
-						ItemUtil.getItemName(item.getItem()),
-						quantity,
-						market.getDisplayName()
-				)
+		logPreventedAttempt(
+				attemptType,
+				Bukkit.getPlayer(buyerUUID),
+				Bukkit.getPlayer(sellerUUID),
+				item.getItem(),
+				quantity,
+				market,
+				item,
+				String.format("buyer=%s (%s) | seller=%s (%s) | price=%.2f",
+						buyerName, buyerUUID, sellerName, sellerUUID, price)
 		);
+	}
+
+	/**
+	 * Log a GUI draft-item dupe attempt (e.g. grab item from slot then refresh GUI).
+	 */
+	public static void logGuiDraftDupeAttempt(
+			@NonNull final Player player,
+			@NonNull final String guiName,
+			@NonNull final String action,
+			@NonNull final ItemStack draftItem,
+			@NonNull final Market market
+	) {
+		logPreventedAttempt(
+				"GUI_DRAFT_ITEM / " + action,
+				player,
+				null,
+				draftItem,
+				draftItem.getAmount(),
+				market,
+				null,
+				"gui=" + guiName
+		);
+	}
+
+	/**
+	 * Log when an operation is blocked due to concurrent modification.
+	 */
+	public static void logBlockedOperation(
+			@NonNull final String operationType,
+			@NonNull final Player player,
+			@NonNull final MarketItem item
+	) {
+		final String attemptType = "PURCHASE".equals(operationType)
+				? "RACE_PURCHASE_DURING_EDIT"
+				: operationType;
+
+		logPreventedAttempt(
+				attemptType,
+				player,
+				null,
+				item.getItem(),
+				item.getStock(),
+				item.getOwningMarket(),
+				item,
+				null
+		);
+	}
+
+	private static String resolveName(@Nullable final Player actor, @Nullable final Market market) {
+		if (actor != null)
+			return actor.getName();
+		if (market != null)
+			return market.getOwnerName();
+		return "Unknown";
 	}
 
 	/**
@@ -98,7 +178,6 @@ public final class DupeDetector {
 		Bukkit.getOnlinePlayers().stream()
 				.filter(player -> player.hasPermission(permission))
 				.forEach(admin -> {
-					// Send message
 					if (prevented) {
 						Common.tell(admin, TranslationManager.list(admin, Translations.DUPE_PREVENTED_MESSAGE,
 								"buyer", buyerName,
@@ -117,50 +196,47 @@ public final class DupeDetector {
 						));
 					}
 
-					// Play sound
 					if (Settings.DUPE_ALERT_SOUND_ENABLED.getBoolean()) {
 						try {
 							final Sound sound = Sound.valueOf(Settings.DUPE_ALERT_SOUND.getString().toUpperCase());
 							admin.playSound(admin.getLocation(), sound, 1.0f, 1.0f);
-						} catch (IllegalArgumentException e) {
-							// Invalid sound, skip
+						} catch (IllegalArgumentException ignored) {
 						}
 					}
 				});
 	}
 
-	/**
-	 * Log dupe attempt to file with full details
-	 */
-	private static void logToFile(
+	private static void logPreventedToFile(
 			@NonNull final String attemptType,
-			@NonNull final UUID buyerUUID,
-			@NonNull final String buyerName,
-			@NonNull final UUID sellerUUID,
-			@NonNull final String sellerName,
-			@NonNull final MarketItem item,
+			@Nullable final Player actor,
+			@Nullable final Player otherParty,
+			@Nullable final ItemStack item,
 			final int quantity,
-			final double price,
-			@NonNull final Market market,
+			@Nullable final Market market,
+			@Nullable final MarketItem marketItem,
+			@Nullable final String detail,
 			final boolean prevented
 	) {
 		if (!Settings.DUPE_LOG_TO_FILE.getBoolean()) {
 			return;
 		}
 
+		final String actorName = resolveName(actor, market);
+		final UUID actorUuid = actor != null ? actor.getUniqueId()
+				: (market != null ? market.getOwnerUUID() : new UUID(0, 0));
+		final String otherName = otherParty != null ? otherParty.getName() : "N/A";
+		final UUID otherUuid = otherParty != null ? otherParty.getUniqueId() : new UUID(0, 0);
+
 		Bukkit.getScheduler().runTaskAsynchronously(Markets.getInstance(), () -> {
 			try {
-				// Create parent directory if it doesn't exist
 				if (!LOG_FILE.getParentFile().exists()) {
 					LOG_FILE.getParentFile().mkdirs();
 				}
 
-				// Create file if it doesn't exist
 				if (!LOG_FILE.exists()) {
 					LOG_FILE.createNewFile();
 				}
 
-				// Append to file
 				try (FileWriter fw = new FileWriter(LOG_FILE, true);
 				     PrintWriter pw = new PrintWriter(fw)) {
 
@@ -171,15 +247,27 @@ public final class DupeDetector {
 					pw.println(String.format("[%s] DUPE ATTEMPT %s", timestamp, status));
 					pw.println("--------------------------------------------------------------------------------");
 					pw.println(String.format("Attempt Type:    %s", attemptType));
-					pw.println(String.format("Buyer:           %s (%s)", buyerName, buyerUUID));
-					pw.println(String.format("Seller:          %s (%s)", sellerName, sellerUUID));
-					pw.println(String.format("Market:          %s (%s)", market.getDisplayName(), market.getId()));
-					pw.println(String.format("Market Owner:    %s (%s)", market.getOwnerName(), market.getOwnerUUID()));
-					pw.println(String.format("Item:            %s", ItemUtil.getItemName(item.getItem())));
-					pw.println(String.format("Item ID:         %s", item.getId()));
+					pw.println(String.format("Actor:           %s (%s)", actorName, actorUuid));
+					if (otherParty != null) {
+						pw.println(String.format("Other Party:     %s (%s)", otherName, otherUuid));
+					}
+					if (market != null) {
+						pw.println(String.format("Market:          %s (%s)", market.getDisplayName(), market.getId()));
+						pw.println(String.format("Market Owner:    %s (%s)", market.getOwnerName(), market.getOwnerUUID()));
+					}
+					if (marketItem != null) {
+						pw.println(String.format("Item ID:         %s", marketItem.getId()));
+					}
+					if (item != null) {
+						pw.println(String.format("Item:            %s", ItemUtil.getItemName(item)));
+					}
 					pw.println(String.format("Quantity:        %d", quantity));
-					pw.println(String.format("Price:           %.2f %s", price, item.getCurrencyDisplayName()));
-					pw.println(String.format("Total Value:     %.2f %s", price * quantity, item.getCurrencyDisplayName()));
+					if (marketItem != null) {
+						pw.println(String.format("Price:           %.2f %s", marketItem.getPrice(), marketItem.getCurrencyDisplayName()));
+					}
+					if (detail != null) {
+						pw.println(String.format("Detail:          %s", detail));
+					}
 					pw.println(String.format("Thread ID:       %s", Thread.currentThread().getId()));
 					pw.println(String.format("Server Time:     %d", System.currentTimeMillis()));
 					pw.println("================================================================================");
@@ -190,22 +278,5 @@ public final class DupeDetector {
 				e.printStackTrace();
 			}
 		});
-	}
-
-	/**
-	 * Log when an operation is blocked due to concurrent modification
-	 */
-	public static void logBlockedOperation(
-			@NonNull final String operationType,
-			@NonNull final Player player,
-			@NonNull final MarketItem item
-	) {
-		Markets.getInstance().getLogger().info(
-				String.format("[DUPE PROTECTION] Blocked %s by %s on item %s (item is being edited)",
-						operationType,
-						player.getName(),
-						ItemUtil.getItemName(item.getItem())
-				)
-		);
 	}
 }

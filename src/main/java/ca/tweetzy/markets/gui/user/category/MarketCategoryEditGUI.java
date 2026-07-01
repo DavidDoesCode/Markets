@@ -16,6 +16,7 @@ import ca.tweetzy.markets.gui.shared.selector.ItemSelectorGUI;
 import ca.tweetzy.markets.gui.shared.view.content.MarketCategoryViewGUI;
 import ca.tweetzy.markets.gui.shared.view.content.MarketViewGUI;
 import ca.tweetzy.markets.gui.user.market.MarketOverviewGUI;
+import ca.tweetzy.markets.model.DupeDetector;
 import ca.tweetzy.markets.model.FloodGateCheck;
 import ca.tweetzy.markets.settings.Settings;
 import ca.tweetzy.markets.settings.Translations;
@@ -251,7 +252,10 @@ public final class MarketCategoryEditGUI extends MarketsPagedGUI<MarketItem> {
 
 		final MarketItem locate = Markets.getCategoryItemManager().getByUUID(marketItem.getId());
 		if (locate == null || locate.getStock() != marketItem.getStock()) {
-			Common.log(player.getName() + " stock mismatch, cancelling click");
+			final String detail = locate == null
+					? "item_missing"
+					: "displayed_stock=" + marketItem.getStock() + ",actual_stock=" + locate.getStock();
+			DupeDetector.logPreventedAttempt("STALE_STOCK_CLICK", player, null, marketItem.getItem(), marketItem.getStock(), this.market, marketItem, detail);
 			reopen(click);
 			return;
 		}
@@ -296,6 +300,7 @@ public final class MarketCategoryEditGUI extends MarketsPagedGUI<MarketItem> {
 			// Dupe prevention: Check if item is being purchased
 			if (marketItem.isBeingEdited()) {
 				Common.tell(click.player, TranslationManager.list(click.player, Translations.ITEM_BEING_EDITED));
+				DupeDetector.logPreventedAttempt("GUI_DELETE_DURING_PURCHASE", click.player, null, marketItem.getItem(), marketItem.getStock(), this.market, marketItem, null);
 				return;
 			}
 
@@ -306,7 +311,7 @@ public final class MarketCategoryEditGUI extends MarketsPagedGUI<MarketItem> {
 						return;
 					}
 
-					marketItem.unStore(result -> {
+					marketItem.unStore(click.player, result -> {
 						if (result != SynchronizeResult.SUCCESS)
 							return;
 
@@ -322,7 +327,7 @@ public final class MarketCategoryEditGUI extends MarketsPagedGUI<MarketItem> {
 				}));
 
 			} else {
-				marketItem.unStore(result -> {
+				marketItem.unStore(click.player, result -> {
 					if (result != SynchronizeResult.SUCCESS)
 						return;
 

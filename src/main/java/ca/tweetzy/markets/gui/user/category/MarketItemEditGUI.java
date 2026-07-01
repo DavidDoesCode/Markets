@@ -17,6 +17,7 @@ import ca.tweetzy.markets.gui.MarketsBaseGUI;
 import ca.tweetzy.markets.gui.shared.selector.ConfirmGUI;
 import ca.tweetzy.markets.gui.shared.selector.CurrencyPickerGUI;
 import ca.tweetzy.markets.gui.shared.view.content.MarketCategoryViewGUI;
+import ca.tweetzy.markets.model.DupeDetector;
 import ca.tweetzy.markets.model.FloodGateCheck;
 import ca.tweetzy.markets.settings.Settings;
 import ca.tweetzy.markets.settings.Translations;
@@ -26,9 +27,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
-import org.bukkit.inventory.ItemStack;
-
-import java.util.HashMap;
+import org.jetbrains.annotations.Nullable;
 
 public final class MarketItemEditGUI extends MarketsBaseGUI {
 
@@ -119,6 +118,10 @@ public final class MarketItemEditGUI extends MarketsBaseGUI {
 		click.manager.showGUI(click.player, new MarketItemEditGUI(click.player, MarketItemEditGUI.this.market, MarketItemEditGUI.this.category, MarketItemEditGUI.this.marketItem));
 	}
 
+	private void logMarketItemDupeAttempt(@NonNull final Player player, @NonNull final String attemptType, @Nullable final String detail) {
+		DupeDetector.logPreventedAttempt(attemptType, player, null, this.marketItem.getItem(), this.marketItem.getStock(), this.market, this.marketItem, detail);
+	}
+
 	private void drawAddOneButton() {
 		setButton(2, 7, QuickItem
 				.of(CompMaterial.LIME_CANDLE)
@@ -132,7 +135,7 @@ public final class MarketItemEditGUI extends MarketsBaseGUI {
 			if (click.clickType == ClickType.LEFT || FloodGateCheck.isBedrock(this.player)) {
 				synchronized (this) {
 					if (playerLock) {
-						Bukkit.getLogger().severe(click.player.getName() + " attempting to add one twice.");
+						logMarketItemDupeAttempt(click.player, "STOCK_DOUBLE_ADD_ONE", null);
 						return;
 					} else
 						playerLock = true;
@@ -178,7 +181,7 @@ public final class MarketItemEditGUI extends MarketsBaseGUI {
 			if (click.clickType == ClickType.LEFT || FloodGateCheck.isBedrock(this.player)) {
 				synchronized (this) {
 					if (playerLock) {
-						Bukkit.getLogger().severe(click.player.getName() + " attempting to deposit twice.");
+						logMarketItemDupeAttempt(click.player, "STOCK_DOUBLE_DEPOSIT", null);
 						return;
 					} else
 						playerLock = true;
@@ -207,7 +210,7 @@ public final class MarketItemEditGUI extends MarketsBaseGUI {
 			if (click.clickType == ClickType.SHIFT_LEFT) {
 				synchronized (this) {
 					if (playerLock) {
-						Bukkit.getLogger().severe(click.player.getName() + " attempting to bulk deposit twice.");
+						logMarketItemDupeAttempt(click.player, "STOCK_DOUBLE_BULK_DEPOSIT", null);
 						return;
 					} else
 						playerLock = true;
@@ -235,12 +238,13 @@ public final class MarketItemEditGUI extends MarketsBaseGUI {
 				// Dupe prevention: Check if item is being purchased
 				if (marketItem.isBeingEdited()) {
 					Common.tell(click.player, TranslationManager.list(click.player, Translations.ITEM_BEING_EDITED));
+					logMarketItemDupeAttempt(click.player, "GUI_WITHDRAW_DURING_PURCHASE", null);
 					return;
 				}
 
 				synchronized (this) {
 					if (playerLock) {
-						Bukkit.getLogger().severe(click.player.getName() + " attempting to withdraw twice.");
+						logMarketItemDupeAttempt(click.player, "WITHDRAW_DOUBLE_SUBMIT", null);
 						return;
 					} else
 						playerLock = true;
@@ -256,7 +260,7 @@ public final class MarketItemEditGUI extends MarketsBaseGUI {
 					public boolean onResult(String string) {
 						synchronized (this) {
 							if (inputLock) {
-								Bukkit.getLogger().severe(click.player.getName() + " attempting to submit qty twice.");
+								logMarketItemDupeAttempt(click.player, "WITHDRAW_INPUT_DOUBLE_SUBMIT", null);
 								return false;
 							} else
 								inputLock = true;
@@ -273,7 +277,7 @@ public final class MarketItemEditGUI extends MarketsBaseGUI {
 						int qty = Integer.parseInt(string);
 
 						if(qty <= 0) {
-							Bukkit.getLogger().warning(click.player.getName() + " attempted to withdraw negative amount: " + qty);
+							logMarketItemDupeAttempt(click.player, "WITHDRAW_NEGATIVE_QTY", "qty=" + qty);
 							Common.tell(click.player, "Enter a valid amount to withdraw");
 							return false;
 						}
@@ -334,7 +338,7 @@ public final class MarketItemEditGUI extends MarketsBaseGUI {
 						return;
 					}
 
-					marketItem.unStore(result -> {
+					marketItem.unStore(click.player, result -> {
 						if (result != SynchronizeResult.SUCCESS)
 							return;
 
@@ -350,7 +354,7 @@ public final class MarketItemEditGUI extends MarketsBaseGUI {
 				}));
 
 			} else {
-				marketItem.unStore(result -> {
+				marketItem.unStore(click.player, result -> {
 					if (result != SynchronizeResult.SUCCESS)
 						return;
 

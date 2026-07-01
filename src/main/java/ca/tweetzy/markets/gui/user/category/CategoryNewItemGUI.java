@@ -1,6 +1,7 @@
 package ca.tweetzy.markets.gui.user.category;
 
 import ca.tweetzy.flight.comp.enums.CompMaterial;
+import ca.tweetzy.flight.gui.GuiManager;
 import ca.tweetzy.flight.settings.TranslationManager;
 import ca.tweetzy.flight.utils.Common;
 import ca.tweetzy.flight.utils.PlayerUtil;
@@ -14,6 +15,7 @@ import ca.tweetzy.markets.gui.MarketsBaseGUI;
 import ca.tweetzy.markets.gui.shared.selector.CurrencyPickerGUI;
 import ca.tweetzy.markets.impl.CategoryItem;
 import ca.tweetzy.markets.model.BlacklistChecker;
+import ca.tweetzy.markets.model.DupeDetector;
 import ca.tweetzy.markets.settings.Settings;
 import ca.tweetzy.markets.settings.Translations;
 import lombok.NonNull;
@@ -32,6 +34,7 @@ public final class CategoryNewItemGUI extends MarketsBaseGUI {
 
 	private Boolean clickLock = false;
 	private ItemStack pendingItem = null;
+	private boolean suppressItemReturn = false;
 
 	public CategoryNewItemGUI(@NonNull final Player player, @NonNull final Market market, @NonNull final Category category, final MarketItem marketItem) {
 		super(new MarketCategoryEditGUI(player, market, category), player, TranslationManager.string(Translations.GUI_CATEGORY_ADD_ITEM_TITLE, "category_name", category.getName()), 6);
@@ -51,6 +54,8 @@ public final class CategoryNewItemGUI extends MarketsBaseGUI {
 		// Fixed: Use direct inventory access to prevent item loss on disconnect
 		// See BankGUI.java:167-176 for similar pattern
 		setOnClose(close -> {
+			if (this.suppressItemReturn) return;
+
 			final ItemStack itemToReturn = this.pendingItem != null ? this.pendingItem : getItem(1, 4);
 			if (itemToReturn != null && itemToReturn.getType() != CompMaterial.AIR.get()) {
 				try {
@@ -78,6 +83,38 @@ public final class CategoryNewItemGUI extends MarketsBaseGUI {
 		this(player, market, category, null);
 	}
 
+	private void syncPlacedItemFromSlot(@NonNull final String action) {
+		final ItemStack placedItem = getItem(1, 4);
+		if (placedItem != null && placedItem.getType() != CompMaterial.AIR.get()) {
+			this.marketItem.setItem(placedItem.clone());
+			return;
+		}
+
+		detectAndLogDraftDupeAttempt(action);
+		this.marketItem.setItem(CompMaterial.AIR.parseItem());
+	}
+
+	private void detectAndLogDraftDupeAttempt(@NonNull final String action) {
+		final ItemStack draftItem = this.marketItem.getItem();
+		if (draftItem == null || draftItem.getType() == CompMaterial.AIR.get())
+			return;
+
+		final ItemStack slotItem = getItem(1, 4);
+		if (slotItem != null && slotItem.getType() != CompMaterial.AIR.get())
+			return;
+
+		if (PlayerUtil.getItemCountInPlayerInventory(this.player, draftItem) <= 0)
+			return;
+
+		DupeDetector.logGuiDraftDupeAttempt(this.player, "CategoryNewItemGUI", action, draftItem, this.market);
+	}
+
+	private void reopen(@NonNull final Player player, @NonNull final GuiManager manager) {
+		this.suppressItemReturn = true;
+		syncPlacedItemFromSlot("GUI_REFRESH");
+		manager.showGUI(player, new CategoryNewItemGUI(this.player, this.market, this.category, this.marketItem));
+	}
+
 	@Override
 	protected void draw() {
 
@@ -99,7 +136,8 @@ public final class CategoryNewItemGUI extends MarketsBaseGUI {
 				.lore(TranslationManager.list(this.player, Translations.GUI_CATEGORY_ADD_ITEM_ITEMS_PRICE_LORE, "market_item_price", this.marketItem.getPrice()))
 				.make(), click -> {
 
-			if (getItem(1, 4) != null) this.marketItem.setItem(getItem(1, 4));
+			syncPlacedItemFromSlot("GUI_REFRESH");
+			this.suppressItemReturn = true;
 
 			click.gui.exit();
 
@@ -107,6 +145,7 @@ public final class CategoryNewItemGUI extends MarketsBaseGUI {
 
 				@Override
 				public void onExit(Player player) {
+					CategoryNewItemGUI.this.suppressItemReturn = true;
 					click.manager.showGUI(click.player, CategoryNewItemGUI.this);
 				}
 
@@ -132,7 +171,7 @@ public final class CategoryNewItemGUI extends MarketsBaseGUI {
 
 					CategoryNewItemGUI.this.marketItem.setPrice(price);
 
-					click.manager.showGUI(click.player, new CategoryNewItemGUI(CategoryNewItemGUI.this.player, CategoryNewItemGUI.this.market, CategoryNewItemGUI.this.category, CategoryNewItemGUI.this.marketItem));
+					CategoryNewItemGUI.this.reopen(click.player, click.manager);
 					return true;
 				}
 			};
@@ -150,19 +189,17 @@ public final class CategoryNewItemGUI extends MarketsBaseGUI {
 							"market_item_currency", this.marketItem.getCurrencyDisplayName()))
 					.make(), click -> {
 
-				final ItemStack placedItem = getItem(1, 4);
-				if (placedItem != null && placedItem.getType() != CompMaterial.AIR.get())
-					this.marketItem.setItem(placedItem);
+				syncPlacedItemFromSlot("GUI_REFRESH");
+				this.suppressItemReturn = true;
 
 				click.manager.showGUI(click.player, new CurrencyPickerGUI(this, click.player, (currency, item) -> {
-					click.gui.exit();
 
-					this.marketItem.setCurrency(currency.getStoreableName());
+					CategoryNewItemGUI.this.marketItem.setCurrency(currency.getStoreableName());
 
 					if (item != null)
-						this.marketItem.setCurrencyItem(item);
+						CategoryNewItemGUI.this.marketItem.setCurrencyItem(item);
 
-					click.manager.showGUI(click.player, new CategoryNewItemGUI(CategoryNewItemGUI.this.player, CategoryNewItemGUI.this.market, CategoryNewItemGUI.this.category, CategoryNewItemGUI.this.marketItem));
+					CategoryNewItemGUI.this.reopen(click.player, click.manager);
 				}));
 			});
 
@@ -177,7 +214,17 @@ public final class CategoryNewItemGUI extends MarketsBaseGUI {
 		// new item button
 		setButton(getRows() - 1, 4, QuickItem.of(Settings.GUI_CATEGORY_ADD_ITEM_ITEMS_NEW_ITEM_ITEM.getItemStack()).name(TranslationManager.string(this.player, Translations.GUI_CATEGORY_ADD_ITEM_ITEMS_NEW_ITEM_NAME)).lore(TranslationManager.list(this.player, Translations.GUI_CATEGORY_ADD_ITEM_ITEMS_NEW_ITEM_LORE, "left_click", TranslationManager.string(this.player, Translations.MOUSE_LEFT_CLICK))).make(), click -> {
 			if (clickLock) {
-				Bukkit.getLogger().severe(click.player.getName() + " sent duplicate add item clicks");
+				final ItemStack slotItem = getItem(1, 4);
+				DupeDetector.logPreventedAttempt(
+						"ADD_ITEM_DOUBLE_CLICK",
+						click.player,
+						null,
+						slotItem != null ? slotItem : this.marketItem.getItem(),
+						slotItem != null ? slotItem.getAmount() : 1,
+						this.market,
+						null,
+						null
+				);
 				return;
 			} else
 				clickLock = true;
@@ -213,7 +260,16 @@ public final class CategoryNewItemGUI extends MarketsBaseGUI {
 			// create the item
 			Bukkit.getScheduler().runTaskLaterAsynchronously(Markets.getInstance(), () -> {
 				if (!click.gui.isOpen()) {
-					Common.log(String.format("&7Strange activity detected from %s, closing inv & pressing add item btn simultaneously. This could just be lag.", click.player.getName()));
+					DupeDetector.logPreventedAttempt(
+							"ADD_ITEM_GUI_CLOSED_EARLY",
+							click.player,
+							null,
+							this.marketItem.getItem(),
+							this.marketItem.getStock(),
+							this.market,
+							null,
+							"gui_closed_before_async_create"
+					);
 					return;
 				}
 
@@ -255,10 +311,9 @@ public final class CategoryNewItemGUI extends MarketsBaseGUI {
 					.hideTags(true)
 					.make(), click -> {
 
-				if (getItem(1, 4) != null) this.marketItem.setItem(getItem(1, 4));
-
+				syncPlacedItemFromSlot("OFFERS_TOGGLE");
 				this.marketItem.setIsAcceptingOffers(!this.marketItem.isAcceptingOffers());
-				click.manager.showGUI(click.player, new CategoryNewItemGUI(CategoryNewItemGUI.this.player, CategoryNewItemGUI.this.market, CategoryNewItemGUI.this.category, CategoryNewItemGUI.this.marketItem));
+				drawOffersButton();
 			});
 		}
 	}
@@ -274,10 +329,9 @@ public final class CategoryNewItemGUI extends MarketsBaseGUI {
 					.hideTags(true)
 					.make(), click -> {
 
-				if (getItem(1, 4) != null) this.marketItem.setItem(getItem(1, 4));
-
+				syncPlacedItemFromSlot("WHOLESALE_TOGGLE");
 				this.marketItem.setPriceIsForAll(!this.marketItem.isPriceForAll());
-				click.manager.showGUI(click.player, new CategoryNewItemGUI(CategoryNewItemGUI.this.player, CategoryNewItemGUI.this.market, CategoryNewItemGUI.this.category, CategoryNewItemGUI.this.marketItem));
+				drawPriceForAllButton();
 			});
 		}
 	}
@@ -292,9 +346,9 @@ public final class CategoryNewItemGUI extends MarketsBaseGUI {
 				.hideTags(true)
 				.make(), click -> {
 
-
+			syncPlacedItemFromSlot("INFINITE_TOGGLE");
 			this.marketItem.setInfinite(!this.marketItem.isInfinite());
-			click.manager.showGUI(click.player, new CategoryNewItemGUI(CategoryNewItemGUI.this.player, CategoryNewItemGUI.this.market, CategoryNewItemGUI.this.category, CategoryNewItemGUI.this.marketItem));
+			drawInfiniteButton();
 		});
 	}
 }

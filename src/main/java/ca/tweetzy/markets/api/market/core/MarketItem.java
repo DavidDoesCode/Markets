@@ -12,6 +12,7 @@ import ca.tweetzy.markets.settings.Settings;
 import lombok.NonNull;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -55,6 +56,10 @@ public interface MarketItem extends Identifiable, Synchronize, UserViewable, Sto
 	boolean isBeingEdited();
 
 	void performPurchase(@NonNull final Market market, @NonNull final Player buyer, final int quantity, Consumer<TransactionResult> transactionResult);
+
+	default void unStore(@Nullable final Player actor, @Nullable final Consumer<SynchronizeResult> syncResult) {
+		unStore(syncResult);
+	}
 
 	// todo this is needs to be changed
 	default void addStock(@NonNull final ItemStack item, @NonNull final Consumer<SynchronizeResult> resultConsumer) {

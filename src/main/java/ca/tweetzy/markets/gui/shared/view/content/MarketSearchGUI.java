@@ -14,6 +14,7 @@ import ca.tweetzy.markets.gui.MarketsPagedGUI;
 import ca.tweetzy.markets.gui.shared.checkout.MarketItemPurchaseGUI;
 import ca.tweetzy.markets.gui.shared.checkout.OfferCreateGUI;
 import ca.tweetzy.markets.impl.MarketOffer;
+import ca.tweetzy.markets.model.DupeDetector;
 import ca.tweetzy.markets.model.FloodGateCheck;
 import ca.tweetzy.markets.settings.Settings;
 import ca.tweetzy.markets.settings.Translations;
@@ -85,7 +86,9 @@ public final class MarketSearchGUI extends MarketsPagedGUI<MarketItem> {
 		}
 
 		if(clickLock){
-			Bukkit.getLogger().info("MarketSearchGUI Click Lock: " + click.clickType.toString());
+			final Category category = Markets.getCategoryManager().getByUUID(marketItem.getOwningCategory());
+			final Market market = Markets.getMarketManager().getByUUID(category.getOwningMarket());
+			DupeDetector.logPreventedAttempt("PURCHASE_DOUBLE_CLICK", click.player, null, marketItem.getItem(), 1, market, marketItem, "click=" + click.clickType);
 			return;
 		} else
 			clickLock = true;

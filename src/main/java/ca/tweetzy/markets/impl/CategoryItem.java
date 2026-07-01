@@ -191,15 +191,25 @@ public final class CategoryItem implements MarketItem {
 
 	@Override
 	public void unStore(@Nullable Consumer<SynchronizeResult> syncResult) {
+		unStore(null, syncResult);
+	}
+
+	@Override
+	public void unStore(@Nullable final Player actor, @Nullable Consumer<SynchronizeResult> syncResult) {
 		// Dupe prevention: Check if item is being purchased
 		synchronized (this.editLock) {
 			if (this.beingEdited) {
 				// Item is currently being purchased - potential dupe attempt!
 				if (!DupeDetector.isHoneypotMode()) {
-					// PREVENTION MODE: Block the deletion
-					Markets.getInstance().getLogger().warning(
-							String.format("[DUPE BLOCKED] Prevented deletion of item %s (being purchased)",
-									ItemUtil.getItemName(this.item))
+					DupeDetector.logPreventedAttempt(
+							"RACE_DELETE_DURING_PURCHASE",
+							actor,
+							null,
+							this.item,
+							this.stock,
+							getOwningMarket(),
+							this,
+							null
 					);
 					if (syncResult != null) {
 						syncResult.accept(SynchronizeResult.FAILURE);
@@ -249,7 +259,16 @@ public final class CategoryItem implements MarketItem {
 				// Item is currently being edited/deleted - reject purchase
 				transactionResult.accept(TransactionResult.ERROR);
 				Common.tell(buyer, TranslationManager.string(buyer, Translations.ITEM_BEING_EDITED));
-				DupeDetector.logBlockedOperation("PURCHASE", buyer, this);
+				DupeDetector.logPreventedAttempt(
+						"RACE_PURCHASE_DURING_EDIT",
+						buyer,
+						null,
+						this.item,
+						quantity,
+						market,
+						this,
+						null
+				);
 				return;
 			}
 			this.beingEdited = true; // Lock the item for purchase

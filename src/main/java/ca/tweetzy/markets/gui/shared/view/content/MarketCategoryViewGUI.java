@@ -22,6 +22,7 @@ import ca.tweetzy.markets.gui.shared.view.ratings.MarketRatingsViewGUI;
 import ca.tweetzy.markets.gui.shared.view.ratings.NewMarketRatingGUI;
 import ca.tweetzy.markets.impl.MarketOffer;
 import ca.tweetzy.markets.model.AdminActionLogger;
+import ca.tweetzy.markets.model.DupeDetector;
 import ca.tweetzy.markets.settings.Settings;
 import ca.tweetzy.markets.settings.Translations;
 import lombok.NonNull;
@@ -227,7 +228,7 @@ public final class MarketCategoryViewGUI extends MarketsPagedGUI<MarketItem> {
 		}
 
 		if(clickLock){
-			Bukkit.getLogger().info("MarketCategoryViewGUI Click Lock: " + click.clickType.toString());
+			DupeDetector.logPreventedAttempt("PURCHASE_DOUBLE_CLICK", click.player, null, marketItem.getItem(), 1, this.market, marketItem, "click=" + click.clickType);
 			return;
 		} else
 			clickLock = true;
