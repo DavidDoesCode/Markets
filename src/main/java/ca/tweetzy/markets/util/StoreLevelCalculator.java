@@ -5,10 +5,13 @@ import ca.tweetzy.flight.settings.TranslationManager;
 import ca.tweetzy.markets.api.market.Transaction;
 import ca.tweetzy.markets.api.market.core.Market;
 import ca.tweetzy.markets.settings.Translations;
+import lombok.Getter;
 import lombok.NonNull;
 import org.bukkit.entity.Player;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 public final class StoreLevelCalculator {
 
@@ -24,6 +27,33 @@ public final class StoreLevelCalculator {
 			int totalCustomers,
 			int totalReviews
 	) {
+	}
+
+	@Getter
+	public enum StoreTier {
+		LEGENDARY(9, "Legendary"),
+		MASTER(7, "Master"),
+		EXPERT(5, "Expert"),
+		ESTABLISHED(3, "Established"),
+		NOVICE(1, "Novice"),
+		BEGINNER(0, "Beginner");
+
+		private final int minLevel;
+		private final String plainName;
+
+		StoreTier(final int minLevel, final String plainName) {
+			this.minLevel = minLevel;
+			this.plainName = plainName;
+		}
+
+		public static @NonNull StoreTier fromLevel(final int level) {
+			if (level >= LEGENDARY.minLevel) return LEGENDARY;
+			if (level >= MASTER.minLevel) return MASTER;
+			if (level >= EXPERT.minLevel) return EXPERT;
+			if (level >= ESTABLISHED.minLevel) return ESTABLISHED;
+			if (level >= NOVICE.minLevel) return NOVICE;
+			return BEGINNER;
+		}
 	}
 
 	public static int calculateStoreLevel(final int totalSales, final int totalListings, final double avgRating, final int totalCustomers) {
@@ -45,12 +75,28 @@ public final class StoreLevelCalculator {
 	}
 
 	public static @NonNull String getStoreLevelTier(@NonNull final Player player, final int level) {
-		if (level >= 9) return TranslationManager.string(player, Translations.STORE_TIER_LEGENDARY);
-		if (level >= 7) return TranslationManager.string(player, Translations.STORE_TIER_MASTER);
-		if (level >= 5) return TranslationManager.string(player, Translations.STORE_TIER_EXPERT);
-		if (level >= 3) return TranslationManager.string(player, Translations.STORE_TIER_ESTABLISHED);
-		if (level >= 1) return TranslationManager.string(player, Translations.STORE_TIER_NOVICE);
-		return TranslationManager.string(player, Translations.STORE_TIER_BEGINNER);
+		return switch (StoreTier.fromLevel(level)) {
+			case LEGENDARY -> TranslationManager.string(player, Translations.STORE_TIER_LEGENDARY);
+			case MASTER -> TranslationManager.string(player, Translations.STORE_TIER_MASTER);
+			case EXPERT -> TranslationManager.string(player, Translations.STORE_TIER_EXPERT);
+			case ESTABLISHED -> TranslationManager.string(player, Translations.STORE_TIER_ESTABLISHED);
+			case NOVICE -> TranslationManager.string(player, Translations.STORE_TIER_NOVICE);
+			case BEGINNER -> TranslationManager.string(player, Translations.STORE_TIER_BEGINNER);
+		};
+	}
+
+	public static @NonNull Map<StoreTier, Integer> countByTier(@NonNull final List<StoreLevelSnapshot> snapshots) {
+		final Map<StoreTier, Integer> counts = new LinkedHashMap<>();
+		for (final StoreTier tier : StoreTier.values()) {
+			counts.put(tier, 0);
+		}
+
+		for (final StoreLevelSnapshot snapshot : snapshots) {
+			final StoreTier tier = StoreTier.fromLevel(snapshot.level());
+			counts.merge(tier, 1, Integer::sum);
+		}
+
+		return counts;
 	}
 
 	public static @NonNull StoreLevelSnapshot computeForMarket(

@@ -43,6 +43,9 @@ permissions:
   markets.command.topstores:
     description: Allows access to the /markets topstores command
     default: true
+  markets.command.topstores.export:
+    description: Allows exporting top stores data to a file
+    default: op
   markets.command.shipping:
     description: Allows access to the /markets shipping command
     default: true

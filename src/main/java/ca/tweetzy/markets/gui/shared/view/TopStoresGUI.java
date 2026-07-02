@@ -15,8 +15,11 @@ import ca.tweetzy.markets.gui.shared.view.content.MarketViewGUI;
 import ca.tweetzy.markets.model.manager.TransactionManager.SellerSalesStats;
 import ca.tweetzy.markets.settings.Settings;
 import ca.tweetzy.markets.settings.Translations;
+import ca.tweetzy.markets.util.PlayerHeadCache;
 import ca.tweetzy.markets.util.StoreLevelCalculator;
 import ca.tweetzy.markets.util.StoreLevelCalculator.StoreLevelSnapshot;
+import ca.tweetzy.markets.util.StoreLevelCalculator.StoreTier;
+import ca.tweetzy.markets.util.TopStoresExporter;
 import lombok.NonNull;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -26,6 +29,7 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -33,11 +37,14 @@ import java.util.stream.Collectors;
 
 public final class TopStoresGUI extends MarketsPagedGUI<StoreLevelSnapshot> {
 
+	private static final String EXPORT_PERMISSION = "markets.command.topstores.export";
+
 	private final Player player;
 	private StoreSortType sortType = StoreSortType.HIGHEST_SCORE;
 	private boolean isLoading = false;
 	private boolean guiShown = false;
 	private int loadRequestId = 0;
+	private int headLoadRequestId = 0;
 
 	public TopStoresGUI(Gui parent, @NonNull final Player player) {
 		super(parent, player, TranslationManager.string(player, Translations.GUI_TOP_STORES_TITLE), 6, new ArrayList<>());
@@ -103,6 +110,7 @@ public final class TopStoresGUI extends MarketsPagedGUI<StoreLevelSnapshot> {
 	@Override
 	protected void drawFixed() {
 		setSortToggle();
+		setSummaryButton();
 
 		if (this.isLoading) {
 			showLoadingIndicator();
@@ -134,6 +142,50 @@ public final class TopStoresGUI extends MarketsPagedGUI<StoreLevelSnapshot> {
 		});
 	}
 
+	private void setSummaryButton() {
+		if (this.isLoading) {
+			setButton(getRows() - 1, 8, QuickItem
+					.of(Settings.GUI_TOP_STORES_ITEMS_SUMMARY_ITEM.getItemStack())
+					.name(TranslationManager.string(this.player, Translations.GUI_TOP_STORES_ITEMS_SUMMARY_NAME))
+					.lore(TranslationManager.list(this.player, Translations.GUI_TOP_STORES_ITEMS_SUMMARY_LOADING_LORE))
+					.make(), click -> {});
+			return;
+		}
+
+		final Map<StoreTier, Integer> tierCounts = StoreLevelCalculator.countByTier(this.items);
+
+		setButton(getRows() - 1, 8, QuickItem
+				.of(Settings.GUI_TOP_STORES_ITEMS_SUMMARY_ITEM.getItemStack())
+				.name(TranslationManager.string(this.player, Translations.GUI_TOP_STORES_ITEMS_SUMMARY_NAME))
+				.lore(TranslationManager.list(this.player, Translations.GUI_TOP_STORES_ITEMS_SUMMARY_LORE,
+						"tier_legendary_count", tierCounts.get(StoreTier.LEGENDARY),
+						"tier_master_count", tierCounts.get(StoreTier.MASTER),
+						"tier_expert_count", tierCounts.get(StoreTier.EXPERT),
+						"tier_established_count", tierCounts.get(StoreTier.ESTABLISHED),
+						"tier_novice_count", tierCounts.get(StoreTier.NOVICE),
+						"tier_beginner_count", tierCounts.get(StoreTier.BEGINNER),
+						"total_stores", this.items.size(),
+						"left_click", TranslationManager.string(this.player, Translations.MOUSE_LEFT_CLICK)))
+				.make(), this::handleSummaryClick);
+	}
+
+	private void handleSummaryClick(final GuiClickEvent click) {
+		if (this.isLoading) return;
+
+		if (!click.player.hasPermission(EXPORT_PERMISSION)) {
+			Common.tell(click.player, TranslationManager.string(click.player, Translations.GUI_TOP_STORES_EXPORT_NO_PERMISSION));
+			return;
+		}
+
+		TopStoresExporter.exportAsync(
+				click.player,
+				this.items,
+				this.sortType,
+				fileName -> Common.tell(click.player, TranslationManager.string(click.player, Translations.GUI_TOP_STORES_EXPORT_SUCCESS, "file_name", fileName)),
+				error -> Common.tell(click.player, TranslationManager.string(click.player, Translations.GUI_TOP_STORES_EXPORT_FAILURE, "error", error))
+		);
+	}
+
 	private void sortItems() {
 		if (this.items == null || this.items.isEmpty()) return;
 
@@ -154,17 +206,38 @@ public final class TopStoresGUI extends MarketsPagedGUI<StoreLevelSnapshot> {
 
 	@Override
 	protected void onPopulateComplete() {
+		if (this.isLoading || this.items == null || this.items.isEmpty()) {
+			return;
+		}
+
 		loadPlayerHeadsAsync();
 	}
 
 	@Override
 	protected ItemStack makeDisplayItem(StoreLevelSnapshot snapshot) {
 		final Market market = snapshot.market();
-		final int rank = this.items.indexOf(snapshot) + 1;
+		final int rank = getRankMap().getOrDefault(snapshot, 0);
 		final String tier = StoreLevelCalculator.getStoreLevelTier(this.player, snapshot.level());
 
-		return QuickItem
-				.of(CompMaterial.PLAYER_HEAD)
+		return buildStoreItem(QuickItem.of(CompMaterial.PLAYER_HEAD).make(), snapshot, market, rank, tier);
+	}
+
+	private Map<StoreLevelSnapshot, Integer> getRankMap() {
+		final Map<StoreLevelSnapshot, Integer> ranks = new HashMap<>();
+		for (int i = 0; i < this.items.size(); i++) {
+			ranks.put(this.items.get(i), i + 1);
+		}
+		return ranks;
+	}
+
+	private ItemStack buildStoreItem(
+			@NonNull final ItemStack skull,
+			@NonNull final StoreLevelSnapshot snapshot,
+			@NonNull final Market market,
+			final int rank,
+			@NonNull final String tier
+	) {
+		return QuickItem.of(skull)
 				.name(TranslationManager.string(this.player, Translations.GUI_TOP_STORES_ITEMS_ENTRY_NAME,
 						"store_rank", rank,
 						"market_name", market.getDisplayName()))
@@ -182,6 +255,9 @@ public final class TopStoresGUI extends MarketsPagedGUI<StoreLevelSnapshot> {
 	}
 
 	private void loadPlayerHeadsAsync() {
+		final int requestId = ++this.headLoadRequestId;
+		final Map<StoreLevelSnapshot, Integer> rankMap = getRankMap();
+
 		final List<StoreLevelSnapshot> itemsToDisplay = this.items.stream()
 				.skip((page - 1) * (long) fillSlots().size())
 				.limit(fillSlots().size())
@@ -191,35 +267,17 @@ public final class TopStoresGUI extends MarketsPagedGUI<StoreLevelSnapshot> {
 			final StoreLevelSnapshot snapshot = itemsToDisplay.get(i);
 			final Market market = snapshot.market();
 			final int slotIndex = fillSlots().get(i);
-			final int rank = this.items.indexOf(snapshot) + 1;
+			final int rank = rankMap.getOrDefault(snapshot, 0);
 			final String tier = StoreLevelCalculator.getStoreLevelTier(this.player, snapshot.level());
+			final OfflinePlayer owner = Bukkit.getOfflinePlayer(market.getOwnerUUID());
 
-			Bukkit.getScheduler().runTaskAsynchronously(Markets.getInstance(), () -> {
-				final OfflinePlayer owner = Bukkit.getOfflinePlayer(market.getOwnerUUID());
-				QuickItem.asyncPlayerHead(owner).thenAccept(skull -> {
-					final ItemStack finalItem = QuickItem.of(skull)
-							.name(TranslationManager.string(this.player, Translations.GUI_TOP_STORES_ITEMS_ENTRY_NAME,
-									"store_rank", rank,
-									"market_name", market.getDisplayName()))
-							.lore(TranslationManager.list(this.player, Translations.GUI_TOP_STORES_ITEMS_ENTRY_LORE,
-									"market_owner", market.getOwnerName(),
-									"store_level", snapshot.level(),
-									"store_tier", tier,
-									"total_sales", snapshot.totalSales(),
-									"total_listings", snapshot.totalListings(),
-									"avg_rating", String.format("%.1f", snapshot.avgRating()),
-									"total_customers", snapshot.totalCustomers(),
-									"total_reviews", snapshot.totalReviews(),
-									"left_click", TranslationManager.string(this.player, Translations.MOUSE_LEFT_CLICK)))
-							.make();
+			PlayerHeadCache.getOrFetch(owner).thenAccept(skull -> Bukkit.getScheduler().runTask(Markets.getInstance(), () -> {
+				if (requestId != this.headLoadRequestId || !isStillOpen()) {
+					return;
+				}
 
-					Bukkit.getScheduler().runTask(Markets.getInstance(), () -> {
-						if (isStillOpen()) {
-							setItem(slotIndex, finalItem);
-						}
-					});
-				});
-			});
+				setItem(slotIndex, buildStoreItem(skull, snapshot, market, rank, tier));
+			}));
 		}
 	}
 

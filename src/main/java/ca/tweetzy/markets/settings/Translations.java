@@ -1252,6 +1252,27 @@ public final class Translations extends TranslationManager {
 			"",
 			"&e&l%left_click% &7to cycle sort"
 	);
+	public static TranslationEntry GUI_TOP_STORES_ITEMS_SUMMARY_NAME = create("gui.top stores.items.summary.name", "<GRADIENT:8B4513>&lStore Rankings</GRADIENT:654321>");
+	public static TranslationEntry GUI_TOP_STORES_ITEMS_SUMMARY_LORE = create("gui.top stores.items.summary.lore",
+			"&7Stores per tier:",
+			"&6Legendary&f: &e%tier_legendary_count%",
+			"&5Master&f: &e%tier_master_count%",
+			"&bExpert&f: &e%tier_expert_count%",
+			"&aEstablished&f: &e%tier_established_count%",
+			"&eNovice&f: &e%tier_novice_count%",
+			"&7Beginner&f: &e%tier_beginner_count%",
+			"",
+			"&7Total Stores&f: &e%total_stores%",
+			"",
+			"&e&l%left_click% &7to export all store data"
+	);
+	public static TranslationEntry GUI_TOP_STORES_ITEMS_SUMMARY_LOADING_LORE = create("gui.top stores.items.summary.loading.lore",
+			"&7Loading store rankings...",
+			"&7Tier counts will appear shortly."
+	);
+	public static TranslationEntry GUI_TOP_STORES_EXPORT_SUCCESS = create("gui.top stores.export.success", "&aExported top stores to &fexports/%file_name%");
+	public static TranslationEntry GUI_TOP_STORES_EXPORT_FAILURE = create("gui.top stores.export.failure", "&cFailed to export top stores: &f%error%");
+	public static TranslationEntry GUI_TOP_STORES_EXPORT_NO_PERMISSION = create("gui.top stores.export.no permission", "&cYou do not have permission to export store data.");
 
 	// Loading indicator for async operations
 	public static TranslationEntry GUI_LOADING_INDICATOR_NAME = create("gui.loading.name", "&eLoading...");

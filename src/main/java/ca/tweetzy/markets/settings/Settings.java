@@ -273,6 +273,7 @@ public final class Settings extends FlightSettings {
 	public static ConfigEntry GUI_TRANSACTIONS_VIEW_ALL_ITEM = create("gui.transactions.items.view all", CompMaterial.NETHER_STAR.name());
 	public static ConfigEntry GUI_TOP_STORES_BACKGROUND = create("gui.top stores.items.background", CompMaterial.BLACK_STAINED_GLASS_PANE.name());
 	public static ConfigEntry GUI_TOP_STORES_ITEMS_FILTER_ITEM = create("gui.top stores.items.filter.item", CompMaterial.LEVER.name());
+	public static ConfigEntry GUI_TOP_STORES_ITEMS_SUMMARY_ITEM = create("gui.top stores.items.summary.item", CompMaterial.WRITABLE_BOOK.name());
 	public static ConfigEntry GUI_BANK_BACKGROUND = create("gui.bank.items.background", CompMaterial.BLACK_STAINED_GLASS_PANE.name());
 	public static ConfigEntry GUI_BANK_ITEMS_ADD = create("gui.bank.items.add.item", CompMaterial.LIME_DYE.name());
 
