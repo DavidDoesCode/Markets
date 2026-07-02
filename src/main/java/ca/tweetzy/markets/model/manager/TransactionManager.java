@@ -9,16 +9,23 @@ import lombok.NonNull;
 import org.bukkit.Bukkit;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public final class TransactionManager extends ListManager<Transaction> {
+
+	public record SellerSalesStats(int totalQuantity, int uniqueBuyers) {
+		public static final SellerSalesStats EMPTY = new SellerSalesStats(0, 0);
+	}
 
 	private final Map<UUID, List<Transaction>> salesBySeller = new HashMap<>();
 	private final Map<UUID, List<Transaction>> purchasesByBuyer = new HashMap<>();
@@ -72,6 +79,39 @@ public final class TransactionManager extends ListManager<Transaction> {
 
 		final long lastSeenAt = user.getLastSeenAt();
 		runFilterAsync(callback, () -> copyOfflineSalesFor(sellerUUID, lastSeenAt), "getOfflineTransactionsForAsync", sellerUUID);
+	}
+
+	public void computeSellerSalesStatsAsync(@NonNull final Collection<UUID> sellerUUIDs, @NonNull final Consumer<Map<UUID, SellerSalesStats>> callback) {
+		Bukkit.getScheduler().runTaskAsynchronously(Markets.getInstance(), () -> {
+			final Map<UUID, SellerSalesStats> result = new HashMap<>();
+
+			try {
+				synchronized (this.managerContent) {
+					for (final UUID sellerUUID : sellerUUIDs) {
+						final List<Transaction> sales = this.salesBySeller.get(sellerUUID);
+						if (sales == null || sales.isEmpty()) {
+							result.put(sellerUUID, SellerSalesStats.EMPTY);
+							continue;
+						}
+
+						int totalQuantity = 0;
+						final Set<UUID> buyers = new HashSet<>();
+						for (final Transaction transaction : sales) {
+							totalQuantity += transaction.getQuantity();
+							buyers.add(transaction.getBuyer());
+						}
+
+						result.put(sellerUUID, new SellerSalesStats(totalQuantity, buyers.size()));
+					}
+				}
+			} catch (final Exception exception) {
+				Common.log("&cFailed to compute seller sales stats: " + exception.getMessage());
+				exception.printStackTrace();
+			}
+
+			final Map<UUID, SellerSalesStats> stats = result;
+			Bukkit.getScheduler().runTask(Markets.getInstance(), () -> callback.accept(stats));
+		});
 	}
 
 	// ==================== SYNC METHODS (DEPRECATED, KEPT FOR COMPATIBILITY) ====================

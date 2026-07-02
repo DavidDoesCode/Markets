@@ -40,6 +40,9 @@ permissions:
   markets.command.reviews:
     description: Allows access to the /markets reviews command
     default: true
+  markets.command.topstores:
+    description: Allows access to the /markets topstores command
+    default: true
   markets.command.shipping:
     description: Allows access to the /markets shipping command
     default: true

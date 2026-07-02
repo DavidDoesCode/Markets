@@ -119,6 +119,7 @@ public final class Settings extends FlightSettings {
 	public static ConfigEntry CMD_ALIAS_SUB_REVIEWS = create("command aliases.subcommands.reviews", List.of("reviews", "ratings")).withComment("Aliases for the reviews command");
 	public static ConfigEntry CMD_ALIAS_SUB_BACKUP = create("command aliases.subcommands.backup", List.of("backup")).withComment("Aliases for the backup command");
 	public static ConfigEntry CMD_ALIAS_SUB_SHIPPING = create("command aliases.subcommands.shipping", List.of("shipping")).withComment("Aliases for the shipping command");
+	public static ConfigEntry CMD_ALIAS_SUB_TOPSTORES = create("command aliases.subcommands.topstores", List.of("topstores")).withComment("Aliases for the top stores command");
 
 
 	/*
@@ -270,6 +271,8 @@ public final class Settings extends FlightSettings {
 	public static ConfigEntry GUI_OFFER_CREATE_ITEMS_CURRENCY = create("gui.offer creation.items.currency.item", CompMaterial.GOLD_INGOT.name());
 	public static ConfigEntry GUI_TRANSACTIONS_BACKGROUND = create("gui.transactions.items.background", CompMaterial.BLACK_STAINED_GLASS_PANE.name());
 	public static ConfigEntry GUI_TRANSACTIONS_VIEW_ALL_ITEM = create("gui.transactions.items.view all", CompMaterial.NETHER_STAR.name());
+	public static ConfigEntry GUI_TOP_STORES_BACKGROUND = create("gui.top stores.items.background", CompMaterial.BLACK_STAINED_GLASS_PANE.name());
+	public static ConfigEntry GUI_TOP_STORES_ITEMS_FILTER_ITEM = create("gui.top stores.items.filter.item", CompMaterial.LEVER.name());
 	public static ConfigEntry GUI_BANK_BACKGROUND = create("gui.bank.items.background", CompMaterial.BLACK_STAINED_GLASS_PANE.name());
 	public static ConfigEntry GUI_BANK_ITEMS_ADD = create("gui.bank.items.add.item", CompMaterial.LIME_DYE.name());
 

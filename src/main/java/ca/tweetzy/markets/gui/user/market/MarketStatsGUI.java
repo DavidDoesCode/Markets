@@ -15,6 +15,7 @@ import ca.tweetzy.markets.util.MarketSalesPeriodStatsCalculator;
 import ca.tweetzy.markets.util.MarketSalesPeriodStatsCalculator.PeriodStats;
 import ca.tweetzy.markets.util.MarketSalesPeriodStatsCalculator.SalesPeriodSnapshot;
 import ca.tweetzy.markets.util.MessageLinks;
+import ca.tweetzy.markets.util.StoreLevelCalculator;
 import lombok.NonNull;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -308,27 +309,21 @@ public final class MarketStatsGUI extends MarketsBaseGUI {
 	}
 
 	private void drawStoreLevelRating() {
-		int totalSales = getSalesTotalQuantity();
-		int totalListings = getTotalListings();
-		double avgRating = this.market.getRatings().isEmpty() ? 0 : this.market.getReviewAvg();
-		int totalCustomers = getUniqueCustomers();
-		int totalReviews = this.market.getRatings().size();
-		int activeBans = this.market.getBannedUsers().size();
-
-		int level = calculateStoreLevel(totalSales, totalListings, avgRating, totalCustomers);
-		String levelTier = getStoreLevelTier(level);
-		CompMaterial levelIcon = getStoreLevelIcon(level);
+		final StoreLevelCalculator.StoreLevelSnapshot snapshot = StoreLevelCalculator.computeForMarket(this.market, this.sales);
+		final int activeBans = this.market.getBannedUsers().size();
+		final String levelTier = StoreLevelCalculator.getStoreLevelTier(this.player, snapshot.level());
+		final CompMaterial levelIcon = StoreLevelCalculator.getStoreLevelIcon(snapshot.level());
 
 		setButton(1, 2, QuickItem
 				.of(levelIcon)
 				.name(TranslationManager.string(this.player, Translations.GUI_MARKET_STATS_ITEMS_LEVEL_NAME,
-						"store_level", level))
+						"store_level", snapshot.level()))
 				.lore(TranslationManager.list(this.player, Translations.GUI_MARKET_STATS_ITEMS_LEVEL_LORE,
 						"store_tier", levelTier,
-						"total_sales", totalSales,
-						"total_reviews", totalReviews,
-						"avg_rating", String.format("%.1f", avgRating),
-						"total_customers", totalCustomers,
+						"total_sales", snapshot.totalSales(),
+						"total_reviews", snapshot.totalReviews(),
+						"avg_rating", String.format("%.1f", snapshot.avgRating()),
+						"total_customers", snapshot.totalCustomers(),
 						"active_bans", activeBans
 				))
 				.make(), click -> {});
@@ -420,46 +415,6 @@ public final class MarketStatsGUI extends MarketsBaseGUI {
 				.flatMap(category -> category.getItems().stream())
 				.filter(item -> item.getStock() == 0)
 				.count();
-	}
-
-	private int getSalesTotalQuantity() {
-		return this.sales.stream()
-				.mapToInt(Transaction::getQuantity)
-				.sum();
-	}
-
-	private int getUniqueCustomers() {
-		return (int) this.sales.stream()
-				.map(Transaction::getBuyer)
-				.distinct()
-				.count();
-	}
-
-	private int calculateStoreLevel(int totalSales, int totalListings, double avgRating, int totalCustomers) {
-		int salesScore = Math.min(totalSales / 50, 3);
-		int listingsScore = Math.min(totalListings / 10, 2);
-		int ratingScore = (int) Math.min(avgRating, 3);
-		int customerScore = Math.min(totalCustomers / 5, 2);
-
-		return salesScore + listingsScore + ratingScore + customerScore;
-	}
-
-	private String getStoreLevelTier(int level) {
-		if (level >= 9) return TranslationManager.string(this.player, Translations.STORE_TIER_LEGENDARY);
-		if (level >= 7) return TranslationManager.string(this.player, Translations.STORE_TIER_MASTER);
-		if (level >= 5) return TranslationManager.string(this.player, Translations.STORE_TIER_EXPERT);
-		if (level >= 3) return TranslationManager.string(this.player, Translations.STORE_TIER_ESTABLISHED);
-		if (level >= 1) return TranslationManager.string(this.player, Translations.STORE_TIER_NOVICE);
-		return TranslationManager.string(this.player, Translations.STORE_TIER_BEGINNER);
-	}
-
-	private CompMaterial getStoreLevelIcon(int level) {
-		if (level >= 9) return CompMaterial.NETHER_STAR;
-		if (level >= 7) return CompMaterial.DIAMOND;
-		if (level >= 5) return CompMaterial.GOLD_BLOCK;
-		if (level >= 3) return CompMaterial.IRON_BLOCK;
-		if (level >= 1) return CompMaterial.COPPER_BLOCK;
-		return CompMaterial.DIRT;
 	}
 
 	private List<String> getTopSoldItems(int limit) {

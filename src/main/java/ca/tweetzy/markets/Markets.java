@@ -135,6 +135,7 @@ public final class Markets extends FlightPlugin {
 				new CommandTransactions(),
 				new CommandStats(),
 				new CommandReviews(),
+				new CommandTopStores(),
 				new CommandBackup(),
 				new CommandReload(),
 				new CommandShipping()

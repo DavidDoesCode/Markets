@@ -101,6 +101,8 @@ public final class Translations extends TranslationManager {
 	public static TranslationEntry REVIEW_SORT_RECENT = create("info.review sort type.recent", "&eRecent Reviews");
 	public static TranslationEntry REVIEW_SORT_TOP_RATED = create("info.review sort type.top rated", "&eTop Reviews");
 	public static TranslationEntry REVIEW_SORT_LOWEST_RATED = create("info.review sort type.lowest rated", "&eLowest Reviews");
+	public static TranslationEntry STORE_SORT_HIGHEST_SCORE = create("info.store sort type.highest score", "&eHighest Score");
+	public static TranslationEntry STORE_SORT_LOWEST_SCORE = create("info.store sort type.lowest score", "&eLowest Score");
 
 	// inputs
 	public static TranslationEntry PROMPT_SEARCH_TITLE = create("prompts.search.title", "<GRADIENT:65B1B4>&LSearch</GRADIENT:2B6F8A>");
@@ -1223,6 +1225,32 @@ public final class Translations extends TranslationManager {
 			"&7Current Filter&f: %current_filter%",
 			"",
 			"&e&l%left_click% &7to cycle filter"
+	);
+
+	public static TranslationEntry GUI_TOP_STORES_TITLE = create("gui.top stores.title", "&eMarkets &f- &7Top Stores");
+	public static TranslationEntry GUI_TOP_STORES_ITEMS_ENTRY_NAME = create("gui.top stores.items.entry.name", "<GRADIENT:FFD700>&l#%store_rank% &f%market_name%</GRADIENT:FFA500>");
+	public static TranslationEntry GUI_TOP_STORES_ITEMS_ENTRY_LORE = create("gui.top stores.items.entry.lore",
+			"&7----------------------------",
+			"&7Owner&f: &e%market_owner%",
+			"&7Store Level&f: &e%store_level%",
+			"&7Tier&f: %store_tier%",
+			"",
+			"&7Total Sales&f: &e%total_sales%",
+			"&7Listings&f: &e%total_listings%",
+			"&7Avg Rating&f: &e%avg_rating%",
+			"&7Customers&f: &e%total_customers%",
+			"&7Reviews&f: &e%total_reviews%",
+			"",
+			"&e&l%left_click% &7to visit store"
+	);
+	public static TranslationEntry GUI_TOP_STORES_ITEMS_FILTER_NAME = create("gui.top stores.items.filter.name", "<GRADIENT:65B1B4>&lStore Level Sort</GRADIENT:2B6F8A>");
+	public static TranslationEntry GUI_TOP_STORES_ITEMS_FILTER_LORE = create("gui.top stores.items.filter.lore",
+			"&7Toggle between viewing stores",
+			"&7with the highest or lowest score.",
+			"",
+			"&7Current Sort&f: %store_sort_type%",
+			"",
+			"&e&l%left_click% &7to cycle sort"
 	);
 
 	// Loading indicator for async operations
