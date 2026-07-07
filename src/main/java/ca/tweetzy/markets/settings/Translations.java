@@ -1049,7 +1049,8 @@ public final class Translations extends TranslationManager {
 	);
 
 	public static TranslationEntry GUI_PURCHASE_ITEM_ITEMS_HIGH_AMOUNT_WARNING_LORE = create("gui.purchase item.items.high amount warning.lore",
-			"&c&lHigh transaction amount, please review your purchase offer"
+			"&c&lHigh transaction amount.",
+			"&ePlease review your purchase offer"
 	);
 
 	public static TranslationEntry GUI_PURCHASE_ITEM_ITEMS_PRICE_BREAKDOWN_NAME = create("gui.purchase item.items.price breakdown.name", "<GRADIENT:65B1B4>&lPrice Breakdown</GRADIENT:2B6F8A>");
