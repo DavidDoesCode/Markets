@@ -169,6 +169,21 @@ public final class PlayerManager extends KeyValueManager<UUID, MarketUser> {
 		return Markets.getRequestManager().getRequestsBy(player.getUniqueId()).size() >= maxAllowedRequests;
 	}
 
+	public int getMaxStockPerListing(@NonNull final Player player) {
+		if (player.hasPermission("markets.bypass.maxstockperlisting"))
+			return Integer.MAX_VALUE;
+
+		return Math.max(1, Settings.MAX_STOCK_PER_LISTING.getIntOr(100000));
+	}
+
+	public int getAddableStock(@NonNull final Player player, final int currentStock, final int incomingAmount) {
+		final int remaining = getMaxStockPerListing(player) - currentStock;
+		if (remaining <= 0)
+			return 0;
+
+		return Math.min(incomingAmount, remaining);
+	}
+
 
 	public void create(@NonNull final Player player, @NonNull final Consumer<Boolean> created) {
 		final MarketUser marketUser = createRawPlayer(player);

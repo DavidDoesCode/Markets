@@ -242,8 +242,25 @@ public final class CategoryNewItemGUI extends MarketsBaseGUI {
 				return;
 			}
 
-			this.marketItem.setItem(placedItem.clone());
-			this.marketItem.setStock(placedItem.clone().getAmount());
+			final int stockAmount = Markets.getPlayerManager().getAddableStock(click.player, 0, placedItem.getAmount());
+			if (stockAmount <= 0) {
+				Common.tell(click.player, TranslationManager.string(click.player, Translations.AT_MAX_STOCK_PER_LISTING,
+						"max_stock", Markets.getPlayerManager().getMaxStockPerListing(click.player)));
+				clickLock = false;
+				return;
+			}
+
+			final ItemStack listingItem = placedItem.clone();
+			listingItem.setAmount(stockAmount);
+
+			if (stockAmount < placedItem.getAmount()) {
+				final ItemStack overflow = placedItem.clone();
+				overflow.setAmount(placedItem.getAmount() - stockAmount);
+				PlayerUtil.giveItem(click.player, overflow);
+			}
+
+			this.marketItem.setItem(listingItem);
+			this.marketItem.setStock(stockAmount);
 			if (this.marketItem.getPrice() <= 0) {
 				clickLock = false;
 				return;
@@ -254,7 +271,7 @@ public final class CategoryNewItemGUI extends MarketsBaseGUI {
 			}
 
 			// Store item before clearing slot - allows recovery if player disconnects
-			this.pendingItem = placedItem.clone();
+			this.pendingItem = listingItem.clone();
 			setItem(1, 4, CompMaterial.AIR.parseItem());
 
 			// create the item

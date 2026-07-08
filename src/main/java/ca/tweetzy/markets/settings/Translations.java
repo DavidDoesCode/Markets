@@ -29,6 +29,7 @@ public final class Translations extends TranslationManager {
 	public static TranslationEntry TAKE_OUT_ITEM_FIRST = create("error.take out item", "&cPlease remove your item from the menu first!");
 	public static TranslationEntry AT_MAX_CATEGORY_LIMIT = create("error.at maximum category limit", "&cYou aren't allowed to create more categories.");
 	public static TranslationEntry AT_MAX_ITEM_LIMIT = create("error.at maximum item limit", "&cYou aren't allowed to add more items!");
+	public static TranslationEntry AT_MAX_STOCK_PER_LISTING = create("error.at maximum stock per listing", "&cThis listing cannot hold more than &f%max_stock% &citems.");
 	public static TranslationEntry AT_MAX_REQUEST_LIMIT = create("error.at maximum request limit", "&cYou aren't allowed to create more requests!");
 	public static TranslationEntry PLACE_REQUEST_ITEM = create("error.place request item", "&cPlease select/provide the item you want to request");
 	public static TranslationEntry PLACE_ITEM_TO_ADD = create("error.placed item to add", "&cPlease put the item you wish to add into the empty slot");

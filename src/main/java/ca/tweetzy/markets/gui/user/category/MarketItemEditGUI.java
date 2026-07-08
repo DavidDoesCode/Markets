@@ -123,6 +123,33 @@ public final class MarketItemEditGUI extends MarketsBaseGUI {
 		DupeDetector.logPreventedAttempt(attemptType, player, null, this.marketItem.getItem(), this.marketItem.getStock(), this.market, this.marketItem, detail);
 	}
 
+	private synchronized void releaseWithdrawLocks() {
+		this.playerLock = false;
+		this.inputLock = false;
+	}
+
+	private int getAddableStock(@NonNull final Player player, final int incomingAmount) {
+		return Markets.getPlayerManager().getAddableStock(player, this.marketItem.getStock(), incomingAmount);
+	}
+
+	private void tellStockLimitReached(@NonNull final Player player) {
+		Common.tell(player, TranslationManager.string(player, Translations.AT_MAX_STOCK_PER_LISTING,
+				"max_stock", Markets.getPlayerManager().getMaxStockPerListing(player)));
+	}
+
+	private void giveWithdrawItems(@NonNull final Player player, @NonNull final ItemStack template, final int qty) {
+		int remaining = qty;
+		final int maxStack = Math.max(1, template.getMaxStackSize());
+
+		while (remaining > 0) {
+			final int stackSize = Math.min(remaining, maxStack);
+			final ItemStack stack = template.clone();
+			stack.setAmount(stackSize);
+			PlayerUtil.giveItem(player, stack);
+			remaining -= stackSize;
+		}
+	}
+
 	private void drawAddOneButton() {
 		setButton(2, 7, QuickItem
 				.of(CompMaterial.LIME_CANDLE)
@@ -146,6 +173,12 @@ public final class MarketItemEditGUI extends MarketsBaseGUI {
 				int itemCount = PlayerUtil.getItemCountInPlayerInventory(click.player, this.marketItem.getItem());
 				if (itemCount == 0) {
 					Common.tell(click.player, "&cYou don't have any of this item in your inventory!");
+					playerLock = false;
+					return;
+				}
+
+				if (getAddableStock(click.player, 1) <= 0) {
+					tellStockLimitReached(click.player);
 					playerLock = false;
 					return;
 				}
@@ -190,15 +223,35 @@ public final class MarketItemEditGUI extends MarketsBaseGUI {
 
 				final ItemStack cursor = click.cursor;
 				if (cursor != null && cursor.getType() != CompMaterial.AIR.get()) {
-					if (!this.marketItem.getItem().isSimilar(cursor)) return;
+					if (!this.marketItem.getItem().isSimilar(cursor)) {
+						playerLock = false;
+						return;
+					}
 
-					this.marketItem.addStock(cursor, result -> {
+					final int toAdd = getAddableStock(click.player, cursor.getAmount());
+					if (toAdd <= 0) {
+						tellStockLimitReached(click.player);
+						playerLock = false;
+						return;
+					}
+
+					final ItemStack toDeposit = cursor.clone();
+					toDeposit.setAmount(toAdd);
+
+					this.marketItem.addStock(toDeposit, result -> {
 						if (result == SynchronizeResult.FAILURE) {
 							playerLock = false;
 							return;
 						}
 
-						click.player.setItemOnCursor(CompMaterial.AIR.parseItem());
+						final int remainingOnCursor = cursor.getAmount() - toAdd;
+						if (remainingOnCursor > 0) {
+							final ItemStack leftovers = cursor.clone();
+							leftovers.setAmount(remainingOnCursor);
+							click.player.setItemOnCursor(leftovers);
+						} else {
+							click.player.setItemOnCursor(CompMaterial.AIR.parseItem());
+						}
 						drawItemDisplay();
 						drawAddOneButton();
 						drawStockButton();
@@ -223,8 +276,15 @@ public final class MarketItemEditGUI extends MarketsBaseGUI {
 					return;
 				}
 
-				this.marketItem.setStock(this.marketItem.getStock() + itemCount);
-				PlayerUtil.removeSpecificItemQuantityFromPlayer(click.player, this.marketItem.getItem(), itemCount);
+				final int toAdd = getAddableStock(click.player, itemCount);
+				if (toAdd <= 0) {
+					tellStockLimitReached(click.player);
+					playerLock = false;
+					return;
+				}
+
+				this.marketItem.setStock(this.marketItem.getStock() + toAdd);
+				PlayerUtil.removeSpecificItemQuantityFromPlayer(click.player, this.marketItem.getItem(), toAdd);
 
 				this.marketItem.sync(result -> {
 					if (result == SynchronizeResult.FAILURE) return;
@@ -254,61 +314,68 @@ public final class MarketItemEditGUI extends MarketsBaseGUI {
 				new TitleInput(Markets.getInstance(), click.player, TranslationManager.string(click.player, Translations.PROMPT_STOCK_WITHDRAW_TITLE), TranslationManager.string(click.player, Translations.PROMPT_STOCK_WITHDRAW_SUBTITLE)) {
 					@Override
 					public void onExit(Player player) {
+						MarketItemEditGUI.this.releaseWithdrawLocks();
 						click.manager.showGUI(click.player, MarketItemEditGUI.this);
 					}
 
 					@Override
 					public boolean onResult(String string) {
-						synchronized (this) {
+						synchronized (MarketItemEditGUI.this) {
 							if (inputLock) {
 								logMarketItemDupeAttempt(click.player, "WITHDRAW_INPUT_DOUBLE_SUBMIT", null);
 								return false;
-							} else
-								inputLock = true;
+							}
+							inputLock = true;
 						}
 
 						string = ChatColor.stripColor(string);
 
 						if (!MathUtil.isInt(string)) {
 							Common.tell(click.player, TranslationManager.string(click.player, Translations.NOT_A_NUMBER, "value", string));
-							playerLock = false;
+							releaseWithdrawLocks();
 							return false;
 						}
 
-						int qty = Integer.parseInt(string);
+						final int qty = Integer.parseInt(string);
 
-						if(qty <= 0) {
+						if (qty <= 0) {
 							logMarketItemDupeAttempt(click.player, "WITHDRAW_NEGATIVE_QTY", "qty=" + qty);
 							Common.tell(click.player, "Enter a valid amount to withdraw");
+							releaseWithdrawLocks();
 							return false;
 						}
 
 						if (qty > 640) {
 							Common.tell(click.player, "You may only withdraw 10 stacks at a time.");
+							releaseWithdrawLocks();
 							return false;
 						}
-
-						if (marketItem.getStock() < qty) {
-							Common.tell(click.player, TranslationManager.string(click.player, Translations.NOT_ENOUGH_STOCK));
-							playerLock = false;
-							return false;
-						}
-
-						marketItem.setStock(marketItem.getStock() - qty);
-
-						final ItemStack item = marketItem.getItem().clone();
-						item.setAmount(1);
 
 						Bukkit.getServer().getScheduler().runTask(Markets.getInstance(), () -> {
-							for (int i = 0; i < qty; i++)
-								PlayerUtil.giveItem(click.player, item);
+							if (marketItem.isBeingEdited()) {
+								Common.tell(click.player, TranslationManager.list(click.player, Translations.ITEM_BEING_EDITED));
+								logMarketItemDupeAttempt(click.player, "GUI_WITHDRAW_DURING_PURCHASE", null);
+								releaseWithdrawLocks();
+								click.manager.showGUI(click.player, new MarketItemEditGUI(click.player, MarketItemEditGUI.this.market, MarketItemEditGUI.this.category, MarketItemEditGUI.this.marketItem));
+								return;
+							}
+
+							if (marketItem.getStock() < qty) {
+								Common.tell(click.player, TranslationManager.string(click.player, Translations.NOT_ENOUGH_STOCK));
+								releaseWithdrawLocks();
+								click.manager.showGUI(click.player, new MarketItemEditGUI(click.player, MarketItemEditGUI.this.market, MarketItemEditGUI.this.category, MarketItemEditGUI.this.marketItem));
+								return;
+							}
+
+							marketItem.setStock(marketItem.getStock() - qty);
+							giveWithdrawItems(click.player, marketItem.getItem(), qty);
+
+							marketItem.sync(result -> {
+								releaseWithdrawLocks();
+								click.manager.showGUI(click.player, new MarketItemEditGUI(click.player, MarketItemEditGUI.this.market, MarketItemEditGUI.this.category, MarketItemEditGUI.this.marketItem));
+							});
 						});
 
-						marketItem.sync(result -> {
-							inputLock = false;
-							playerLock = false;
-							click.manager.showGUI(click.player, new MarketItemEditGUI(click.player, MarketItemEditGUI.this.market, MarketItemEditGUI.this.category, MarketItemEditGUI.this.marketItem));
-						});
 						return true;
 					}
 				};

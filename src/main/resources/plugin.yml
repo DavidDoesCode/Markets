@@ -61,3 +61,6 @@ permissions:
   markets.alerts.dupe:
     description: Receive alerts when dupe exploits are detected or prevented
     default: op
+  markets.bypass.maxstockperlisting:
+    description: Allows bypassing the max stock-per-listing cap
+    default: op

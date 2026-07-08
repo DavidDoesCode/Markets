@@ -3,7 +3,6 @@ package ca.tweetzy.markets.commands;
 import ca.tweetzy.flight.command.AllowedExecutor;
 import ca.tweetzy.flight.command.Command;
 import ca.tweetzy.flight.command.ReturnType;
-import ca.tweetzy.flight.comp.enums.CompMaterial;
 import ca.tweetzy.flight.settings.TranslationManager;
 import ca.tweetzy.flight.utils.ItemUtil;
 import ca.tweetzy.flight.utils.MathUtil;
@@ -75,10 +74,20 @@ public final class CommandAdd extends Command {
 			final boolean wholesale = !Settings.DISABLE_WHOLESALE.getBoolean() && (FlagExtractor.extract(args).containsKey("-wholesale") || Settings.ITEMS_ARE_WHOLESALE_BY_DEFAULT.getBoolean());
 			final boolean infinite = (player.hasPermission("markets.admin") || player.isOp()) && FlagExtractor.extract(args).containsKey("-infinite");
 
+			final int stockAmount = Markets.getPlayerManager().getAddableStock(player, 0, toSell.getAmount());
+			if (stockAmount <= 0) {
+				tell(player, TranslationManager.string(player, Translations.AT_MAX_STOCK_PER_LISTING,
+						"max_stock", Markets.getPlayerManager().getMaxStockPerListing(player)));
+				return ReturnType.FAIL;
+			}
+
+			final ItemStack listingItem = toSell.clone();
+			listingItem.setAmount(stockAmount);
+
 			final MarketItem marketItem = new CategoryItem(category.getId());
 			marketItem.setPrice(price);
-			marketItem.setItem(toSell);
-			marketItem.setStock(toSell.getAmount());
+			marketItem.setItem(listingItem);
+			marketItem.setStock(stockAmount);
 			marketItem.setPriceIsForAll(wholesale);
 			marketItem.setInfinite(infinite);
 
@@ -87,7 +96,7 @@ public final class CommandAdd extends Command {
 
 			Markets.getCategoryItemManager().create(category, marketItem.getItem(), marketItem.getCurrency(), marketItem.getCurrencyItem(), marketItem.getPrice(), marketItem.isPriceForAll(), marketItem.isAcceptingOffers(), infinite, created -> {
 				if (created) {
-					player.getInventory().setItemInMainHand(CompMaterial.AIR.parseItem());
+					PlayerUtil.removeSpecificItemQuantityFromPlayer(player, toSell, stockAmount);
 
 					tell(player, TranslationManager.string(player, Translations.MARKET_ITEM_ADDED_TO_CATEGORY, "item_quantity", marketItem.getStock(), "item_name", ItemUtil.getItemName(toSell), "category_display_name", category.getDisplayName()));
 
