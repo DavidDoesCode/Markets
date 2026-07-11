@@ -22,7 +22,6 @@ import ca.tweetzy.markets.gui.shared.view.ratings.MarketRatingsViewGUI;
 import ca.tweetzy.markets.gui.shared.view.ratings.NewMarketRatingGUI;
 import ca.tweetzy.markets.impl.MarketOffer;
 import ca.tweetzy.markets.model.AdminActionLogger;
-import ca.tweetzy.markets.model.DupeDetector;
 import ca.tweetzy.markets.settings.Settings;
 import ca.tweetzy.markets.settings.Translations;
 import lombok.NonNull;
@@ -41,8 +40,6 @@ public final class MarketCategoryViewGUI extends MarketsPagedGUI<MarketItem> {
 	private final Category category;
 	private final boolean viewAsCustomer;
 	private final boolean fromAdminCommand;
-
-	private boolean clickLock = false;
 
 	public MarketCategoryViewGUI(Gui parent, @NonNull final Player player, @NonNull final Market market, @NonNull final Category category, boolean viewAsCustomer, boolean fromAdminCommand) {
 		super(fromAdminCommand ? null : parent, player, TranslationManager.string(player, Translations.GUI_MARKET_CATEGORY_VIEW_TITLE,
@@ -227,12 +224,6 @@ public final class MarketCategoryViewGUI extends MarketsPagedGUI<MarketItem> {
 			return;
 		}
 
-		if(clickLock){
-			DupeDetector.logPreventedAttempt("PURCHASE_DOUBLE_CLICK", click.player, null, marketItem.getItem(), 1, this.market, marketItem, "click=" + click.clickType);
-			return;
-		} else
-			clickLock = true;
-
 		if (Markets.getCategoryItemManager().getByUUID(marketItem.getId()) == null) {
 			click.manager.showGUI(click.player, new MarketCategoryViewGUI(this.player, this.market, this.category, this.viewAsCustomer));
 			Common.tell(click.player, TranslationManager.string(click.player, Translations.ITEM_NO_LONGER_AVAILABLE));
@@ -299,8 +290,6 @@ public final class MarketCategoryViewGUI extends MarketsPagedGUI<MarketItem> {
 				return;
 			}
 		}
-
-		clickLock = false;
 	}
 
 	@Override

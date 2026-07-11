@@ -14,7 +14,6 @@ import ca.tweetzy.markets.gui.MarketsPagedGUI;
 import ca.tweetzy.markets.gui.shared.checkout.MarketItemPurchaseGUI;
 import ca.tweetzy.markets.gui.shared.checkout.OfferCreateGUI;
 import ca.tweetzy.markets.impl.MarketOffer;
-import ca.tweetzy.markets.model.DupeDetector;
 import ca.tweetzy.markets.model.FloodGateCheck;
 import ca.tweetzy.markets.settings.Settings;
 import ca.tweetzy.markets.settings.Translations;
@@ -29,7 +28,6 @@ import java.util.List;
 public final class MarketSearchGUI extends MarketsPagedGUI<MarketItem> {
 
 	private final String keywords;
-	private boolean clickLock = false;
 
 	public MarketSearchGUI(Gui parent, @NonNull Player player, @NonNull String keywords) {
 		super(parent, player, TranslationManager.string(player, Translations.GUI_SEARCH_TITLE, "search_keywords", keywords), 6, Markets.getMarketManager().getSearchResults(player, keywords));
@@ -85,14 +83,6 @@ public final class MarketSearchGUI extends MarketsPagedGUI<MarketItem> {
 			return;
 		}
 
-		if(clickLock){
-			final Category category = Markets.getCategoryManager().getByUUID(marketItem.getOwningCategory());
-			final Market market = Markets.getMarketManager().getByUUID(category.getOwningMarket());
-			DupeDetector.logPreventedAttempt("PURCHASE_DOUBLE_CLICK", click.player, null, marketItem.getItem(), 1, market, marketItem, "click=" + click.clickType);
-			return;
-		} else
-			clickLock = true;
-
 		final Category category = Markets.getCategoryManager().getByUUID(marketItem.getOwningCategory());
 		final Market market = Markets.getMarketManager().getByUUID(category.getOwningMarket());
 
@@ -109,8 +99,6 @@ public final class MarketSearchGUI extends MarketsPagedGUI<MarketItem> {
 			marketItem.getViewingPlayers().add(player);
 			return;
 		}
-
-		clickLock = false;
 	}
 
 	@Override
