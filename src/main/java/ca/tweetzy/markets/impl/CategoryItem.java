@@ -330,7 +330,7 @@ public final class CategoryItem implements MarketItem {
 						shippingTotal
 				);
 
-				Common.tell(buyer, TranslationManager.string(buyer, Translations.SHIPPING_PURCHASE_BREAKDOWN,
+				Common.tell(buyer, TranslationManager.list(buyer, Translations.SHIPPING_PURCHASE_BREAKDOWN,
 						"shipping_total", ShippingMoney.format(shippingBreakdown.getTotal()),
 						"shipping_base", ShippingMoney.format(shippingBreakdown.getBaseCharge()),
 						"shipping_distance", ShippingMoney.format(shippingBreakdown.getDistanceCharge()),
