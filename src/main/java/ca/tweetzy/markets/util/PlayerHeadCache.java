@@ -18,6 +18,11 @@ public final class PlayerHeadCache {
 	private PlayerHeadCache() {
 	}
 
+	public static ItemStack getCached(@NonNull final UUID uuid) {
+		final ItemStack cached = CACHE.get(uuid);
+		return cached != null ? cached.clone() : null;
+	}
+
 	public static @NonNull CompletableFuture<ItemStack> getOrFetch(@NonNull final OfflinePlayer player) {
 		final UUID uuid = player.getUniqueId();
 

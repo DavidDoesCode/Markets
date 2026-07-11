@@ -210,7 +210,14 @@ public final class TopStoresGUI extends MarketsPagedGUI<StoreLevelSnapshot> {
 			return;
 		}
 
-		loadPlayerHeadsAsync();
+		final int requestId = ++this.headLoadRequestId;
+		Bukkit.getScheduler().runTask(Markets.getInstance(), () -> {
+			if (requestId != this.headLoadRequestId || !this.player.isOnline()) {
+				return;
+			}
+
+			loadPlayerHeadsAsync(requestId);
+		});
 	}
 
 	@Override
@@ -219,7 +226,9 @@ public final class TopStoresGUI extends MarketsPagedGUI<StoreLevelSnapshot> {
 		final int rank = getRankMap().getOrDefault(snapshot, 0);
 		final String tier = StoreLevelCalculator.getStoreLevelTier(this.player, snapshot.level());
 
-		return buildStoreItem(QuickItem.of(CompMaterial.PLAYER_HEAD).make(), snapshot, market, rank, tier);
+		final ItemStack cachedSkull = PlayerHeadCache.getCached(market.getOwnerUUID());
+		final ItemStack skull = cachedSkull != null ? cachedSkull : QuickItem.of(CompMaterial.PLAYER_HEAD).make();
+		return buildStoreItem(skull, snapshot, market, rank, tier);
 	}
 
 	private Map<StoreLevelSnapshot, Integer> getRankMap() {
@@ -254,8 +263,7 @@ public final class TopStoresGUI extends MarketsPagedGUI<StoreLevelSnapshot> {
 				.make();
 	}
 
-	private void loadPlayerHeadsAsync() {
-		final int requestId = ++this.headLoadRequestId;
+	private void loadPlayerHeadsAsync(final int requestId) {
 		final Map<StoreLevelSnapshot, Integer> rankMap = getRankMap();
 
 		final List<StoreLevelSnapshot> itemsToDisplay = this.items.stream()
@@ -269,15 +277,17 @@ public final class TopStoresGUI extends MarketsPagedGUI<StoreLevelSnapshot> {
 			final int slotIndex = fillSlots().get(i);
 			final int rank = rankMap.getOrDefault(snapshot, 0);
 			final String tier = StoreLevelCalculator.getStoreLevelTier(this.player, snapshot.level());
-			final OfflinePlayer owner = Bukkit.getOfflinePlayer(market.getOwnerUUID());
 
-			PlayerHeadCache.getOrFetch(owner).thenAccept(skull -> Bukkit.getScheduler().runTask(Markets.getInstance(), () -> {
-				if (requestId != this.headLoadRequestId || !isStillOpen()) {
-					return;
-				}
+			Bukkit.getScheduler().runTaskAsynchronously(Markets.getInstance(), () -> {
+				final OfflinePlayer owner = Bukkit.getOfflinePlayer(market.getOwnerUUID());
+				PlayerHeadCache.getOrFetch(owner).thenAccept(skull -> Bukkit.getScheduler().runTask(Markets.getInstance(), () -> {
+					if (requestId != this.headLoadRequestId || !this.player.isOnline()) {
+						return;
+					}
 
-				setItem(slotIndex, buildStoreItem(skull, snapshot, market, rank, tier));
-			}));
+					setButton(slotIndex, buildStoreItem(skull, snapshot, market, rank, tier), click -> onClick(snapshot, click));
+				}));
+			});
 		}
 	}
 
