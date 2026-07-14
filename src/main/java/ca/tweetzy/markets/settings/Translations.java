@@ -1119,7 +1119,7 @@ public final class Translations extends TranslationManager {
 	public static TranslationEntry SHIPPING_INFO_ORIGIN = create("info.shipping.origin", "&7Origin (XZ)&f: &e%origin_x%&7, &e%origin_z%");
 	public static TranslationEntry SHIPPING_INFO_BASE = create("info.shipping.base", "&7Base charge (outside region)&f: &a$%base_charge%");
 	public static TranslationEntry SHIPPING_INFO_FREE_DISTANCE = create("info.shipping.free distance", "&7Free distance&f: &e%free_distance% &7blocks");
-	public static TranslationEntry SHIPPING_INFO_RATE = create("info.shipping.rate", "&7Distance rate&f: &a$%rate_per_unit% &7per &e%distance_unit% &7blocks");
+	public static TranslationEntry SHIPPING_INFO_RATE = create("info.shipping.rate", "&7Distance rate (outside region)&f: &a$%rate_per_unit% &7per &e%distance_unit% &7blocks");
 	public static TranslationEntry SHIPPING_INFO_YOUR_COST = create("info.shipping.your cost", "&7Your current shipping&f: &a$%shipping_total%");
 	public static TranslationEntry SHIPPING_INFO_YOUR_DISTANCE = create("info.shipping.your distance", "&7Your distance&f: &e%distance% &7blocks (&e%billable_distance% &7billable)");
 	public static TranslationEntry SHIPPING_INFO_EXEMPT_FLAT = create("info.shipping.exempt flat", "&7Flat fee exemption&f: &aActive");

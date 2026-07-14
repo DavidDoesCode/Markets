@@ -27,8 +27,10 @@ public final class ShippingCalculator {
 
 		final Location location = player.getLocation();
 		final double distance = distanceFromOrigin(location, config);
-		final double billableDistance = Math.max(0, distance - config.getFreeDistance());
 		final boolean insideRegion = isInsideRegion(location.getX(), location.getZ(), config);
+		final double billableDistance = insideRegion
+				? 0
+				: Math.max(0, distance - config.getFreeDistance());
 
 		final boolean flatExempt = player.hasPermission(PERM_EXEMPT_FLAT);
 		final boolean distanceExempt = player.hasPermission(PERM_EXEMPT_DISTANCE);
@@ -38,7 +40,7 @@ public final class ShippingCalculator {
 			rawBase = 0;
 
 		double rawDistance = 0;
-		if (config.getDistanceUnit() > 0 && billableDistance > 0)
+		if (!insideRegion && config.getDistanceUnit() > 0 && billableDistance > 0)
 			rawDistance = (billableDistance / config.getDistanceUnit()) * config.getRatePerUnit();
 		if (distanceExempt)
 			rawDistance = 0;
