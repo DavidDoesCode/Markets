@@ -63,7 +63,7 @@ public final class Translations extends TranslationManager {
 	public static TranslationEntry DELETED_MARKET = create("info.deleted market", "&eSuccessfully deleted your market!");
 	public static TranslationEntry REMOVED_PLAYER_MARKET = create("info.admin.removed market", "&eSuccessfully removed market owned by &b%player_name%");
 	public static TranslationEntry MARKET_ITEM_BOUGHT_SELLER = create("info.market item bought.seller", "&fx&a%purchase_quantity% &f%item_name% &ewas bought by &b%buyer_name%");
-	public static TranslationEntry MARKET_ITEM_BOUGHT_BUYER = create("info.market item bought.buyer", "&eBought &fx&a%purchase_quantity% &f%item_name% &efrom &b%seller_name%");
+	public static TranslationEntry MARKET_ITEM_BOUGHT_BUYER = create("info.market item bought.buyer", "&eBought &fx&a%purchase_quantity% &f%item_name% &efrom &b%seller_name% &efor &a$%purchase_price%");
 	public static TranslationEntry MARKET_ITEM_OUT_OF_STOCK = create("info.market item bought.out of stock", "&EAll &f%item_name% &estock has been sold!");
 	public static TranslationEntry MARKET_ITEM_ADDED_TO_CATEGORY = create("info.added item to category", "&fx&a%item_quantity% &f%item_name% &ewas added to &b%category_display_name%");
 	public static TranslationEntry OFFLINE_SALES_INFO = create("info.offline sales messages",
@@ -221,12 +221,25 @@ public final class Translations extends TranslationManager {
 			"&a&lClick &7to view market"
 	);
 
-	public static TranslationEntry GUI_MAIN_VIEW_ITEMS_GLOBAL_NAME = create("gui.main view.items.global.name", "<GRADIENT:65B1B4>&LAll Markets</GRADIENT:2B6F8A>");
+	public static TranslationEntry GUI_MAIN_VIEW_ITEMS_GLOBAL_NAME = create("gui.main view.items.global.name", "<GRADIENT:65B1B4>&LTotal Open Shops (%open_shops%)</GRADIENT:2B6F8A>");
 	public static TranslationEntry GUI_MAIN_VIEW_ITEMS_GLOBAL_LORE = create("gui.main view.items.global.lore",
-			"&7Used to view all open markets",
+			"&7Used to view all open shops",
 			"&7that are owned by other players",
 			"",
-			"&e&l%left_click% &7to view open markets"
+			"&e&l%left_click% &7to view open shops"
+	);
+
+	public static TranslationEntry GUI_MAIN_VIEW_ITEMS_SHIPPING_NAME = create("gui.main view.items.shipping.name", "<GRADIENT:65B1B4>&LShipping Estimate</GRADIENT:2B6F8A>");
+	public static TranslationEntry GUI_MAIN_VIEW_ITEMS_SHIPPING_LORE = create("gui.main view.items.shipping.lore",
+			"&7Estimate for your current location",
+			"&7in &e%world_name%&7.",
+			"",
+			"&7Your shipping&f: &a$%shipping_total%",
+			"&7Distance&f: &e%distance% &7blocks",
+			"",
+			"&aShipping is free in the WildTP area.",
+			"",
+			"&e&l%left_click% &7to view full shipping details"
 	);
 
 	public static TranslationEntry GUI_MAIN_VIEW_ITEMS_ALL_REVIEWS_NAME = create("gui.main view.items.all reviews.name", "<GRADIENT:65B1B4>&LAll Reviews</GRADIENT:2B6F8A>");

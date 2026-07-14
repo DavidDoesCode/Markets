@@ -17,12 +17,17 @@ import ca.tweetzy.markets.gui.user.OfflinePaymentsGUI;
 import ca.tweetzy.markets.gui.user.TransactionsGUI;
 import ca.tweetzy.markets.gui.user.market.MarketOverviewGUI;
 import ca.tweetzy.markets.gui.user.market.MarketStatsGUI;
+import ca.tweetzy.markets.model.shipping.ShippingBreakdown;
+import ca.tweetzy.markets.model.shipping.ShippingCalculator;
+import ca.tweetzy.markets.model.shipping.ShippingMoney;
 import ca.tweetzy.markets.settings.Settings;
 import ca.tweetzy.markets.settings.Translations;
 import lombok.NonNull;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+
+import java.util.List;
 
 public final class MarketsMainGUI extends MarketsBaseGUI {
 
@@ -38,13 +43,35 @@ public final class MarketsMainGUI extends MarketsBaseGUI {
 	@Override
 	protected void draw() {
 		final Market playerMarket = Markets.getMarketManager().getByOwner(this.player.getUniqueId());
+		final int openShops = Markets.getMarketManager().getOpenMarketsInclusive().size();
+
+		// shipping estimate
+		final ShippingBreakdown shippingBreakdown = ShippingCalculator.calculate(this.player);
+		setButton(Settings.GUI_MAIN_VIEW_ITEMS_SHIPPING_SLOT.getInt(),
+				QuickItem
+						.of(Settings.GUI_MAIN_VIEW_ITEMS_SHIPPING.getItemStack())
+						.hideTags(true)
+						.name(TranslationManager.string(this.player, Translations.GUI_MAIN_VIEW_ITEMS_SHIPPING_NAME))
+						.lore(TranslationManager.list(this.player, Translations.GUI_MAIN_VIEW_ITEMS_SHIPPING_LORE,
+								"world_name", shippingBreakdown.getWorldName(),
+								"shipping_total", ShippingMoney.format(shippingBreakdown.getTotal()),
+								"distance", String.format("%,.0f", shippingBreakdown.getDistance()),
+								"left_click", TranslationManager.string(this.player, Translations.MOUSE_LEFT_CLICK)))
+						.make(), click -> {
+					click.gui.exit();
+					final List<String> mainAliases = Settings.CMD_ALIAS_MAIN.getStringList();
+					final List<String> shippingAliases = Settings.CMD_ALIAS_SUB_SHIPPING.getStringList();
+					final String mainAlias = mainAliases.isEmpty() ? "market" : mainAliases.get(0);
+					final String shippingAlias = shippingAliases.isEmpty() ? "shipping" : shippingAliases.get(0);
+					click.player.performCommand(mainAlias + " " + shippingAlias);
+				});
 
 		// global markets
 		setButton(Settings.GUI_MAIN_VIEW_ITEMS_ALL_MARKETS_SLOT.getInt(),
 				QuickItem
 						.of(Settings.GUI_MAIN_VIEW_ITEMS_ALL_MARKETS.getItemStack())
 						.hideTags(true)
-						.name(TranslationManager.string(this.player, Translations.GUI_MAIN_VIEW_ITEMS_GLOBAL_NAME))
+						.name(TranslationManager.string(this.player, Translations.GUI_MAIN_VIEW_ITEMS_GLOBAL_NAME, "open_shops", openShops))
 						.lore(TranslationManager.list(this.player, Translations.GUI_MAIN_VIEW_ITEMS_GLOBAL_LORE, "left_click", TranslationManager.string(this.player, Translations.MOUSE_LEFT_CLICK)))
 						.make(), click -> click.manager.showGUI(click.player, new AllMarketsViewGUI(new MarketsMainGUI(click.player), click.player)));
 
