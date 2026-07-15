@@ -18,6 +18,7 @@ import ca.tweetzy.markets.gui.shared.view.content.MarketViewGUI;
 import ca.tweetzy.markets.gui.user.market.MarketOverviewGUI;
 import ca.tweetzy.markets.model.DupeDetector;
 import ca.tweetzy.markets.model.FloodGateCheck;
+import ca.tweetzy.markets.model.WorthPriceLimiter;
 import ca.tweetzy.markets.settings.Settings;
 import ca.tweetzy.markets.settings.Translations;
 import lombok.NonNull;
@@ -282,6 +283,14 @@ public final class MarketCategoryEditGUI extends MarketsPagedGUI<MarketItem> {
 					}
 
 					final double price = Double.parseDouble(string);
+					if (price <= 0) {
+						Common.tell(click.player, TranslationManager.string(click.player, Translations.MUST_BE_HIGHER_THAN_ZERO, "value", string));
+						return false;
+					}
+
+					if (!WorthPriceLimiter.validate(click.player, marketItem, price))
+						return false;
+
 					marketItem.setPrice(price);
 					marketItem.sync(result -> reopen(click));
 					return true;

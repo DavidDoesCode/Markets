@@ -9,6 +9,7 @@ softdepend:
   - PlaceholderAPI
   - Vault
   - EcoBits
+  - Essentials
 
 
 libraries:
@@ -51,6 +52,15 @@ permissions:
     default: true
   markets.admin.shipping:
     description: Allows configuring shipping settings via /markets admin shipping
+    default: op
+  markets.admin.worth:
+    description: Allows configuring Essentials worth price limit settings via /markets admin worth
+    default: op
+  markets.admin.audit:
+    description: Allows auditing market listings against Essentials worth via /markets admin audit
+    default: op
+  markets.bypass.worthpricelimit:
+    description: Allows bypassing the Essentials worth-based and absolute Vault price caps when listing items
     default: op
   markets.shipping.exempt.flat:
     description: Exempts the player from flat/base shipping charges

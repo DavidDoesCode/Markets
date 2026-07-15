@@ -16,6 +16,7 @@ import ca.tweetzy.markets.gui.shared.selector.CurrencyPickerGUI;
 import ca.tweetzy.markets.impl.CategoryItem;
 import ca.tweetzy.markets.model.BlacklistChecker;
 import ca.tweetzy.markets.model.DupeDetector;
+import ca.tweetzy.markets.model.WorthPriceLimiter;
 import ca.tweetzy.markets.settings.Settings;
 import ca.tweetzy.markets.settings.Translations;
 import lombok.NonNull;
@@ -164,10 +165,9 @@ public final class CategoryNewItemGUI extends MarketsBaseGUI {
 						return false;
 					}
 
-					if(price > 10000000) {
-						Common.tell(click.player, "Price must be below 10,000,000");
+					final int quantity = Math.max(1, CategoryNewItemGUI.this.marketItem.getItem().getAmount());
+					if (!WorthPriceLimiter.validate(click.player, CategoryNewItemGUI.this.marketItem.getItem(), CategoryNewItemGUI.this.marketItem.getCurrency(), price, CategoryNewItemGUI.this.marketItem.isPriceForAll(), quantity))
 						return false;
-					}
 
 					CategoryNewItemGUI.this.marketItem.setPrice(price);
 
@@ -193,11 +193,21 @@ public final class CategoryNewItemGUI extends MarketsBaseGUI {
 				this.suppressItemReturn = true;
 
 				click.manager.showGUI(click.player, new CurrencyPickerGUI(this, click.player, (currency, item) -> {
+					final String previousCurrency = CategoryNewItemGUI.this.marketItem.getCurrency();
+					final ItemStack previousCurrencyItem = CategoryNewItemGUI.this.marketItem.getCurrencyItem() != null
+							? CategoryNewItemGUI.this.marketItem.getCurrencyItem().clone()
+							: null;
 
 					CategoryNewItemGUI.this.marketItem.setCurrency(currency.getStoreableName());
 
 					if (item != null)
 						CategoryNewItemGUI.this.marketItem.setCurrencyItem(item);
+
+					if (!WorthPriceLimiter.validateCurrentPrice(click.player, CategoryNewItemGUI.this.marketItem)) {
+						CategoryNewItemGUI.this.marketItem.setCurrency(previousCurrency);
+						if (previousCurrencyItem != null)
+							CategoryNewItemGUI.this.marketItem.setCurrencyItem(previousCurrencyItem);
+					}
 
 					CategoryNewItemGUI.this.reopen(click.player, click.manager);
 				}));
@@ -262,6 +272,11 @@ public final class CategoryNewItemGUI extends MarketsBaseGUI {
 			this.marketItem.setItem(listingItem);
 			this.marketItem.setStock(stockAmount);
 			if (this.marketItem.getPrice() <= 0) {
+				clickLock = false;
+				return;
+			}
+
+			if (!WorthPriceLimiter.validate(click.player, listingItem, this.marketItem.getCurrency(), this.marketItem.getPrice(), this.marketItem.isPriceForAll(), stockAmount)) {
 				clickLock = false;
 				return;
 			}

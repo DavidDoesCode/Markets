@@ -98,6 +98,14 @@ public final class Settings extends FlightSettings {
 	public static ConfigEntry BANNED_OWNER_CACHE_TTL = create("settings.banned owner cache ttl", 60).withComment("How many seconds the server ban list is cached before it is rebuilt. Higher values are more efficient on large servers but reflect new bans/unbans more slowly.");
 
 	/*
+	========================= Worth Price Limit Settings =========================
+	 */
+	public static ConfigEntry WORTH_PRICE_LIMIT_ENABLED = create("settings.worth.price limit.enabled", true).withComment("If true, Vault currency listings are capped by Essentials worth percentage (or absolute max when worth is unavailable).");
+	public static ConfigEntry WORTH_PRICE_LIMIT_MAX_PERCENT = create("settings.worth.price limit.max percent", 2500).withComment("Maximum listing unit price as a percent of Essentials worth. 2500 means 25x worth.");
+	public static ConfigEntry WORTH_PRICE_LIMIT_ABSOLUTE_MAX = create("settings.worth.price limit.absolute max", 100000).withComment("Absolute max unit price for Vault listings when Essentials is missing or the item has no worth.");
+	public static ConfigEntry WORTH_PRICE_LIMIT_BYPASS_PERMISSION = create("settings.worth.price limit.bypass permission", "markets.bypass.worthpricelimit").withComment("Permission that bypasses worth and absolute Vault price caps.");
+
+	/*
 	========================= Shipping Settings =========================
 	 */
 	public static ConfigEntry SHIPPING_ENABLED = create("settings.shipping.enabled", false).withComment("If true, shipping charges will be applied to market purchases based on per-world settings.");

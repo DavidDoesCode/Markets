@@ -1160,6 +1160,25 @@ public final class Translations extends TranslationManager {
 	public static TranslationEntry SHIPPING_ADMIN_WORLD_REMOVED = create("info.shipping.admin.world removed", "&aRemoved shipping config for world &e%world_name%&a.");
 	public static TranslationEntry SHIPPING_ADMIN_WORLD_LIST = create("info.shipping.admin.world list", "&7Configured worlds&f: &e%world_list%");
 
+	public static TranslationEntry WORTH_PRICE_TOO_HIGH = create("error.worth.price too high", "&cPrice too high. Max unit price for this item is &e%max_price%&c.");
+	public static TranslationEntry WORTH_ADMIN_UPDATED = create("info.worth.admin.updated", "&aWorth price limit setting updated.");
+	public static TranslationEntry WORTH_ADMIN_INVALID = create("error.worth.admin.invalid", "&cInvalid value. Check your command syntax.");
+	public static TranslationEntry WORTH_ADMIN_USAGE = create("error.worth.admin.usage", "&cUsage: /markets admin worth <info|enabled|maxpercent|absolutemax> ...");
+	public static TranslationEntry WORTH_ADMIN_INFO = create("info.worth.admin.info",
+			"&7Worth price limits&f:",
+			"&7Enabled&f: &e%enabled%",
+			"&7Max percent&f: &e%max_percent%%",
+			"&7Absolute max&f: &e%absolute_max%"
+	);
+	public static TranslationEntry WORTH_AUDIT_UNAVAILABLE = create("error.worth.audit.unavailable", "&cEssentials worth is not available. Cannot run an audit.");
+	public static TranslationEntry WORTH_AUDIT_INVALID = create("error.worth.audit.invalid", "&cPlease provide a valid positive percent value.");
+	public static TranslationEntry WORTH_AUDIT_STARTED = create("info.worth.audit.started", "&7Scanning Vault listings for items at &e%percent%% &7of Essentials worth...");
+	public static TranslationEntry WORTH_AUDIT_NONE = create("info.worth.audit.none", "&aNo matching Vault listings found.");
+	public static TranslationEntry WORTH_AUDIT_HEADER = create("info.worth.audit.header", "&7Found &e%count% &7matching listing(s) (&e%mode%&7):");
+	public static TranslationEntry WORTH_AUDIT_ENTRY = create("info.worth.audit.entry", "&e%owner% &7| &f%item% &7| unit &a%unit_price% &7| worth &a%worth% &7| &e%ratio%% &7| &8%item_id%");
+	public static TranslationEntry WORTH_AUDIT_MORE = create("info.worth.audit.more", "&7...and &e%remaining% &7more.");
+	public static TranslationEntry WORTH_AUDIT_COMPLETE = create("info.worth.audit.complete", "&aAudit complete.");
+
 	public static TranslationEntry GUI_OFFLINE_PAYMENTS_TITLE = create("gui.offline payments.title", "&eMarkets &f- &7Collect Payments");
 	public static TranslationEntry GUI_OFFLINE_PAYMENTS_ITEMS_PROFILE_LORE = create("gui.offline payments.items.payment.lore",
 			"",

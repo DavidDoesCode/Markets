@@ -19,6 +19,7 @@ import ca.tweetzy.markets.gui.shared.selector.CurrencyPickerGUI;
 import ca.tweetzy.markets.gui.shared.view.content.MarketCategoryViewGUI;
 import ca.tweetzy.markets.model.DupeDetector;
 import ca.tweetzy.markets.model.FloodGateCheck;
+import ca.tweetzy.markets.model.WorthPriceLimiter;
 import ca.tweetzy.markets.settings.Settings;
 import ca.tweetzy.markets.settings.Translations;
 import lombok.NonNull;
@@ -101,10 +102,8 @@ public final class MarketItemEditGUI extends MarketsBaseGUI {
 						return false;
 					}
 
-					if(price > 10000000) {
-						Common.tell(click.player, "Price must be below 10,000,000");
+					if (!WorthPriceLimiter.validate(click.player, marketItem, price))
 						return false;
-					}
 
 					marketItem.setPrice(price);
 					marketItem.sync(result -> reopen(click));
@@ -500,11 +499,23 @@ public final class MarketItemEditGUI extends MarketsBaseGUI {
 							"left_click", Translations.string(this.player, Translations.MOUSE_LEFT_CLICK),
 							"market_item_currency", this.marketItem.getCurrencyDisplayName()))
 					.make(), click -> click.manager.showGUI(click.player, new CurrencyPickerGUI(this, click.player, (currency, item) -> {
+				final String previousCurrency = this.marketItem.getCurrency();
+				final ItemStack previousCurrencyItem = this.marketItem.getCurrencyItem() != null
+						? this.marketItem.getCurrencyItem().clone()
+						: null;
 
 				this.marketItem.setCurrency(currency.getStoreableName());
 
 				if (item != null)
 					this.marketItem.setCurrencyItem(item);
+
+				if (!WorthPriceLimiter.validateCurrentPrice(MarketItemEditGUI.this.player, this.marketItem)) {
+					this.marketItem.setCurrency(previousCurrency);
+					if (previousCurrencyItem != null)
+						this.marketItem.setCurrencyItem(previousCurrencyItem);
+					click.manager.showGUI(click.player, new MarketItemEditGUI(MarketItemEditGUI.this.player, MarketItemEditGUI.this.market, MarketItemEditGUI.this.category, MarketItemEditGUI.this.marketItem));
+					return;
+				}
 
 				this.marketItem.sync(result -> click.manager.showGUI(click.player, new MarketItemEditGUI(MarketItemEditGUI.this.player, MarketItemEditGUI.this.market, MarketItemEditGUI.this.category, MarketItemEditGUI.this.marketItem)));
 			})));

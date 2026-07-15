@@ -15,6 +15,7 @@ import ca.tweetzy.markets.gui.user.category.MarketCategoryEditGUI;
 import ca.tweetzy.markets.impl.CategoryItem;
 import ca.tweetzy.markets.model.BlacklistChecker;
 import ca.tweetzy.markets.model.FlagExtractor;
+import ca.tweetzy.markets.model.WorthPriceLimiter;
 import ca.tweetzy.markets.settings.Settings;
 import ca.tweetzy.markets.settings.Translations;
 import org.bukkit.command.CommandSender;
@@ -70,6 +71,11 @@ public final class CommandAdd extends Command {
 			}
 
 			final double price = Double.parseDouble(args[1]);
+			if (price <= 0) {
+				tell(player, TranslationManager.string(player, Translations.MUST_BE_HIGHER_THAN_ZERO, "value", args[1]));
+				return ReturnType.FAIL;
+			}
+
 			final boolean noOffers = FlagExtractor.extract(args).containsKey("-nooffers");
 			final boolean wholesale = !Settings.DISABLE_WHOLESALE.getBoolean() && (FlagExtractor.extract(args).containsKey("-wholesale") || Settings.ITEMS_ARE_WHOLESALE_BY_DEFAULT.getBoolean());
 			final boolean infinite = (player.hasPermission("markets.admin") || player.isOp()) && FlagExtractor.extract(args).containsKey("-infinite");
@@ -90,6 +96,9 @@ public final class CommandAdd extends Command {
 			marketItem.setStock(stockAmount);
 			marketItem.setPriceIsForAll(wholesale);
 			marketItem.setInfinite(infinite);
+
+			if (!WorthPriceLimiter.validate(player, listingItem, marketItem.getCurrency(), price, wholesale, stockAmount))
+				return ReturnType.FAIL;
 
 			if (noOffers)
 				marketItem.setIsAcceptingOffers(false);
