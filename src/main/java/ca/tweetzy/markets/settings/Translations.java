@@ -1194,6 +1194,11 @@ public final class Translations extends TranslationManager {
 	public static TranslationEntry WORTH_AUDIT_COMPLETE = create("info.worth.audit.complete", "&aAudit complete.");
 	public static TranslationEntry WORTH_AUDIT_OPENED = create("info.worth.audit.opened", "&7Opened worth audit GUI with &e%count% &7matching listing(s).");
 	public static TranslationEntry WORTH_AUDIT_STALE = create("error.worth.audit.stale", "&cThat listing is no longer available.");
+	public static TranslationEntry WORTH_AUDIT_DELETE_SUCCESS = create("info.worth.audit.delete.success", "&aRemoved &e%item% &afrom &e%owner%&a's market and returned stock to their payments.");
+	public static TranslationEntry WORTH_AUDIT_DELETE_FAILED = create("error.worth.audit.delete.failed", "&cFailed to remove that listing. It may be locked by a purchase.");
+	public static TranslationEntry WORTH_AUDIT_CLEAR_INVALID = create("error.worth.audit.clear.invalid", "&cUsage: /markets admin auditclear <percent>");
+	public static TranslationEntry WORTH_AUDIT_CLEAR_STARTED = create("info.worth.audit.clear.started", "&7Clearing Vault listings at &e%percent%% &7of Essentials worth (skipping stock over 1,000)...");
+	public static TranslationEntry WORTH_AUDIT_CLEAR_COMPLETE = create("info.worth.audit.clear.complete", "&aAudit clear done. Deleted&f: &e%deleted% &7| Skipped&f: &e%skipped% &7| Failed&f: &e%failed%");
 
 	public static TranslationEntry MIN_BALANCE_BLOCKED = create("error.min balance blocked",
 			"&cMinimum balance of $%min_balance% to use the markets.",
@@ -1570,9 +1575,11 @@ public final class Translations extends TranslationManager {
 			"&7Unit Price&f: &a%unit_price%",
 			"&7Worth&f: &a%worth%",
 			"&7Ratio&f: &e%ratio%%",
+			"&7Total Stocked&f: &e%stock%",
 			"&7Item ID&f: &8%item_id%",
 			"",
-			"&a&lClick &7to open category"
+			"&a&lClick &7to open category",
+			"&c&l%drop_key% &7to delete listing & return stock"
 	);
 	public static TranslationEntry GUI_WORTH_AUDIT_ITEMS_FILTER_NAME = create("gui.worth audit.items.filter.name", "<GRADIENT:65B1B4>&lFilter</GRADIENT:2B6F8A>");
 	public static TranslationEntry GUI_WORTH_AUDIT_ITEMS_FILTER_LORE = create("gui.worth audit.items.filter.lore",

@@ -13,14 +13,17 @@ import ca.tweetzy.markets.api.market.core.Category;
 import ca.tweetzy.markets.api.market.core.Market;
 import ca.tweetzy.markets.api.market.core.MarketItem;
 import ca.tweetzy.markets.gui.MarketsPagedGUI;
+import ca.tweetzy.markets.gui.shared.selector.ConfirmGUI;
 import ca.tweetzy.markets.gui.shared.view.content.MarketCategoryViewGUI;
 import ca.tweetzy.markets.model.AuditEntry;
+import ca.tweetzy.markets.model.AuditListingRemover;
 import ca.tweetzy.markets.settings.Settings;
 import ca.tweetzy.markets.settings.Translations;
 import lombok.NonNull;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
@@ -75,12 +78,18 @@ public final class WorthAuditGUI extends MarketsPagedGUI<AuditEntry> {
 	}
 
 	private List<String> buildLore(AuditEntry entry) {
+		final MarketItem live = Markets.getCategoryItemManager().getByUUID(entry.getMarketItem().getId());
+		final MarketItem source = live != null ? live : entry.getMarketItem();
+		final String stockDisplay = source.isInfinite() ? "∞" : String.format("%,d", Math.max(0, source.getStock()));
+
 		return TranslationManager.list(this.player, Translations.GUI_WORTH_AUDIT_ITEMS_ENTRY_LORE,
 				"item", entry.getItemName(),
 				"unit_price", String.format("%,.2f", entry.getUnitPrice()),
 				"worth", String.format("%,.2f", entry.getWorth()),
 				"ratio", String.format("%,.0f", entry.getRatioPercent()),
-				"item_id", entry.getItemId());
+				"stock", stockDisplay,
+				"item_id", entry.getItemId(),
+				"drop_key", TranslationManager.string(this.player, Translations.DROP_KEY));
 	}
 
 	@Override
@@ -116,7 +125,8 @@ public final class WorthAuditGUI extends MarketsPagedGUI<AuditEntry> {
 							.lore(buildLore(entry))
 							.make();
 
-					Bukkit.getScheduler().runTask(Markets.getInstance(), () -> setItem(slotIndex, finalItem));
+					Bukkit.getScheduler().runTask(Markets.getInstance(), () ->
+							setButton(slotIndex, finalItem, click -> onClick(entry, click)));
 				});
 			});
 		}
@@ -124,6 +134,11 @@ public final class WorthAuditGUI extends MarketsPagedGUI<AuditEntry> {
 
 	@Override
 	protected void onClick(AuditEntry entry, GuiClickEvent click) {
+		if (click.clickType == ClickType.DROP) {
+			handleDelete(entry, click);
+			return;
+		}
+
 		final MarketItem marketItem = Markets.getCategoryItemManager().getByUUID(entry.getMarketItem().getId());
 		if (marketItem == null) {
 			refreshAfterStale(click, entry);
@@ -143,6 +158,40 @@ public final class WorthAuditGUI extends MarketsPagedGUI<AuditEntry> {
 		}
 
 		click.manager.showGUI(click.player, new MarketCategoryViewGUI(this, click.player, market, category, false, false));
+	}
+
+	private void handleDelete(AuditEntry entry, GuiClickEvent click) {
+		final MarketItem marketItem = Markets.getCategoryItemManager().getByUUID(entry.getMarketItem().getId());
+		if (marketItem == null) {
+			refreshAfterStale(click, entry);
+			return;
+		}
+
+		click.manager.showGUI(click.player, new ConfirmGUI(this, click.player, confirmed -> {
+			if (!confirmed) {
+				click.manager.showGUI(click.player, new WorthAuditGUI(this.parent, this.player, this.results, this.modeLabel, this.sortType));
+				return;
+			}
+
+			AuditListingRemover.removeListing(
+					marketItem,
+					click.player.getName(),
+					"Admin removed listing from worth audit",
+					success -> Bukkit.getScheduler().runTask(Markets.getInstance(), () -> {
+						if (!success) {
+							Common.tell(click.player, TranslationManager.string(click.player, Translations.WORTH_AUDIT_DELETE_FAILED));
+							click.manager.showGUI(click.player, new WorthAuditGUI(this.parent, this.player, this.results, this.modeLabel, this.sortType));
+							return;
+						}
+
+						Common.tell(click.player, TranslationManager.string(click.player, Translations.WORTH_AUDIT_DELETE_SUCCESS,
+								"item", entry.getItemName(),
+								"owner", entry.getOwnerName()));
+						this.results.removeIf(existing -> existing.getMarketItem().getId().equals(entry.getMarketItem().getId()));
+						click.manager.showGUI(click.player, new WorthAuditGUI(this.parent, this.player, this.results, this.modeLabel, this.sortType));
+					})
+			);
+		}));
 	}
 
 	private void refreshAfterStale(GuiClickEvent click, AuditEntry entry) {

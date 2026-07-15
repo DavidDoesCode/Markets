@@ -63,6 +63,9 @@ permissions:
   markets.admin.audit:
     description: Allows auditing market listings against Essentials worth via /markets admin audit
     default: op
+  markets.admin.auditclear:
+    description: Allows clearing audited worth-outlier listings via /markets admin auditclear
+    default: op
   markets.bypass.worthpricelimit:
     description: Allows bypassing the Essentials worth-based and absolute Vault price caps when listing items
     default: op
