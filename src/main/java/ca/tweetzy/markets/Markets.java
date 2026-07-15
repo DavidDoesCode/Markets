@@ -121,6 +121,7 @@ public final class Markets extends FlightPlugin {
 		// listeners
 		getServer().getPluginManager().registerEvents(new PlayerJoinListener(), this);
 		getServer().getPluginManager().registerEvents(new MarketTransactionListener(), this);
+		this.marketManager.registerLiteBansListeners();
 
 		// setup commands
 		this.commandManager.registerCommandDynamically(new MarketsCommand()).addSubCommands(
@@ -150,6 +151,7 @@ public final class Markets extends FlightPlugin {
 			// Warm up managers by accessing their content
 			// This pre-loads data from database and caches it in memory
 			this.marketManager.getManagerContent();
+			this.marketManager.getOpenMarketsInclusive(); // warm Bukkit + LiteBans banned-owner cache
 			this.playerManager.getManagerContent();
 			this.categoryManager.getManagerContent();
 			this.categoryItemManager.getManagerContent();

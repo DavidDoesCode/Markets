@@ -94,8 +94,8 @@ public final class Settings extends FlightSettings {
 	public static ConfigEntry REQUEST_MENU_SHOWS_OWN_FIRST = create("settings.request menu shows own first", true).withComment("If false, the request menu will show global requests by default instead of your own.");
 	public static ConfigEntry USE_ADDITIONAL_CONFIRMS = create("settings.additional confirmations.enabled", true).withComment("If true, markets will ask the player to confirm sensitive actions (ie. deleting, creating) ");
 	public static ConfigEntry TRANSACTION_VIEW_ALL_NEEDS_PERM = create("settings.require permission to view all transactions", true).withComment("If true, players will need the perm: markets.viewalltransactions to see the toggle button.");
-	public static ConfigEntry HIDE_BANNED_OWNER_MARKETS = create("settings.hide banned owner markets", true).withComment("If true, markets whose owner is banned from the server will be hidden from listings/search and cannot be opened by regular players (admins with markets.admin.viewrestricted can still open them).");
-	public static ConfigEntry BANNED_OWNER_CACHE_TTL = create("settings.banned owner cache ttl", 60).withComment("How many seconds the server ban list is cached before it is rebuilt. Higher values are more efficient on large servers but reflect new bans/unbans more slowly.");
+	public static ConfigEntry HIDE_BANNED_OWNER_MARKETS = create("settings.hide banned owner markets", true).withComment("If true, markets whose owner is banned from the server (Bukkit ban list, and LiteBans when installed on the same server) will be hidden from listings/search and cannot be opened by regular players (admins with markets.admin.viewrestricted can still open them).");
+	public static ConfigEntry BANNED_OWNER_CACHE_TTL = create("settings.banned owner cache ttl", 60).withComment("How many seconds the server ban list is cached before it is rebuilt. Higher values are more efficient on large servers but reflect new bans/unbans more slowly. LiteBans ban/unban events also update the cache immediately.");
 
 	/*
 	========================= Worth Price Limit Settings =========================

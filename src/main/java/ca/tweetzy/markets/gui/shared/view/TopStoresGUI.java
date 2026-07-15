@@ -71,6 +71,7 @@ public final class TopStoresGUI extends MarketsPagedGUI<StoreLevelSnapshot> {
 
 		final List<Market> playerMarkets = Markets.getMarketManager().getManagerContent().stream()
 				.filter(market -> !market.isServerMarket())
+				.filter(market -> !Markets.getMarketManager().isOwnerServerBanned(market))
 				.collect(Collectors.toList());
 
 		final List<UUID> ownerUUIDs = playerMarkets.stream()
@@ -300,7 +301,8 @@ public final class TopStoresGUI extends MarketsPagedGUI<StoreLevelSnapshot> {
 			return;
 		}
 
-		if (!market.isOpen()) {
+		if (!market.isOpen() || (Markets.getMarketManager().isOwnerServerBanned(market)
+				&& !Markets.getMarketManager().canViewRestrictedMarkets(click.player, market))) {
 			Common.tell(click.player, TranslationManager.string(click.player, Translations.MARKET_IS_CLOSED, "market_owner", market.getOwnerName()));
 			return;
 		}

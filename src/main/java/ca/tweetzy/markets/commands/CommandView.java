@@ -57,11 +57,10 @@ public final class CommandView extends Command {
 				return ReturnType.FAIL;
 			}
 
-			final boolean isOwner = market.getOwnerUUID().equals(player.getUniqueId());
-			final boolean canViewRestricted = player.hasPermission("markets.admin.viewrestricted") || player.isOp();
+			final boolean canViewRestricted = Markets.getMarketManager().canViewRestrictedMarkets(player, market);
 
 			// regular players cannot view markets that are closed or whose owner is banned from the server
-			if (!isOwner && !canViewRestricted && (!market.isOpen() || Markets.getMarketManager().isOwnerServerBanned(market))) {
+			if (!canViewRestricted && (!market.isOpen() || Markets.getMarketManager().isOwnerServerBanned(market))) {
 				Common.tell(player, TranslationManager.string(player, Translations.MARKET_IS_CLOSED, "market_owner", market.getOwnerName()));
 				return ReturnType.FAIL;
 			}

@@ -12,6 +12,7 @@ import ca.tweetzy.markets.api.market.core.MarketItem;
 import ca.tweetzy.markets.impl.PlayerMarket;
 import ca.tweetzy.markets.impl.ServerMarket;
 import ca.tweetzy.markets.impl.layout.HomeLayout;
+import ca.tweetzy.markets.model.LiteBansBanCheck;
 import ca.tweetzy.markets.settings.Settings;
 import ca.tweetzy.markets.settings.Translations;
 import lombok.NonNull;
@@ -31,12 +32,14 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.profile.PlayerProfile;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -44,16 +47,35 @@ public final class MarketManager extends ListManager<Market> {
 
 	private final Set<UUID> bannedOwnerUUIDs = ConcurrentHashMap.newKeySet();
 	private final Set<String> bannedOwnerNames = ConcurrentHashMap.newKeySet();
+	private final Set<UUID> bukkitBannedOwnerUUIDs = ConcurrentHashMap.newKeySet();
+	private final Set<String> bukkitBannedOwnerNames = ConcurrentHashMap.newKeySet();
+	private final Set<UUID> liteBansBannedOwnerUUIDs = ConcurrentHashMap.newKeySet();
+	private final Set<String> liteBansBannedOwnerNames = ConcurrentHashMap.newKeySet();
+	private final AtomicBoolean liteBansRefreshInFlight = new AtomicBoolean(false);
 	private long bannedCacheLastRefresh = 0L;
+	private boolean liteBansListenersRegistered = false;
 
 	public MarketManager() {
 		super("Market");
 	}
 
 	/**
-	 * Rebuilds the cached set of server-banned owners from the Bukkit ban lists, but only
-	 * if the cache is older than {@link Settings#BANNED_OWNER_CACHE_TTL}. This keeps per-market
-	 * ban checks an O(1) set lookup instead of querying the ban list (or OfflinePlayer) per market.
+	 * Registers LiteBans ban/unban listeners (once) so the owner-ban cache updates
+	 * immediately instead of waiting for the TTL. Safe to call when LiteBans is absent.
+	 */
+	public void registerLiteBansListeners() {
+		if (this.liteBansListenersRegistered || !LiteBansBanCheck.isAvailable())
+			return;
+
+		LiteBansBanCheck.registerBanListeners((uuid, banned) ->
+				Bukkit.getScheduler().runTask(Markets.getInstance(), () -> applyLiteBansOwnerChange(uuid, banned)));
+		this.liteBansListenersRegistered = true;
+	}
+
+	/**
+	 * Rebuilds the cached set of server-banned owners from Bukkit (sync) and LiteBans (async),
+	 * but only if the cache is older than {@link Settings#BANNED_OWNER_CACHE_TTL}. This keeps
+	 * per-market ban checks an O(1) set lookup instead of querying ban sources per market.
 	 */
 	private void refreshBanCacheIfStale() {
 		final long ttlMillis = Settings.BANNED_OWNER_CACHE_TTL.getInt() * 1000L;
@@ -91,11 +113,72 @@ public final class MarketManager extends ListManager<Market> {
 			// ignore, name bans are best-effort
 		}
 
-		this.bannedOwnerUUIDs.clear();
-		this.bannedOwnerUUIDs.addAll(uuids);
-		this.bannedOwnerNames.clear();
-		this.bannedOwnerNames.addAll(names);
+		this.bukkitBannedOwnerUUIDs.clear();
+		this.bukkitBannedOwnerUUIDs.addAll(uuids);
+		this.bukkitBannedOwnerNames.clear();
+		this.bukkitBannedOwnerNames.addAll(names);
 		this.bannedCacheLastRefresh = System.currentTimeMillis();
+		rebuildMergedBanCache();
+
+		scheduleLiteBansBanRefresh();
+	}
+
+	private void scheduleLiteBansBanRefresh() {
+		if (!LiteBansBanCheck.isAvailable())
+			return;
+		if (!this.liteBansRefreshInFlight.compareAndSet(false, true))
+			return;
+
+		final Map<UUID, String> owners = new HashMap<>();
+		for (Market market : getManagerContent()) {
+			owners.putIfAbsent(market.getOwnerUUID(), market.getOwnerName());
+		}
+
+		Bukkit.getScheduler().runTaskAsynchronously(Markets.getInstance(), () -> {
+			try {
+				final LiteBansBanCheck.BannedOwners banned = LiteBansBanCheck.findBannedOwners(owners);
+				Bukkit.getScheduler().runTask(Markets.getInstance(), () -> {
+					this.liteBansBannedOwnerUUIDs.clear();
+					this.liteBansBannedOwnerUUIDs.addAll(banned.uuids());
+					this.liteBansBannedOwnerNames.clear();
+					this.liteBansBannedOwnerNames.addAll(banned.names());
+					rebuildMergedBanCache();
+					this.liteBansRefreshInFlight.set(false);
+				});
+			} catch (Exception ex) {
+				Bukkit.getScheduler().runTask(Markets.getInstance(), () -> this.liteBansRefreshInFlight.set(false));
+			}
+		});
+	}
+
+	private void applyLiteBansOwnerChange(@NonNull final UUID ownerUUID, final boolean banned) {
+		final Market market = getByOwner(ownerUUID);
+		final String ownerName = market != null ? market.getOwnerName() : null;
+
+		if (banned) {
+			this.liteBansBannedOwnerUUIDs.add(ownerUUID);
+			if (ownerName != null)
+				this.liteBansBannedOwnerNames.add(ownerName.toLowerCase());
+		} else {
+			this.liteBansBannedOwnerUUIDs.remove(ownerUUID);
+			if (ownerName != null)
+				this.liteBansBannedOwnerNames.remove(ownerName.toLowerCase());
+			else
+				// Owner may no longer have a market; drop any lingering name tied only via UUID on next full refresh
+				this.bannedCacheLastRefresh = 0L;
+		}
+
+		rebuildMergedBanCache();
+	}
+
+	private void rebuildMergedBanCache() {
+		this.bannedOwnerUUIDs.clear();
+		this.bannedOwnerUUIDs.addAll(this.bukkitBannedOwnerUUIDs);
+		this.bannedOwnerUUIDs.addAll(this.liteBansBannedOwnerUUIDs);
+
+		this.bannedOwnerNames.clear();
+		this.bannedOwnerNames.addAll(this.bukkitBannedOwnerNames);
+		this.bannedOwnerNames.addAll(this.liteBansBannedOwnerNames);
 	}
 
 	/**
@@ -108,6 +191,15 @@ public final class MarketManager extends ListManager<Market> {
 
 		refreshBanCacheIfStale();
 		return this.bannedOwnerUUIDs.contains(market.getOwnerUUID()) || this.bannedOwnerNames.contains(market.getOwnerName().toLowerCase());
+	}
+
+	/**
+	 * @return true if the player may open closed / server-banned-owner markets (owner or admin).
+	 */
+	public boolean canViewRestrictedMarkets(@NonNull final Player player, @NonNull final Market market) {
+		return market.getOwnerUUID().equals(player.getUniqueId())
+				|| player.hasPermission("markets.admin.viewrestricted")
+				|| player.isOp();
 	}
 
 	/**

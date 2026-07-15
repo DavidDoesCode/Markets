@@ -51,9 +51,11 @@ public final class AllReviewsGUI extends MarketsPagedGUI<Rating> {
 
 	@Override
 	protected void prePopulate() {
-		// Get all ratings from all markets
+		// Get all ratings from markets that are not owned by a server-banned player
 		this.items = new ArrayList<>();
 		Markets.getMarketManager().getManagerContent().forEach(market -> {
+			if (Markets.getMarketManager().isOwnerServerBanned(market))
+				return;
 			this.items.addAll(market.getRatings());
 		});
 
@@ -175,8 +177,9 @@ public final class AllReviewsGUI extends MarketsPagedGUI<Rating> {
 			return;
 		}
 
-		// Check if market is open
-		if (!market.isOpen()) {
+		// Check if market is open / owner is not server-banned
+		if (!market.isOpen() || (Markets.getMarketManager().isOwnerServerBanned(market)
+				&& !Markets.getMarketManager().canViewRestrictedMarkets(click.player, market))) {
 			Common.tell(click.player, TranslationManager.string(click.player, Translations.MARKET_IS_CLOSED, "market_owner", market.getOwnerName()));
 			return;
 		}

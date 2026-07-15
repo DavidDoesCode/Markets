@@ -9,6 +9,7 @@ softdepend:
   - PlaceholderAPI
   - Vault
   - EcoBits
+  - LiteBans
   - Essentials
 
 
