@@ -1614,6 +1614,9 @@ public final class Translations extends TranslationManager {
 	public static TranslationEntry GUI_ADMIN_LOCKED_SHOPS_TITLE = create("gui.admin locked shops.title", "&eMarkets &f- &7Locked Shops");
 	public static TranslationEntry GUI_ADMIN_BANNED_SHOPS_TITLE = create("gui.admin banned shops.title", "&eMarkets &f- &7Banned Owner Shops");
 	public static TranslationEntry GUI_ADMIN_CLOSED_SHOPS_TITLE = create("gui.admin closed shops.title", "&eMarkets &f- &7Closed Shops");
+	public static TranslationEntry GUI_ADMIN_MARKETS_LIST_ITEMS_MARKET_OWNER = create("gui.admin markets list.items.market.owner",
+			"&7Owner&f: &e%market_owner%"
+	);
 	public static TranslationEntry GUI_ADMIN_MARKETS_LIST_ITEMS_MARKET_LORE = create("gui.admin markets list.items.market.lore",
 			"%shop_open_status%",
 			"%shop_lock_status%",
@@ -1622,6 +1625,15 @@ public final class Translations extends TranslationManager {
 			"&7Total Value&f: &a%total_value%",
 			"",
 			"&a&l%left_click% &7to view shop"
+	);
+	public static TranslationEntry GUI_ADMIN_MARKETS_LIST_ITEMS_FILTER_NAME = create("gui.admin markets list.items.filter.name", "<GRADIENT:65B1B4>&LFilter</GRADIENT:2B6F8A>");
+	public static TranslationEntry GUI_ADMIN_MARKETS_LIST_ITEMS_FILTER_LORE = create("gui.admin markets list.items.filter.lore",
+			"&7Used to filter markets by",
+			"&7name, items, ratings and last updated",
+			"",
+			"&7Current&F: &e%market_sort_type%",
+			"",
+			"&e&lClick &7to change filter."
 	);
 	public static TranslationEntry ADMIN_LOCKED_SHOPS_EMPTY = create("info.admin locked shops empty", "&cThere are no locked shops.");
 	public static TranslationEntry ADMIN_BANNED_SHOPS_EMPTY = create("info.admin banned shops empty", "&cThere are no shops with banned owners.");

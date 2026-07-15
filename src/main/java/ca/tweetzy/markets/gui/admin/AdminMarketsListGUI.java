@@ -8,6 +8,7 @@ import ca.tweetzy.flight.settings.TranslationManager;
 import ca.tweetzy.flight.utils.QuickItem;
 import ca.tweetzy.flight.utils.TimeUtil;
 import ca.tweetzy.markets.Markets;
+import ca.tweetzy.markets.api.market.MarketSortType;
 import ca.tweetzy.markets.api.market.core.Market;
 import ca.tweetzy.markets.api.market.core.MarketUser;
 import ca.tweetzy.markets.gui.MarketsPagedGUI;
@@ -21,6 +22,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
@@ -34,12 +36,16 @@ public final class AdminMarketsListGUI extends MarketsPagedGUI<Market> {
 		CLOSED
 	}
 
+	private final List<Market> sourceMarkets;
+	private MarketSortType sortType = MarketSortType.NAME;
+
 	public AdminMarketsListGUI(Gui parent, @NonNull Player player, @NonNull ListMode listMode, @NonNull List<Market> markets) {
 		super(parent, player, TranslationManager.string(player, switch (listMode) {
 			case LOCKED -> Translations.GUI_ADMIN_LOCKED_SHOPS_TITLE;
 			case BANNED -> Translations.GUI_ADMIN_BANNED_SHOPS_TITLE;
 			case CLOSED -> Translations.GUI_ADMIN_CLOSED_SHOPS_TITLE;
-		}), 6, markets);
+		}), 6, new ArrayList<>(markets));
+		this.sourceMarkets = new ArrayList<>(markets);
 		setAsync(true);
 		setDefaultItem(QuickItem.bg(Settings.GUI_ALL_MARKETS_BACKGROUND.getItemStack()));
 		draw();
@@ -47,9 +53,41 @@ public final class AdminMarketsListGUI extends MarketsPagedGUI<Market> {
 
 	@Override
 	protected void prePopulate() {
-		this.items = this.items.stream()
-				.sorted(Comparator.comparing(Market::getDisplayName, String.CASE_INSENSITIVE_ORDER))
-				.toList();
+		this.items = new ArrayList<>(this.sourceMarkets);
+
+		if (this.sortType == MarketSortType.NAME) {
+			this.items.sort(Comparator.comparing(Market::getDisplayName, String.CASE_INSENSITIVE_ORDER));
+		}
+
+		if (this.sortType == MarketSortType.ITEMS) {
+			this.items.sort(Comparator.comparing(Market::getItemCount).reversed());
+		}
+
+		if (this.sortType == MarketSortType.REVIEWS) {
+			this.items.sort(Comparator
+					.comparingDouble(Market::getReviewAvg)
+					.thenComparingInt(m -> m.getRatings().size())
+					.reversed());
+		}
+
+		if (this.sortType == MarketSortType.LAST_UPDATED) {
+			this.items.sort(Comparator.comparing(Market::getLastUpdated).reversed());
+		}
+	}
+
+	@Override
+	protected void drawFixed() {
+		setButton(getRows() - 1, 8, QuickItem
+				.of(Settings.GUI_ALL_MARKETS_ITEMS_FILTER_ITEM.getItemStack())
+				.name(TranslationManager.string(this.player, Translations.GUI_ADMIN_MARKETS_LIST_ITEMS_FILTER_NAME))
+				.lore(TranslationManager.list(this.player, Translations.GUI_ADMIN_MARKETS_LIST_ITEMS_FILTER_LORE,
+						"market_sort_type", this.sortType.getTranslatedName()))
+				.make(), click -> {
+			final MarketSortType next = this.sortType.next();
+			if (next != null)
+				this.sortType = next;
+			draw();
+		});
 	}
 
 	@Override
@@ -82,6 +120,8 @@ public final class AdminMarketsListGUI extends MarketsPagedGUI<Market> {
 
 		return item
 				.name(market.getDisplayName())
+				.lore(TranslationManager.list(this.player, Translations.GUI_ADMIN_MARKETS_LIST_ITEMS_MARKET_OWNER,
+						"market_owner", market.getOwnerName()))
 				.lore(market.getDescription())
 				.lore(buildMarketLore(market, owner))
 				.make();

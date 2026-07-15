@@ -119,7 +119,7 @@ public final class UserProfileGUI extends MarketsPagedGUI<Rating> {
 	}
 
 	private void drawAdminOpenButton(@NonNull final Market market) {
-		setItem(1, 3, QuickItem
+		setButton(1, 3, QuickItem
 				.of(market.isOpen() ? Settings.GUI_MARKET_SETTINGS_ITEMS_OPEN_ITEM.getItemStack() : Settings.GUI_MARKET_SETTINGS_ITEMS_CLOSE_ITEM.getItemStack())
 				.name(TranslationManager.string(this.player, Translations.GUI_USER_PROFILE_ITEMS_TOGGLE_OPEN_NAME))
 				.lore(TranslationManager.list(this.player, Translations.GUI_USER_PROFILE_ITEMS_TOGGLE_OPEN_LORE,
@@ -140,7 +140,7 @@ public final class UserProfileGUI extends MarketsPagedGUI<Rating> {
 	}
 
 	private void drawAdminLockButton(@NonNull final Market market) {
-		setItem(1, 5, QuickItem
+		setButton(1, 5, QuickItem
 				.of(CompMaterial.BARRIER)
 				.name(TranslationManager.string(this.player, Translations.GUI_USER_PROFILE_ITEMS_TOGGLE_LOCK_NAME))
 				.lore(TranslationManager.list(this.player, Translations.GUI_USER_PROFILE_ITEMS_TOGGLE_LOCK_LORE,
