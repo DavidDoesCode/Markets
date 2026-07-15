@@ -10,6 +10,8 @@ import lombok.experimental.UtilityClass;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.List;
+
 @UtilityClass
 public final class WorthPriceLimiter {
 
@@ -28,6 +30,23 @@ public final class WorthPriceLimiter {
 	}
 
 	/**
+	 * Materials in the exclude list skip the percent-of-worth cap (and audits),
+	 * but still use the absolute max unit price when listing.
+	 */
+	public boolean isExcludedFromWorthPercent(@NonNull final ItemStack item) {
+		final List<String> excluded = Settings.WORTH_PRICE_LIMIT_EXCLUDED_MATERIALS.getStringList();
+		if (excluded == null || excluded.isEmpty())
+			return false;
+
+		final String materialName = item.getType().name();
+		for (final String entry : excluded) {
+			if (entry != null && entry.equalsIgnoreCase(materialName))
+				return true;
+		}
+		return false;
+	}
+
+	/**
 	 * @return max allowed unit price, or null if uncapped for this player/currency
 	 */
 	public Double getMaxAllowedUnitPrice(@NonNull final Player player, @NonNull final ItemStack item, final String currency) {
@@ -39,6 +58,9 @@ public final class WorthPriceLimiter {
 
 		if (player.hasPermission(Settings.WORTH_PRICE_LIMIT_BYPASS_PERMISSION.getString()))
 			return null;
+
+		if (isExcludedFromWorthPercent(item))
+			return Settings.WORTH_PRICE_LIMIT_ABSOLUTE_MAX.getDouble();
 
 		final Double worth = EssentialsWorthHook.getUnitWorth(item);
 		if (worth != null && worth > 0)

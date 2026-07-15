@@ -5,18 +5,24 @@ import ca.tweetzy.flight.settings.TranslationManager;
 import ca.tweetzy.flight.utils.Common;
 import ca.tweetzy.flight.utils.ItemUtil;
 import ca.tweetzy.markets.Markets;
+import ca.tweetzy.markets.api.market.AuditSortType;
 import ca.tweetzy.markets.api.market.core.Category;
 import ca.tweetzy.markets.api.market.core.Market;
 import ca.tweetzy.markets.api.market.core.MarketItem;
+import ca.tweetzy.markets.gui.admin.WorthAuditGUI;
+import ca.tweetzy.markets.model.AuditEntry;
 import ca.tweetzy.markets.model.EssentialsWorthHook;
 import ca.tweetzy.markets.model.WorthPriceLimiter;
 import ca.tweetzy.markets.settings.Translations;
 import lombok.experimental.UtilityClass;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.UUID;
 
 @UtilityClass
 public final class AuditAdminCommand {
@@ -59,6 +65,9 @@ public final class AuditAdminCommand {
 				if (!WorthPriceLimiter.isVaultCurrency(marketItem.getCurrency()))
 					continue;
 
+				if (WorthPriceLimiter.isExcludedFromWorthPercent(marketItem.getItem()))
+					continue;
+
 				final Double worth = EssentialsWorthHook.getUnitWorth(marketItem.getItem());
 				if (worth == null || worth <= 0)
 					continue;
@@ -73,15 +82,16 @@ public final class AuditAdminCommand {
 				if (!matchesRule)
 					continue;
 
-				final String owner = resolveOwnerName(marketItem);
+				final OwnerInfo owner = resolveOwner(marketItem);
 				final double ratioPercent = (unitPrice / worth) * 100.0;
 				matches.add(new AuditEntry(
-						owner,
+						marketItem,
+						owner.uuid(),
+						owner.name(),
 						ItemUtil.getItemName(marketItem.getItem()),
 						unitPrice,
 						worth,
-						ratioPercent,
-						marketItem.getId().toString()
+						ratioPercent
 				));
 			}
 
@@ -91,20 +101,32 @@ public final class AuditAdminCommand {
 					return;
 				}
 
+				final AuditSortType defaultSort = overpricedMode ? AuditSortType.HIGHEST_RATIO : AuditSortType.LOWEST_RATIO;
+				sortMatches(matches, defaultSort);
+
+				final String modeLabel = overpricedMode ? "overpriced" : "underpriced";
+
+				if (sender instanceof final Player player) {
+					Common.tell(player, TranslationManager.string(Translations.WORTH_AUDIT_OPENED,
+							"count", String.valueOf(matches.size())));
+					Markets.getGuiManager().showGUI(player, new WorthAuditGUI(null, player, matches, modeLabel, defaultSort));
+					return;
+				}
+
 				Common.tell(sender, TranslationManager.string(Translations.WORTH_AUDIT_HEADER,
 						"count", String.valueOf(matches.size()),
-						"mode", overpricedMode ? "overpriced" : "underpriced"));
+						"mode", modeLabel));
 
 				final int shown = Math.min(MAX_CHAT_RESULTS, matches.size());
 				for (int i = 0; i < shown; i++) {
 					final AuditEntry entry = matches.get(i);
 					Common.tell(sender, TranslationManager.string(Translations.WORTH_AUDIT_ENTRY,
-							"owner", entry.owner,
-							"item", entry.itemName,
-							"unit_price", String.format("%,.2f", entry.unitPrice),
-							"worth", String.format("%,.2f", entry.worth),
-							"ratio", String.format("%,.0f", entry.ratioPercent),
-							"item_id", entry.itemId));
+							"owner", entry.getOwnerName(),
+							"item", entry.getItemName(),
+							"unit_price", String.format("%,.2f", entry.getUnitPrice()),
+							"worth", String.format("%,.2f", entry.getWorth()),
+							"ratio", String.format("%,.0f", entry.getRatioPercent()),
+							"item_id", entry.getItemId()));
 				}
 
 				if (matches.size() > MAX_CHAT_RESULTS) {
@@ -119,16 +141,25 @@ public final class AuditAdminCommand {
 		return ReturnType.SUCCESS;
 	}
 
-	private String resolveOwnerName(MarketItem marketItem) {
+	private void sortMatches(List<AuditEntry> matches, AuditSortType sortType) {
+		switch (sortType) {
+			case HIGHEST_PRICE -> matches.sort(Comparator.comparingDouble(AuditEntry::getUnitPrice).reversed());
+			case HIGHEST_RATIO -> matches.sort(Comparator.comparingDouble(AuditEntry::getRatioPercent).reversed());
+			case LOWEST_PRICE -> matches.sort(Comparator.comparingDouble(AuditEntry::getUnitPrice));
+			case LOWEST_RATIO -> matches.sort(Comparator.comparingDouble(AuditEntry::getRatioPercent));
+		}
+	}
+
+	private OwnerInfo resolveOwner(MarketItem marketItem) {
 		final Category category = Markets.getCategoryManager().getByUUID(marketItem.getOwningCategory());
 		if (category == null)
-			return "Unknown";
+			return new OwnerInfo(new UUID(0, 0), "Unknown");
 
 		final Market market = Markets.getMarketManager().getByUUID(category.getOwningMarket());
 		if (market == null)
-			return "Unknown";
+			return new OwnerInfo(new UUID(0, 0), "Unknown");
 
-		return market.getOwnerName();
+		return new OwnerInfo(market.getOwnerUUID(), market.getOwnerName());
 	}
 
 	private Double parseDouble(String value) {
@@ -145,21 +176,6 @@ public final class AuditAdminCommand {
 		return null;
 	}
 
-	private static final class AuditEntry {
-		private final String owner;
-		private final String itemName;
-		private final double unitPrice;
-		private final double worth;
-		private final double ratioPercent;
-		private final String itemId;
-
-		private AuditEntry(String owner, String itemName, double unitPrice, double worth, double ratioPercent, String itemId) {
-			this.owner = owner;
-			this.itemName = itemName;
-			this.unitPrice = unitPrice;
-			this.worth = worth;
-			this.ratioPercent = ratioPercent;
-			this.itemId = itemId;
-		}
+	private record OwnerInfo(UUID uuid, String name) {
 	}
 }

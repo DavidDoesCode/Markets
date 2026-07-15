@@ -104,6 +104,7 @@ public final class Settings extends FlightSettings {
 	public static ConfigEntry WORTH_PRICE_LIMIT_MAX_PERCENT = create("settings.worth.price limit.max percent", 2500).withComment("Maximum listing unit price as a percent of Essentials worth. 2500 means 25x worth.");
 	public static ConfigEntry WORTH_PRICE_LIMIT_ABSOLUTE_MAX = create("settings.worth.price limit.absolute max", 100000).withComment("Absolute max unit price for Vault listings when Essentials is missing or the item has no worth.");
 	public static ConfigEntry WORTH_PRICE_LIMIT_BYPASS_PERMISSION = create("settings.worth.price limit.bypass permission", "markets.bypass.worthpricelimit").withComment("Permission that bypasses worth and absolute Vault price caps.");
+	public static ConfigEntry WORTH_PRICE_LIMIT_EXCLUDED_MATERIALS = create("settings.worth.price limit.excluded materials", List.of("ENCHANTED_BOOK")).withComment("Materials excluded from the percent-of-worth cap and from worth audits. Absolute max still applies. Use Bukkit material names.");
 
 	/*
 	========================= Min Balance Settings =========================
@@ -315,6 +316,8 @@ public final class Settings extends FlightSettings {
 	public static ConfigEntry GUI_ALL_MARKETS_ITEMS_FILTER_ITEM = create("gui.all markets.items.filter.item", CompMaterial.REPEATER.name());
 	public static ConfigEntry GUI_ALL_REVIEWS_BACKGROUND = create("gui.all reviews.items.background", CompMaterial.BLACK_STAINED_GLASS_PANE.name());
 	public static ConfigEntry GUI_ALL_REVIEWS_ITEMS_FILTER_ITEM = create("gui.all reviews.items.filter.item", CompMaterial.REPEATER.name());
+	public static ConfigEntry GUI_WORTH_AUDIT_BACKGROUND = create("gui.worth audit.items.background", CompMaterial.BLACK_STAINED_GLASS_PANE.name());
+	public static ConfigEntry GUI_WORTH_AUDIT_ITEMS_FILTER_ITEM = create("gui.worth audit.items.filter.item", CompMaterial.REPEATER.name());
 	public static ConfigEntry GUI_REQUEST_BACKGROUND = create("gui.request.items.background", CompMaterial.BLACK_STAINED_GLASS_PANE.name());
 	public static ConfigEntry GUI_REQUEST_ITEMS_TOGGLE_ITEM = create("gui.request.items.toggle.item", CompMaterial.LEVER.name());
 	public static ConfigEntry GUI_REQUEST_ITEMS_CREATE_ITEM = create("gui.request.items.create.item", CompMaterial.LIME_DYE.name());

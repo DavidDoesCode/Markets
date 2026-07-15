@@ -1163,13 +1163,36 @@ public final class Translations extends TranslationManager {
 	public static TranslationEntry WORTH_PRICE_TOO_HIGH = create("error.worth.price too high", "&cPrice too high. Max unit price for this item is &e%max_price%&c.");
 	public static TranslationEntry WORTH_ADMIN_UPDATED = create("info.worth.admin.updated", "&aWorth price limit setting updated.");
 	public static TranslationEntry WORTH_ADMIN_INVALID = create("error.worth.admin.invalid", "&cInvalid value. Check your command syntax.");
-	public static TranslationEntry WORTH_ADMIN_USAGE = create("error.worth.admin.usage", "&cUsage: /markets admin worth <info|enabled|maxpercent|absolutemax> ...");
+	public static TranslationEntry WORTH_ADMIN_USAGE = create("error.worth.admin.usage", "&cUsage: /markets admin worth <info|enabled|maxpercent|absolutemax|exclude> ...");
 	public static TranslationEntry WORTH_ADMIN_INFO = create("info.worth.admin.info",
 			"&7Worth price limits&f:",
 			"&7Enabled&f: &e%enabled%",
 			"&7Max percent&f: &e%max_percent%%",
-			"&7Absolute max&f: &e%absolute_max%"
+			"&7Absolute max&f: &e%absolute_max%",
+			"&7Excluded materials&f: &e%excluded_materials%"
 	);
+	public static TranslationEntry WORTH_ADMIN_EXCLUDE_USAGE = create("error.worth.admin.exclude.usage", "&cUsage: /markets admin worth exclude <list|add|remove> [material]");
+	public static TranslationEntry WORTH_ADMIN_EXCLUDE_LIST = create("info.worth.admin.exclude.list", "&7Excluded materials&f: &e%excluded_materials%");
+	public static TranslationEntry WORTH_ADMIN_EXCLUDE_ADDED = create("info.worth.admin.exclude.added", "&aAdded &e%material% &ato the worth exclude list.");
+	public static TranslationEntry WORTH_ADMIN_EXCLUDE_REMOVED = create("info.worth.admin.exclude.removed", "&aRemoved &e%material% &afrom the worth exclude list.");
+	public static TranslationEntry WORTH_ADMIN_EXCLUDE_EXISTS = create("error.worth.admin.exclude.exists", "&c&e%material% &cis already on the exclude list.");
+	public static TranslationEntry WORTH_ADMIN_EXCLUDE_MISSING = create("error.worth.admin.exclude.missing", "&c&e%material% &cis not on the exclude list.");
+
+	public static TranslationEntry AUDIT_SORT_HIGHEST_PRICE = create("info.audit sort type.highest price", "&eHighest Priced");
+	public static TranslationEntry AUDIT_SORT_HIGHEST_RATIO = create("info.audit sort type.highest ratio", "&eHighest Ratio");
+	public static TranslationEntry AUDIT_SORT_LOWEST_PRICE = create("info.audit sort type.lowest price", "&eLowest Price");
+	public static TranslationEntry AUDIT_SORT_LOWEST_RATIO = create("info.audit sort type.lowest ratio", "&eLowest Ratio");
+
+	public static TranslationEntry WORTH_AUDIT_UNAVAILABLE = create("error.worth.audit.unavailable", "&cEssentials worth is not available. Cannot run an audit.");
+	public static TranslationEntry WORTH_AUDIT_INVALID = create("error.worth.audit.invalid", "&cPlease provide a valid positive percent value.");
+	public static TranslationEntry WORTH_AUDIT_STARTED = create("info.worth.audit.started", "&7Scanning Vault listings for items at &e%percent%% &7of Essentials worth...");
+	public static TranslationEntry WORTH_AUDIT_NONE = create("info.worth.audit.none", "&aNo matching Vault listings found.");
+	public static TranslationEntry WORTH_AUDIT_HEADER = create("info.worth.audit.header", "&7Found &e%count% &7matching listing(s) (&e%mode%&7):");
+	public static TranslationEntry WORTH_AUDIT_ENTRY = create("info.worth.audit.entry", "&e%owner% &7| &f%item% &7| unit &a%unit_price% &7| worth &a%worth% &7| &e%ratio%% &7| &8%item_id%");
+	public static TranslationEntry WORTH_AUDIT_MORE = create("info.worth.audit.more", "&7...and &e%remaining% &7more.");
+	public static TranslationEntry WORTH_AUDIT_COMPLETE = create("info.worth.audit.complete", "&aAudit complete.");
+	public static TranslationEntry WORTH_AUDIT_OPENED = create("info.worth.audit.opened", "&7Opened worth audit GUI with &e%count% &7matching listing(s).");
+	public static TranslationEntry WORTH_AUDIT_STALE = create("error.worth.audit.stale", "&cThat listing is no longer available.");
 
 	public static TranslationEntry MIN_BALANCE_BLOCKED = create("error.min balance blocked",
 			"&cMinimum balance of $%min_balance% to use the markets.",
@@ -1182,15 +1205,6 @@ public final class Translations extends TranslationManager {
 			"&7Enabled&f: &e%enabled%",
 			"&7Amount&f: &a$%amount%"
 	);
-	public static TranslationEntry WORTH_AUDIT_UNAVAILABLE = create("error.worth.audit.unavailable", "&cEssentials worth is not available. Cannot run an audit.");
-	public static TranslationEntry WORTH_AUDIT_INVALID = create("error.worth.audit.invalid", "&cPlease provide a valid positive percent value.");
-	public static TranslationEntry WORTH_AUDIT_STARTED = create("info.worth.audit.started", "&7Scanning Vault listings for items at &e%percent%% &7of Essentials worth...");
-	public static TranslationEntry WORTH_AUDIT_NONE = create("info.worth.audit.none", "&aNo matching Vault listings found.");
-	public static TranslationEntry WORTH_AUDIT_HEADER = create("info.worth.audit.header", "&7Found &e%count% &7matching listing(s) (&e%mode%&7):");
-	public static TranslationEntry WORTH_AUDIT_ENTRY = create("info.worth.audit.entry", "&e%owner% &7| &f%item% &7| unit &a%unit_price% &7| worth &a%worth% &7| &e%ratio%% &7| &8%item_id%");
-	public static TranslationEntry WORTH_AUDIT_MORE = create("info.worth.audit.more", "&7...and &e%remaining% &7more.");
-	public static TranslationEntry WORTH_AUDIT_COMPLETE = create("info.worth.audit.complete", "&aAudit complete.");
-
 	public static TranslationEntry GUI_OFFLINE_PAYMENTS_TITLE = create("gui.offline payments.title", "&eMarkets &f- &7Collect Payments");
 	public static TranslationEntry GUI_OFFLINE_PAYMENTS_ITEMS_PROFILE_LORE = create("gui.offline payments.items.payment.lore",
 			"",
@@ -1539,6 +1553,25 @@ public final class Translations extends TranslationManager {
 	public static TranslationEntry GUI_ALL_REVIEWS_ITEMS_FILTER_NAME = create("gui.all reviews.items.filter.name", "<GRADIENT:65B1B4>&lFilter</GRADIENT:2B6F8A>");
 	public static TranslationEntry GUI_ALL_REVIEWS_ITEMS_FILTER_LORE = create("gui.all reviews.items.filter.lore",
 			"&7Current&f: &e%review_sort_type%",
+			"",
+			"&e&lClick &7to cycle filters"
+	);
+
+	public static TranslationEntry GUI_WORTH_AUDIT_TITLE = create("gui.worth audit.title", "&eMarkets &f- &7Worth Audit &f- &7%mode%");
+	public static TranslationEntry GUI_WORTH_AUDIT_ITEMS_ENTRY_NAME = create("gui.worth audit.items.entry.name", "<GRADIENT:65B1B4>&l%owner%</GRADIENT:2B6F8A>");
+	public static TranslationEntry GUI_WORTH_AUDIT_ITEMS_ENTRY_LORE = create("gui.worth audit.items.entry.lore",
+			"",
+			"&7Item&f: &e%item%",
+			"&7Unit Price&f: &a%unit_price%",
+			"&7Worth&f: &a%worth%",
+			"&7Ratio&f: &e%ratio%%",
+			"&7Item ID&f: &8%item_id%",
+			"",
+			"&a&lClick &7to open category"
+	);
+	public static TranslationEntry GUI_WORTH_AUDIT_ITEMS_FILTER_NAME = create("gui.worth audit.items.filter.name", "<GRADIENT:65B1B4>&lFilter</GRADIENT:2B6F8A>");
+	public static TranslationEntry GUI_WORTH_AUDIT_ITEMS_FILTER_LORE = create("gui.worth audit.items.filter.lore",
+			"&7Current&f: &e%audit_sort_type%",
 			"",
 			"&e&lClick &7to cycle filters"
 	);
