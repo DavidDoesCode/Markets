@@ -47,16 +47,20 @@ public final class MarketsMainGUI extends MarketsBaseGUI {
 
 		// shipping estimate
 		final ShippingBreakdown shippingBreakdown = ShippingCalculator.calculate(this.player);
+		final List<String> shippingLore = shippingBreakdown.getNoChargeReason() == ShippingBreakdown.NoChargeReason.DISABLED
+				? TranslationManager.list(this.player, Translations.GUI_MAIN_VIEW_ITEMS_SHIPPING_LORE_FREE,
+				"left_click", TranslationManager.string(this.player, Translations.MOUSE_LEFT_CLICK))
+				: TranslationManager.list(this.player, Translations.GUI_MAIN_VIEW_ITEMS_SHIPPING_LORE,
+				"world_name", shippingBreakdown.getWorldName(),
+				"shipping_total", ShippingMoney.format(shippingBreakdown.getTotal()),
+				"distance", String.format("%,.0f", shippingBreakdown.getDistance()),
+				"left_click", TranslationManager.string(this.player, Translations.MOUSE_LEFT_CLICK));
 		setButton(Settings.GUI_MAIN_VIEW_ITEMS_SHIPPING_SLOT.getInt(),
 				QuickItem
 						.of(Settings.GUI_MAIN_VIEW_ITEMS_SHIPPING.getItemStack())
 						.hideTags(true)
 						.name(TranslationManager.string(this.player, Translations.GUI_MAIN_VIEW_ITEMS_SHIPPING_NAME))
-						.lore(TranslationManager.list(this.player, Translations.GUI_MAIN_VIEW_ITEMS_SHIPPING_LORE,
-								"world_name", shippingBreakdown.getWorldName(),
-								"shipping_total", ShippingMoney.format(shippingBreakdown.getTotal()),
-								"distance", String.format("%,.0f", shippingBreakdown.getDistance()),
-								"left_click", TranslationManager.string(this.player, Translations.MOUSE_LEFT_CLICK)))
+						.lore(shippingLore)
 						.make(), click -> {
 					click.gui.exit();
 					final List<String> mainAliases = Settings.CMD_ALIAS_MAIN.getStringList();

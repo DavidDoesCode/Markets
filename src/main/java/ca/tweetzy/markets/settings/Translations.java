@@ -241,6 +241,14 @@ public final class Translations extends TranslationManager {
 			"",
 			"&e&l%left_click% &7to view full shipping details"
 	);
+	public static TranslationEntry GUI_MAIN_VIEW_ITEMS_SHIPPING_LORE_FREE = create("gui.main view.items.shipping.lore.free",
+			"&7Shipping is currently &afree&7!",
+			"",
+			"&7No shipping charges apply",
+			"&7to market purchases right now.",
+			"",
+			"&e&l%left_click% &7to view shipping details"
+	);
 
 	public static TranslationEntry GUI_MAIN_VIEW_ITEMS_ALL_REVIEWS_NAME = create("gui.main view.items.all reviews.name", "<GRADIENT:65B1B4>&LAll Reviews</GRADIENT:2B6F8A>");
 	public static TranslationEntry GUI_MAIN_VIEW_ITEMS_ALL_REVIEWS_LORE = create("gui.main view.items.all reviews.lore",
