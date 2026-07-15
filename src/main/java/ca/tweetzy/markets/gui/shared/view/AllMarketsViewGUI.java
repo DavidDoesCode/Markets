@@ -60,7 +60,10 @@ public final class AllMarketsViewGUI extends MarketsPagedGUI<Market> {
 		}
 
 		if (this.marketUser.getMarketSortType() == MarketSortType.REVIEWS) {
-			this.items.sort(Comparator.comparing(Market::getReviewAvg).reversed());
+			this.items.sort(Comparator
+					.comparingDouble(Market::getReviewAvg)
+					.thenComparingInt(m -> m.getRatings().size())
+					.reversed());
 		}
 
 		if (this.marketUser.getMarketSortType() == MarketSortType.LAST_UPDATED) {
@@ -87,6 +90,8 @@ public final class AllMarketsViewGUI extends MarketsPagedGUI<Market> {
 					.of(Settings.SERVER_MARKET_TEXTURE.getString())
 					.fallbackTexture(Settings.SERVER_MARKET_TEXTURE.getString())
 					.name(market.getDisplayName())
+					.lore(TranslationManager.list(this.player, Translations.GUI_ALL_MARKETS_ITEMS_MARKET_OWNER,
+							"market_owner", market.getOwnerName()))
 					.lore(market.getDescription())
 					.lore(TranslationManager.list(this.player, Translations.GUI_ALL_MARKETS_ITEMS_MARKET_LORE,
 							"left_click", TranslationManager.string(this.player, Translations.MOUSE_LEFT_CLICK),
@@ -100,6 +105,8 @@ public final class AllMarketsViewGUI extends MarketsPagedGUI<Market> {
 		return QuickItem
 				.of(CompMaterial.PLAYER_HEAD)
 				.name(market.getDisplayName())
+				.lore(TranslationManager.list(this.player, Translations.GUI_ALL_MARKETS_ITEMS_MARKET_OWNER,
+						"market_owner", market.getOwnerName()))
 				.lore(market.getDescription())
 				.lore(TranslationManager.list(this.player, Translations.GUI_ALL_MARKETS_ITEMS_MARKET_LORE,
 						"left_click", TranslationManager.string(this.player, Translations.MOUSE_LEFT_CLICK),
@@ -164,6 +171,8 @@ public final class AllMarketsViewGUI extends MarketsPagedGUI<Market> {
 					// Build the final item with the loaded skull
 					ItemStack finalItem = QuickItem.of(skull)
 							.name(market.getDisplayName())
+							.lore(TranslationManager.list(this.player, Translations.GUI_ALL_MARKETS_ITEMS_MARKET_OWNER,
+									"market_owner", market.getOwnerName()))
 							.lore(market.getDescription())
 							.lore(TranslationManager.list(this.player, Translations.GUI_ALL_MARKETS_ITEMS_MARKET_LORE,
 									"left_click", TranslationManager.string(this.player, Translations.MOUSE_LEFT_CLICK),

@@ -167,12 +167,12 @@ public final class Translations extends TranslationManager {
 
 	public static TranslationEntry GUI_SHARED_ITEMS_PREVIOUS_BUTTON_NAME = create("gui.shared buttons.previous button.name", "<GRADIENT:65B1B4>&lPrevious Page</GRADIENT:2B6F8A>");
 	public static TranslationEntry GUI_SHARED_ITEMS_PREVIOUS_BUTTON_LORE = create("gui.shared buttons.previous button.lore",
-			"&e&l%left_click% &7to go back a page"
+			"&e&l%left_click% &7to go back &f%current_page%&7 of &f%total_pages%"
 	);
 
 	public static TranslationEntry GUI_SHARED_ITEMS_NEXT_BUTTON_NAME = create("gui.shared buttons.next button.name", "<GRADIENT:65B1B4>&lNext Page</GRADIENT:2B6F8A>");
 	public static TranslationEntry GUI_SHARED_ITEMS_NEXT_BUTTON_LORE = create("gui.shared buttons.next button.lore",
-			"&e&l%left_click% &7to go to next page"
+			"&e&l%left_click% &7to go to next page &f%current_page%&7 of &f%total_pages%"
 	);
 
 	public static TranslationEntry GUI_MAIN_ADMIN_TITLE = create("gui.admin main.title", "&eMarkets &f- &cAdmin");
@@ -1394,6 +1394,10 @@ public final class Translations extends TranslationManager {
 	public static TranslationEntry GUI_OFFERS_ITEMS_OFFER_LORE_FOOTER = create("gui.offers.items.offer.lore.footer", "&7----------------------------");
 
 	public static TranslationEntry GUI_ALL_MARKETS_TITLE = create("gui.all markets.title", "&eMarkets &f- &7Open Markets");
+	public static TranslationEntry GUI_ALL_MARKETS_ITEMS_MARKET_OWNER = create("gui.all markets.items.market.owner",
+			"&7Owner&f: &e%market_owner%"
+	);
+
 	public static TranslationEntry GUI_ALL_MARKETS_ITEMS_MARKET_LORE = create("gui.all markets.items.market.lore",
 			"",
 			"&7Ratings&f: &6%market_ratings_stars% &f(&7%market_ratings_total%&f)",

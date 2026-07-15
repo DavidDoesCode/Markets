@@ -54,7 +54,10 @@ public abstract class MarketsBaseGUI extends BaseGUI {
 		return QuickItem
 				.of(Settings.GUI_SHARED_ITEMS_PREVIOUS_BUTTON.getItemStack())
 				.name(TranslationManager.string(this.player, Translations.GUI_SHARED_ITEMS_PREVIOUS_BUTTON_NAME))
-				.lore(TranslationManager.list(this.player, Translations.GUI_SHARED_ITEMS_PREVIOUS_BUTTON_LORE, "left_click", TranslationManager.string(this.player, Translations.MOUSE_LEFT_CLICK)))
+				.lore(TranslationManager.list(this.player, Translations.GUI_SHARED_ITEMS_PREVIOUS_BUTTON_LORE,
+						"left_click", TranslationManager.string(this.player, Translations.MOUSE_LEFT_CLICK),
+						"current_page", this.page,
+						"total_pages", this.pages))
 				.make();
 	}
 
@@ -63,7 +66,10 @@ public abstract class MarketsBaseGUI extends BaseGUI {
 		return QuickItem
 				.of(Settings.GUI_SHARED_ITEMS_NEXT_BUTTON.getItemStack())
 				.name(TranslationManager.string(this.player, Translations.GUI_SHARED_ITEMS_NEXT_BUTTON_NAME))
-				.lore(TranslationManager.list(this.player, Translations.GUI_SHARED_ITEMS_NEXT_BUTTON_LORE, "left_click", TranslationManager.string(this.player, Translations.MOUSE_LEFT_CLICK)))
+				.lore(TranslationManager.list(this.player, Translations.GUI_SHARED_ITEMS_NEXT_BUTTON_LORE,
+						"left_click", TranslationManager.string(this.player, Translations.MOUSE_LEFT_CLICK),
+						"current_page", this.page,
+						"total_pages", this.pages))
 				.make();
 	}
 
