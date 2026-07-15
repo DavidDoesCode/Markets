@@ -12,6 +12,7 @@ import ca.tweetzy.markets.gui.shared.view.content.MarketCategoryViewGUI;
 import ca.tweetzy.markets.gui.shared.view.content.MarketViewGUI;
 import ca.tweetzy.markets.gui.user.category.MarketCategoryEditGUI;
 import ca.tweetzy.markets.gui.user.market.MarketOverviewGUI;
+import ca.tweetzy.markets.model.MarketLockHelper;
 import ca.tweetzy.markets.settings.Settings;
 import ca.tweetzy.markets.settings.Translations;
 import org.bukkit.Bukkit;
@@ -67,6 +68,9 @@ public final class CommandView extends Command {
 
 			if (args.length == 1){
 				if (market.getOwnerUUID().equals(player.getUniqueId())) {
+					if (MarketLockHelper.shouldBlockManagementGui(player, market))
+						return ReturnType.SUCCESS;
+
 					Markets.getGuiManager().showGUI(player, new MarketOverviewGUI(player, market));
 				} else {
 					Markets.getGuiManager().showGUI(player, new MarketViewGUI(player, market));
@@ -81,6 +85,9 @@ public final class CommandView extends Command {
 				}
 
 				if (market.getOwnerUUID().equals(player.getUniqueId())) {
+					if (MarketLockHelper.shouldBlockManagementGui(player, market))
+						return ReturnType.SUCCESS;
+
 					Markets.getGuiManager().showGUI(player, new MarketCategoryEditGUI(player, market, locatedCategory));
 				} else {
 					Markets.getGuiManager().showGUI(player, new MarketCategoryViewGUI(player, market, locatedCategory, false));

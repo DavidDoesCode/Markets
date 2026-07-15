@@ -19,6 +19,7 @@ import ca.tweetzy.markets.gui.shared.selector.CurrencyPickerGUI;
 import ca.tweetzy.markets.gui.shared.view.content.MarketCategoryViewGUI;
 import ca.tweetzy.markets.model.DupeDetector;
 import ca.tweetzy.markets.model.FloodGateCheck;
+import ca.tweetzy.markets.model.MarketLockHelper;
 import ca.tweetzy.markets.model.WorthPriceLimiter;
 import ca.tweetzy.markets.settings.Settings;
 import ca.tweetzy.markets.settings.Translations;
@@ -47,6 +48,10 @@ public final class MarketItemEditGUI extends MarketsBaseGUI {
 
 		setAcceptsItems(true);
 		setDefaultItem(QuickItem.bg(Settings.GUI_EDIT_ITEM_BACKGROUND.getItemStack()));
+
+		if (MarketLockHelper.shouldBlockManagementGui(player, market))
+			return;
+
 		draw();
 	}
 

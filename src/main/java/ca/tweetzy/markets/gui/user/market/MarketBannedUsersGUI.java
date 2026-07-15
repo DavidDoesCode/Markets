@@ -12,6 +12,7 @@ import ca.tweetzy.markets.api.market.core.Market;
 import ca.tweetzy.markets.api.market.core.MarketUser;
 import ca.tweetzy.markets.gui.MarketsPagedGUI;
 import ca.tweetzy.markets.gui.shared.selector.PlayerPickerGUI;
+import ca.tweetzy.markets.model.MarketLockHelper;
 import ca.tweetzy.markets.settings.Settings;
 import ca.tweetzy.markets.settings.Translations;
 import lombok.NonNull;
@@ -35,6 +36,9 @@ public final class MarketBannedUsersGUI extends MarketsPagedGUI<UUID> {
 		this.market = market;
 		setAsync(true);
 		setDefaultItem(QuickItem.bg(Settings.GUI_MARKET_BANNED_USERS_BACKGROUND.getItemStack()));
+
+		if (MarketLockHelper.shouldBlockManagementGui(player, market))
+			return;
 
 		draw();
 	}

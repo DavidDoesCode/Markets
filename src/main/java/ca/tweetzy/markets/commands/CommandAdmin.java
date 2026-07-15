@@ -51,6 +51,12 @@ public final class CommandAdmin extends Command {
 					return MinBalanceAdminCommand.execute(sender, args);
 				case "audit":
 					return AuditAdminCommand.execute(sender, args);
+				case "lockedshops":
+					return LockedShopsAdminCommand.execute(sender, args);
+				case "bannedshops":
+					return BannedShopsAdminCommand.execute(sender, args);
+				case "closedshops":
+					return ClosedShopsAdminCommand.execute(sender, args);
 			}
 			return ReturnType.SUCCESS;
 		}
@@ -112,7 +118,7 @@ public final class CommandAdmin extends Command {
 	@Override
 	protected List<String> tab(CommandSender sender, String... args) {
 		if (args.length == 1) {
-			final List<String> options = new ArrayList<>(List.of("collecttax", "shipping", "worth", "minbalance", "audit"));
+			final List<String> options = new ArrayList<>(List.of("collecttax", "shipping", "worth", "minbalance", "audit", "lockedshops", "bannedshops", "closedshops"));
 			options.addAll(Bukkit.getOnlinePlayers().stream().map(OfflinePlayer::getName).collect(Collectors.toList()));
 			return options;
 		}

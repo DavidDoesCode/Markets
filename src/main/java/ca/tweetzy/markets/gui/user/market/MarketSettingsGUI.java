@@ -12,6 +12,7 @@ import ca.tweetzy.markets.gui.shared.selector.ConfirmGUI;
 import ca.tweetzy.markets.gui.shared.selector.ItemSelectorGUI;
 import ca.tweetzy.markets.gui.user.layout.MarketLayoutEditorGUI;
 import ca.tweetzy.markets.impl.layout.HomeLayout;
+import ca.tweetzy.markets.model.MarketLockHelper;
 import ca.tweetzy.markets.settings.Settings;
 import ca.tweetzy.markets.settings.Translations;
 import lombok.NonNull;
@@ -30,6 +31,9 @@ public final class MarketSettingsGUI extends MarketsBaseGUI {
 		this.market = market;
 		setAcceptsItems(true);
 		setDefaultItem(QuickItem.bg(Settings.GUI_MARKET_SETTINGS_BACKGROUND.getItemStack()));
+
+		if (MarketLockHelper.shouldBlockManagementGui(player, market))
+			return;
 
 		draw();
 	}
@@ -65,6 +69,9 @@ public final class MarketSettingsGUI extends MarketsBaseGUI {
 						"left_click", TranslationManager.string(this.player, Translations.MOUSE_LEFT_CLICK)
 				))
 				.make(), click -> {
+
+			if (MarketLockHelper.denyOwnerIfLocked(click.player, this.market))
+				return;
 
 			this.market.setOpen(!this.market.isOpen());
 			this.market.sync(result -> {

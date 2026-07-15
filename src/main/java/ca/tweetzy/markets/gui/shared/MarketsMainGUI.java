@@ -17,6 +17,7 @@ import ca.tweetzy.markets.gui.user.OfflinePaymentsGUI;
 import ca.tweetzy.markets.gui.user.TransactionsGUI;
 import ca.tweetzy.markets.gui.user.market.MarketOverviewGUI;
 import ca.tweetzy.markets.gui.user.market.MarketStatsGUI;
+import ca.tweetzy.markets.model.MarketLockHelper;
 import ca.tweetzy.markets.model.shipping.ShippingBreakdown;
 import ca.tweetzy.markets.model.shipping.ShippingCalculator;
 import ca.tweetzy.markets.model.shipping.ShippingMoney;
@@ -128,6 +129,9 @@ public final class MarketsMainGUI extends MarketsBaseGUI {
 					}
 
 					// open market
+					if (MarketLockHelper.shouldBlockManagementGui(click.player, playerMarket))
+						return;
+
 					click.manager.showGUI(click.player, new MarketOverviewGUI(click.player, playerMarket));
 				});
 

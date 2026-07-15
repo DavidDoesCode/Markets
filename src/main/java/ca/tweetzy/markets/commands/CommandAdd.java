@@ -15,6 +15,7 @@ import ca.tweetzy.markets.gui.user.category.MarketCategoryEditGUI;
 import ca.tweetzy.markets.impl.CategoryItem;
 import ca.tweetzy.markets.model.BlacklistChecker;
 import ca.tweetzy.markets.model.FlagExtractor;
+import ca.tweetzy.markets.model.MarketLockHelper;
 import ca.tweetzy.markets.model.WorthPriceLimiter;
 import ca.tweetzy.markets.settings.Settings;
 import ca.tweetzy.markets.settings.Translations;
@@ -37,6 +38,14 @@ public final class CommandAdd extends Command {
 			if (args.length < 2) return ReturnType.FAIL;
 
 			final Market market = Markets.getMarketManager().getByOwner(player.getUniqueId());
+
+			if (market == null) {
+				tell(player, TranslationManager.string(player, Translations.NO_MARKET_FOUND_SELF));
+				return ReturnType.FAIL;
+			}
+
+			if (MarketLockHelper.denyOwnerIfLocked(player, market))
+				return ReturnType.FAIL;
 
 			// no categories
 			if (market.getCategories().isEmpty()) {

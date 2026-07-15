@@ -10,6 +10,7 @@ import ca.tweetzy.markets.api.market.layout.Layout;
 import ca.tweetzy.markets.api.market.layout.MarketLayoutType;
 import ca.tweetzy.markets.gui.MarketsPagedGUI;
 import ca.tweetzy.markets.gui.user.market.MarketSettingsGUI;
+import ca.tweetzy.markets.model.MarketLockHelper;
 import ca.tweetzy.markets.settings.Settings;
 import ca.tweetzy.markets.settings.Translations;
 import lombok.NonNull;
@@ -38,6 +39,10 @@ public final class MarketLayoutEditorGUI extends MarketsPagedGUI<Integer> {
 		setAcceptsItems(true);
 		setOnClose(close -> this.market.sync(null));
 		setDefaultItem(QuickItem.bg(Settings.GUI_LAYOUT_EDITOR_BACKGROUND.getItemStack()));
+
+		if (MarketLockHelper.shouldBlockManagementGui(player, market))
+			return;
+
 		draw();
 	}
 

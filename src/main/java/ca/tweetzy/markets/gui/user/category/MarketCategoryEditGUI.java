@@ -18,6 +18,7 @@ import ca.tweetzy.markets.gui.shared.view.content.MarketViewGUI;
 import ca.tweetzy.markets.gui.user.market.MarketOverviewGUI;
 import ca.tweetzy.markets.model.DupeDetector;
 import ca.tweetzy.markets.model.FloodGateCheck;
+import ca.tweetzy.markets.model.MarketLockHelper;
 import ca.tweetzy.markets.model.WorthPriceLimiter;
 import ca.tweetzy.markets.settings.Settings;
 import ca.tweetzy.markets.settings.Translations;
@@ -45,6 +46,10 @@ public final class MarketCategoryEditGUI extends MarketsPagedGUI<MarketItem> {
 		this.category = category;
 		setAcceptsItems(true);
 		setDefaultItem(QuickItem.bg(Settings.GUI_MARKET_CATEGORY_EDIT_BACKGROUND.getItemStack()));
+
+		if (MarketLockHelper.shouldBlockManagementGui(player, market))
+			return;
+
 		draw();
 	}
 

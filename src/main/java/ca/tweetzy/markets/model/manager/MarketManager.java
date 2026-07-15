@@ -400,16 +400,51 @@ public final class MarketManager extends ListManager<Market> {
 		Markets.getDataManager().getMarkets((error, found) -> {
 			if (error != null) return;
 			Common.log("&aLoading Markets");
-			found.forEach(market -> {
-				Markets.getDataManager().getRatingsByMarket(market.getId(), (ratingError, foundRatings) -> {
-					if (ratingError != null) return;
-					market.getRatings().addAll(foundRatings);
-					add(market);
-				});
-			});
 
-			// after markets have been added let's load categories
-			Markets.getCategoryManager().load();
+			Markets.getDataManager().getMarketLocks((lockError, lockedMarketIds) -> {
+				final Set<UUID> lockedIds = lockError == null && lockedMarketIds != null
+						? new HashSet<>(lockedMarketIds)
+						: Set.of();
+
+				found.forEach(market -> {
+					if (lockedIds.contains(market.getId()))
+						market.setLocked(true);
+
+					Markets.getDataManager().getRatingsByMarket(market.getId(), (ratingError, foundRatings) -> {
+						if (ratingError != null) return;
+						market.getRatings().addAll(foundRatings);
+						add(market);
+					});
+				});
+
+				// after markets have been added let's load categories
+				Markets.getCategoryManager().load();
+			});
 		});
+	}
+
+	public boolean isManagementLocked(@NonNull final Market market) {
+		return market.isLocked();
+	}
+
+	public List<Market> getLockedMarkets() {
+		return getManagerContent().stream().filter(Market::isLocked).collect(Collectors.toList());
+	}
+
+	public List<Market> getClosedMarkets() {
+		return getManagerContent().stream().filter(market -> !market.isOpen()).collect(Collectors.toList());
+	}
+
+	public List<Market> getBannedOwnerMarkets() {
+		refreshBanCacheIfStale();
+		return getManagerContent().stream().filter(this::isOwnerServerBannedAdmin).collect(Collectors.toList());
+	}
+
+	/**
+	 * @return true if the owner is server-banned, regardless of {@link Settings#HIDE_BANNED_OWNER_MARKETS}.
+	 */
+	public boolean isOwnerServerBannedAdmin(@NonNull final Market market) {
+		refreshBanCacheIfStale();
+		return this.bannedOwnerUUIDs.contains(market.getOwnerUUID()) || this.bannedOwnerNames.contains(market.getOwnerName().toLowerCase());
 	}
 }

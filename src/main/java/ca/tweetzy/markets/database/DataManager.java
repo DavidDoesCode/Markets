@@ -120,6 +120,67 @@ public final class DataManager extends DataManagerAbstract {
 		}));
 	}
 
+	public void createMarketLock(@NonNull final UUID marketId, @NonNull final String lockedBy, final long lockedAt, final Callback<Boolean> callback) {
+		this.runAsync(() -> this.databaseConnector.connect(connection -> {
+			final String query = "INSERT INTO " + this.getTablePrefix() + "market_lock (market_id, locked_by, locked_at) VALUES (?, ?, ?)";
+
+			try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+				preparedStatement.setString(1, marketId.toString());
+				preparedStatement.setString(2, lockedBy);
+				preparedStatement.setLong(3, lockedAt);
+				preparedStatement.executeUpdate();
+
+				if (callback != null)
+					callback.accept(null, true);
+
+			} catch (Exception e) {
+				e.printStackTrace();
+				resolveCallback(callback, e);
+			}
+		}));
+	}
+
+	public void deleteMarketLock(@NonNull final UUID marketId, final Callback<Boolean> callback) {
+		this.runAsync(() -> this.databaseConnector.connect(connection -> {
+			try (PreparedStatement statement = connection.prepareStatement("DELETE FROM " + this.getTablePrefix() + "market_lock WHERE market_id = ?")) {
+				statement.setString(1, marketId.toString());
+
+				int result = statement.executeUpdate();
+
+				if (callback != null)
+					callback.accept(null, result > 0);
+
+			} catch (Exception e) {
+				resolveCallback(callback, e);
+			}
+		}));
+	}
+
+	public void getMarketLocks(@NonNull final Callback<List<UUID>> callback) {
+		this.runAsync(() -> this.databaseConnector.connect(connection -> {
+			final String query = "SELECT market_id FROM " + this.getTablePrefix() + "market_lock";
+			final List<UUID> lockedMarketIds = new ArrayList<>();
+
+			try (PreparedStatement preparedStatement = connection.prepareStatement(query);
+			     ResultSet resultSet = preparedStatement.executeQuery()) {
+
+				while (resultSet.next()) {
+					try {
+						lockedMarketIds.add(UUID.fromString(resultSet.getString("market_id")));
+					} catch (IllegalArgumentException ignored) {
+						// skip invalid rows
+					}
+				}
+
+				if (callback != null)
+					callback.accept(null, lockedMarketIds);
+
+			} catch (Exception e) {
+				resolveCallback(callback, e);
+			}
+		}));
+	}
+
 
 	public void getMarkets(@NonNull final Callback<List<AbstractMarket>> callback) {
 		final List<AbstractMarket> markets = new ArrayList<>();

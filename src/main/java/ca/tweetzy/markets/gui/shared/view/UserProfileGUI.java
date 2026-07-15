@@ -98,7 +98,78 @@ public final class UserProfileGUI extends MarketsPagedGUI<Rating> {
 			});
 		}
 
+		drawAdminShopControls();
 		applyBackExit();
+	}
+
+	private boolean hasAdminShopPermission() {
+		return this.player.hasPermission("markets.admin.shoplock") || this.player.isOp();
+	}
+
+	private void drawAdminShopControls() {
+		if (!hasAdminShopPermission())
+			return;
+
+		final Market market = Markets.getMarketManager().getByOwner(this.profileUserUUID);
+		if (market == null)
+			return;
+
+		drawAdminOpenButton(market);
+		drawAdminLockButton(market);
+	}
+
+	private void drawAdminOpenButton(@NonNull final Market market) {
+		setItem(1, 3, QuickItem
+				.of(market.isOpen() ? Settings.GUI_MARKET_SETTINGS_ITEMS_OPEN_ITEM.getItemStack() : Settings.GUI_MARKET_SETTINGS_ITEMS_CLOSE_ITEM.getItemStack())
+				.name(TranslationManager.string(this.player, Translations.GUI_USER_PROFILE_ITEMS_TOGGLE_OPEN_NAME))
+				.lore(TranslationManager.list(this.player, Translations.GUI_USER_PROFILE_ITEMS_TOGGLE_OPEN_LORE,
+						"shop_open_status", TranslationManager.string(this.player, market.isOpen() ? Translations.SHOP_STATUS_OPEN : Translations.SHOP_STATUS_CLOSED)
+				))
+				.make(), click -> {
+			market.setOpen(!market.isOpen());
+			market.sync(result -> {
+				if (result == SynchronizeResult.FAILURE)
+					return;
+
+				AdminActionLogger.log(click.player.getName(),
+						"Toggled shop open status on profile for " + market.getOwnerName() +
+								" (" + market.getOwnerUUID() + ") to " + (market.isOpen() ? "open" : "closed"));
+				drawAdminOpenButton(market);
+			});
+		});
+	}
+
+	private void drawAdminLockButton(@NonNull final Market market) {
+		setItem(1, 5, QuickItem
+				.of(CompMaterial.BARRIER)
+				.name(TranslationManager.string(this.player, Translations.GUI_USER_PROFILE_ITEMS_TOGGLE_LOCK_NAME))
+				.lore(TranslationManager.list(this.player, Translations.GUI_USER_PROFILE_ITEMS_TOGGLE_LOCK_LORE,
+						"shop_lock_status", TranslationManager.string(this.player, market.isLocked() ? Translations.SHOP_STATUS_LOCKED : Translations.SHOP_STATUS_UNLOCKED)
+				))
+				.make(), click -> {
+			if (market.isLocked()) {
+				Markets.getDataManager().deleteMarketLock(market.getId(), (error, deleted) -> {
+					if (error != null || !deleted)
+						return;
+
+					market.setLocked(false);
+					AdminActionLogger.log(click.player.getName(),
+							"Unlocked shop on profile for " + market.getOwnerName() + " (" + market.getOwnerUUID() + ")");
+					Bukkit.getScheduler().runTask(Markets.getInstance(), () -> drawAdminLockButton(market));
+				});
+				return;
+			}
+
+			Markets.getDataManager().createMarketLock(market.getId(), click.player.getName(), System.currentTimeMillis(), (error, created) -> {
+				if (error != null || !created)
+					return;
+
+				market.setLocked(true);
+				AdminActionLogger.log(click.player.getName(),
+						"Locked shop on profile for " + market.getOwnerName() + " (" + market.getOwnerUUID() + ")");
+				Bukkit.getScheduler().runTask(Markets.getInstance(), () -> drawAdminLockButton(market));
+			});
+		});
 	}
 
 	@Override

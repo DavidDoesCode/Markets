@@ -34,6 +34,10 @@ public interface Market extends Identifiable, Displayable, Trackable, Synchroniz
 
 	boolean isCloseWhenOutOfStock();
 
+	boolean isLocked();
+
+	void setLocked(final boolean locked);
+
 	Layout getHomeLayout();
 
 	Layout getCategoryLayout();
@@ -79,6 +83,33 @@ public interface Market extends Identifiable, Displayable, Trackable, Synchroniz
 		}
 
 		return count;
+	}
+
+	default int getTotalStock() {
+		int total = 0;
+		for (Category category : getCategories()) {
+			for (MarketItem item : category.getItems()) {
+				if (item.isInfinite()) {
+					total += 1;
+					continue;
+				}
+				if (item.getStock() > 0)
+					total += item.getStock();
+			}
+		}
+		return total;
+	}
+
+	default double getTotalListingValue() {
+		double total = 0;
+		for (Category category : getCategories()) {
+			for (MarketItem item : category.getItems()) {
+				final int stock = item.isInfinite() ? 1 : item.getStock();
+				if (stock > 0)
+					total += item.getPrice() * stock;
+			}
+		}
+		return total;
 	}
 
 	default double getReviewAvg() {

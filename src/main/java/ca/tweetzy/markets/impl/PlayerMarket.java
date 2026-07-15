@@ -26,6 +26,7 @@ public class PlayerMarket extends AbstractMarket {
 	private final List<UUID> bannedUsers;
 	private boolean open;
 	private boolean closeWhenOutOfStock;
+	private boolean locked;
 	private Layout homeLayout;
 	private Layout categoryLayout;
 	private final long createdAt;
@@ -115,6 +116,16 @@ public class PlayerMarket extends AbstractMarket {
 	}
 
 	@Override
+	public boolean isLocked() {
+		return this.locked;
+	}
+
+	@Override
+	public void setLocked(boolean locked) {
+		this.locked = locked;
+	}
+
+	@Override
 	public Layout getHomeLayout() {
 		return this.homeLayout;
 	}
@@ -188,13 +199,14 @@ public class PlayerMarket extends AbstractMarket {
 
 	@Override
 	public void unStore(@Nullable Consumer<SynchronizeResult> syncResult) {
-		Markets.getDataManager().deleteMarket(this, (error, updateStatus) -> {
-			if (updateStatus) {
-				Markets.getMarketManager().remove(this);
-			}
+		Markets.getDataManager().deleteMarketLock(this.getId(), (lockError, lockDeleted) ->
+				Markets.getDataManager().deleteMarket(this, (error, updateStatus) -> {
+					if (updateStatus) {
+						Markets.getMarketManager().remove(this);
+					}
 
-			if (syncResult != null)
-				syncResult.accept(error == null ? updateStatus ? SynchronizeResult.SUCCESS : SynchronizeResult.FAILURE : SynchronizeResult.FAILURE);
-		});
+					if (syncResult != null)
+						syncResult.accept(error == null ? updateStatus ? SynchronizeResult.SUCCESS : SynchronizeResult.FAILURE : SynchronizeResult.FAILURE);
+				}));
 	}
 }

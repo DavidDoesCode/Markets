@@ -46,6 +46,7 @@ public final class Translations extends TranslationManager {
 	public static TranslationEntry ERROR_CANNOT_BAN_SELF = create("error.cannot ban self", "&cYou cannot ban yourself from your own market!");
 	public static TranslationEntry ERROR_PLAYER_ALREADY_BANNED = create("error.player already banned", "&cThat player is already on your ban list!");
 	public static TranslationEntry MARKET_IS_CLOSED = create("error.market is closed", "&4%market_owner%&c's market is currently closed!");
+	public static TranslationEntry MARKET_IS_LOCKED = create("error.market is locked", "&cYour shop is locked by an admin. You cannot make changes.");
 	public static TranslationEntry PROVIDE_REQUESTED_ITEM = create("error.provide requested item", "&cYou need to place/select a requested item first");
 	public static TranslationEntry MAX_STACK_SIZE = create("error.max stack size", "&cCannot request that many, max stack size is &4%max_stack_size%");
 	public static TranslationEntry REVIEWS_DISABLED = create("error.ratings disabled", "&cReviews are disabled");
@@ -1584,6 +1585,43 @@ public final class Translations extends TranslationManager {
 			"",
 			"&7Online&F: %true%"
 	);
+
+	public static TranslationEntry SHOP_STATUS_OPEN = create("info.shop status.open", "Shop is open.");
+	public static TranslationEntry SHOP_STATUS_CLOSED = create("info.shop status.closed", "Shop is closed.");
+	public static TranslationEntry SHOP_STATUS_LOCKED = create("info.shop status.locked", "Shop is locked.");
+	public static TranslationEntry SHOP_STATUS_UNLOCKED = create("info.shop status.unlocked", "Shop is unlocked.");
+
+	public static TranslationEntry GUI_USER_PROFILE_ITEMS_TOGGLE_OPEN_NAME = create("gui.userprofile.items.toggle open.name", "<GRADIENT:65B1B4>&lShop Status</GRADIENT:2B6F8A>");
+	public static TranslationEntry GUI_USER_PROFILE_ITEMS_TOGGLE_OPEN_LORE = create("gui.userprofile.items.toggle open.lore",
+			"%shop_open_status%",
+			"",
+			"&7Click to toggle and open|close.",
+			"&7Closed shops cannot be purchased from."
+	);
+
+	public static TranslationEntry GUI_USER_PROFILE_ITEMS_TOGGLE_LOCK_NAME = create("gui.userprofile.items.toggle lock.name", "<GRADIENT:65B1B4>&lShop Lock</GRADIENT:2B6F8A>");
+	public static TranslationEntry GUI_USER_PROFILE_ITEMS_TOGGLE_LOCK_LORE = create("gui.userprofile.items.toggle lock.lore",
+			"%shop_lock_status%",
+			"",
+			"&7Click to toggle and lock the shop.",
+			"&7Owners are locked out of shop management."
+	);
+
+	public static TranslationEntry GUI_ADMIN_LOCKED_SHOPS_TITLE = create("gui.admin locked shops.title", "&eMarkets &f- &7Locked Shops");
+	public static TranslationEntry GUI_ADMIN_BANNED_SHOPS_TITLE = create("gui.admin banned shops.title", "&eMarkets &f- &7Banned Owner Shops");
+	public static TranslationEntry GUI_ADMIN_CLOSED_SHOPS_TITLE = create("gui.admin closed shops.title", "&eMarkets &f- &7Closed Shops");
+	public static TranslationEntry GUI_ADMIN_MARKETS_LIST_ITEMS_MARKET_LORE = create("gui.admin markets list.items.market.lore",
+			"%shop_open_status%",
+			"%shop_lock_status%",
+			"&7Last Seen&f: &e%user_last_seen%",
+			"&7Items&f: &e%item_count% &7(&e%in_stock_count% &7in stock)",
+			"&7Total Value&f: &a%total_value%",
+			"",
+			"&a&l%left_click% &7to view shop"
+	);
+	public static TranslationEntry ADMIN_LOCKED_SHOPS_EMPTY = create("info.admin locked shops empty", "&cThere are no locked shops.");
+	public static TranslationEntry ADMIN_BANNED_SHOPS_EMPTY = create("info.admin banned shops empty", "&cThere are no shops with banned owners.");
+	public static TranslationEntry ADMIN_CLOSED_SHOPS_EMPTY = create("info.admin closed shops empty", "&cThere are no closed shops.");
 
 	public static TranslationEntry GUI_USER_PROFILE_ITEMS_RATING_NAME = create("gui.userprofile.items.rating.name", "<GRADIENT:65B1B4>&l%rater_name%</GRADIENT:2B6F8A>");
 	public static TranslationEntry GUI_USER_PROFILE_ITEMS_RATING_LORE = create("gui.userprofile.items.rating.lore.default",

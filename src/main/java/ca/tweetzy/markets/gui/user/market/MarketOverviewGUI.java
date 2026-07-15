@@ -17,6 +17,7 @@ import ca.tweetzy.markets.gui.shared.selector.ConfirmGUI;
 import ca.tweetzy.markets.gui.shared.view.content.MarketViewGUI;
 import ca.tweetzy.markets.gui.shared.view.ratings.MarketRatingsViewGUI;
 import ca.tweetzy.markets.gui.user.category.MarketCategoryEditGUI;
+import ca.tweetzy.markets.model.MarketLockHelper;
 import ca.tweetzy.markets.settings.Settings;
 import ca.tweetzy.markets.settings.Translations;
 import lombok.NonNull;
@@ -38,6 +39,9 @@ public final class MarketOverviewGUI extends MarketsPagedGUI<Category> {
 		this.player = player;
 		this.market = market;
 		setDefaultItem(QuickItem.bg(Settings.GUI_MARKET_OVERVIEW_BACKGROUND.getItemStack()));
+
+		if (MarketLockHelper.shouldBlockManagementGui(player, market))
+			return;
 
 		draw();
 	}

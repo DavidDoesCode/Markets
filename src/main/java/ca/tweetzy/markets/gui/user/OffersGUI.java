@@ -10,9 +10,11 @@ import ca.tweetzy.flight.utils.ItemUtil;
 import ca.tweetzy.flight.utils.QuickItem;
 import ca.tweetzy.markets.Markets;
 import ca.tweetzy.markets.api.currency.TransactionResult;
+import ca.tweetzy.markets.api.market.core.Market;
 import ca.tweetzy.markets.api.market.core.MarketItem;
 import ca.tweetzy.markets.api.market.offer.Offer;
 import ca.tweetzy.markets.gui.MarketsPagedGUI;
+import ca.tweetzy.markets.model.MarketLockHelper;
 import ca.tweetzy.markets.settings.Settings;
 import ca.tweetzy.markets.settings.Translations;
 import lombok.NonNull;
@@ -73,6 +75,10 @@ public final class OffersGUI extends MarketsPagedGUI<Offer> {
 		final MarketItem marketItem = Markets.getCategoryItemManager().getByUUID(offer.getMarketItem());
 
 		if (click.clickType == ClickType.LEFT) {
+			final Market market = marketItem != null ? marketItem.getOwningMarket() : null;
+			if (market != null && MarketLockHelper.denyOwnerIfLocked(click.player, market))
+				return;
+
 			offer.accept(result -> {
 				// Use getPlayer() instead of getOfflinePlayer() to avoid blocking main thread
 				final Player offerSender = Bukkit.getPlayer(offer.getOfferSender());
