@@ -3,6 +3,7 @@ package ca.tweetzy.markets.gui.shared.checkout;
 import ca.tweetzy.flight.settings.TranslationManager;
 import ca.tweetzy.flight.utils.QuickItem;
 import ca.tweetzy.markets.Markets;
+import ca.tweetzy.markets.api.currency.TransactionResult;
 import ca.tweetzy.markets.api.market.core.Market;
 import ca.tweetzy.markets.api.market.core.MarketItem;
 import ca.tweetzy.markets.gui.MarketsBaseGUI;
@@ -130,6 +131,9 @@ public final class MarketItemPurchaseGUI extends MarketsBaseGUI {
 
 			this.marketItem.performPurchase(this.market, click.player, this.purchaseQty, result -> {
 				this.marketItem.getViewingPlayers().remove(click.player);
+				if (result == TransactionResult.FAILED_MIN_BALANCE)
+					return;
+
 				click.manager.showGUI(click.player, new MarketCategoryViewGUI(this.player, this.market, Markets.getCategoryManager().getByUUID(marketItem.getOwningCategory()), false));
 			});
 		});

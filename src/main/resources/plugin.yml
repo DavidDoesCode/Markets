@@ -56,6 +56,9 @@ permissions:
   markets.admin.worth:
     description: Allows configuring Essentials worth price limit settings via /markets admin worth
     default: op
+  markets.admin.minbalance:
+    description: Allows configuring minimum remaining balance via /markets admin minbalance
+    default: op
   markets.admin.audit:
     description: Allows auditing market listings against Essentials worth via /markets admin audit
     default: op

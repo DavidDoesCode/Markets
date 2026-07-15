@@ -47,6 +47,8 @@ public final class CommandAdmin extends Command {
 					return ShippingAdminCommand.execute(sender, args);
 				case "worth":
 					return WorthAdminCommand.execute(sender, args);
+				case "minbalance":
+					return MinBalanceAdminCommand.execute(sender, args);
 				case "audit":
 					return AuditAdminCommand.execute(sender, args);
 			}
@@ -58,6 +60,9 @@ public final class CommandAdmin extends Command {
 
 		if (args.length >= 2 && args[0].equalsIgnoreCase("worth"))
 			return WorthAdminCommand.execute(sender, args);
+
+		if (args.length >= 2 && args[0].equalsIgnoreCase("minbalance"))
+			return MinBalanceAdminCommand.execute(sender, args);
 
 		if (args.length >= 2 && args[0].equalsIgnoreCase("audit"))
 			return AuditAdminCommand.execute(sender, args);
@@ -107,7 +112,7 @@ public final class CommandAdmin extends Command {
 	@Override
 	protected List<String> tab(CommandSender sender, String... args) {
 		if (args.length == 1) {
-			final List<String> options = new ArrayList<>(List.of("collecttax", "shipping", "worth", "audit"));
+			final List<String> options = new ArrayList<>(List.of("collecttax", "shipping", "worth", "minbalance", "audit"));
 			options.addAll(Bukkit.getOnlinePlayers().stream().map(OfflinePlayer::getName).collect(Collectors.toList()));
 			return options;
 		}
@@ -122,6 +127,12 @@ public final class CommandAdmin extends Command {
 			final List<String> worthTab = WorthAdminCommand.tab(args);
 			if (worthTab != null)
 				return worthTab;
+		}
+
+		if (args[0].equalsIgnoreCase("minbalance")) {
+			final List<String> minBalanceTab = MinBalanceAdminCommand.tab(args);
+			if (minBalanceTab != null)
+				return minBalanceTab;
 		}
 
 		if (args[0].equalsIgnoreCase("audit")) {

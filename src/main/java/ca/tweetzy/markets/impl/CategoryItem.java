@@ -309,6 +309,25 @@ public final class CategoryItem implements MarketItem {
 			return;
 		}
 
+		if (Settings.MIN_BALANCE_ENABLED.getBoolean()) {
+			final double minBalance = Settings.MIN_BALANCE_AMOUNT.getDouble();
+			double vaultOutflow = 0;
+
+			final boolean isVaultCurrency = currencyPlugin.equalsIgnoreCase("vault") || currencyName.equalsIgnoreCase("vault");
+			if (!this.isCurrencyOfItem() && isVaultCurrency)
+				vaultOutflow += itemTotalWithTax;
+			if (shippingTotal > 0)
+				vaultOutflow += shippingTotal;
+
+			if (!Markets.getEconomy().has(buyer, vaultOutflow + minBalance)) {
+				buyer.closeInventory();
+				Common.tell(buyer, TranslationManager.list(buyer, Translations.MIN_BALANCE_BLOCKED,
+						"min_balance", String.format("%,.0f", minBalance)));
+				transactionResult.accept(TransactionResult.FAILED_MIN_BALANCE);
+				return;
+			}
+		}
+
 		final boolean withdrawResult = this.isCurrencyOfItem()
 				? Markets.getCurrencyManager().withdraw(buyer, this.currencyItem, (int) itemTotalWithTax)
 				: Markets.getCurrencyManager().withdraw(buyer, currencyPlugin, currencyName, itemTotalWithTax);

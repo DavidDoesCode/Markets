@@ -1170,6 +1170,18 @@ public final class Translations extends TranslationManager {
 			"&7Max percent&f: &e%max_percent%%",
 			"&7Absolute max&f: &e%absolute_max%"
 	);
+
+	public static TranslationEntry MIN_BALANCE_BLOCKED = create("error.min balance blocked",
+			"&cMinimum balance of $%min_balance% to use the markets.",
+			"&7Earn coins by playing survival, voting, and USD purchase.");
+	public static TranslationEntry MIN_BALANCE_ADMIN_UPDATED = create("info.min balance.admin.updated", "&aMinimum balance setting updated.");
+	public static TranslationEntry MIN_BALANCE_ADMIN_INVALID = create("error.min balance.admin.invalid", "&cInvalid value. Check your command syntax.");
+	public static TranslationEntry MIN_BALANCE_ADMIN_USAGE = create("error.min balance.admin.usage", "&cUsage: /markets admin minbalance <info|enabled|amount> ...");
+	public static TranslationEntry MIN_BALANCE_ADMIN_INFO = create("info.min balance.admin.info",
+			"&7Minimum remaining balance&f:",
+			"&7Enabled&f: &e%enabled%",
+			"&7Amount&f: &a$%amount%"
+	);
 	public static TranslationEntry WORTH_AUDIT_UNAVAILABLE = create("error.worth.audit.unavailable", "&cEssentials worth is not available. Cannot run an audit.");
 	public static TranslationEntry WORTH_AUDIT_INVALID = create("error.worth.audit.invalid", "&cPlease provide a valid positive percent value.");
 	public static TranslationEntry WORTH_AUDIT_STARTED = create("info.worth.audit.started", "&7Scanning Vault listings for items at &e%percent%% &7of Essentials worth...");

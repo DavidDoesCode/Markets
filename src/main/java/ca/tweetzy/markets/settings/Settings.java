@@ -106,6 +106,12 @@ public final class Settings extends FlightSettings {
 	public static ConfigEntry WORTH_PRICE_LIMIT_BYPASS_PERMISSION = create("settings.worth.price limit.bypass permission", "markets.bypass.worthpricelimit").withComment("Permission that bypasses worth and absolute Vault price caps.");
 
 	/*
+	========================= Min Balance Settings =========================
+	 */
+	public static ConfigEntry MIN_BALANCE_ENABLED = create("settings.min balance.enabled", true).withComment("If true, buyers must keep at least the configured Vault balance after a purchase.");
+	public static ConfigEntry MIN_BALANCE_AMOUNT = create("settings.min balance.amount", 500).withComment("Minimum Vault balance that must remain after a purchase (item cost + shipping when applicable).");
+
+	/*
 	========================= Shipping Settings =========================
 	 */
 	public static ConfigEntry SHIPPING_ENABLED = create("settings.shipping.enabled", false).withComment("If true, shipping charges will be applied to market purchases based on per-world settings.");
