@@ -7,7 +7,6 @@ import ca.tweetzy.markets.impl.currency.ItemCurrency;
 import ca.tweetzy.markets.impl.currency.VaultCurrency;
 import ca.tweetzy.markets.model.currency.EcoBitsEconomyLoader;
 import ca.tweetzy.markets.model.currency.FundsEconomyLoader;
-import ca.tweetzy.markets.model.currency.UltraEconomyLoader;
 import ca.tweetzy.markets.settings.Settings;
 import lombok.NonNull;
 import org.bukkit.Bukkit;
@@ -76,8 +75,8 @@ public final class CurrencyManager extends ListManager<AbstractCurrency> {
 		add(new ItemCurrency());
 
 		// load currencies from providers that allow multiple currencies
-		if (Bukkit.getServer().getPluginManager().isPluginEnabled("UltraEconomy"))
-			new UltraEconomyLoader().getCurrencies().forEach(this::add);
+//		if (Bukkit.getServer().getPluginManager().isPluginEnabled("UltraEconomy"))
+//			new UltraEconomyLoader().getCurrencies().forEach(this::add);
 
 		if (Bukkit.getServer().getPluginManager().isPluginEnabled("Funds"))
 			new FundsEconomyLoader().getCurrencies().forEach(this::add);
