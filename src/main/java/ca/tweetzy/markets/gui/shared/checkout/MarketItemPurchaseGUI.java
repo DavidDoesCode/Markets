@@ -8,6 +8,7 @@ import ca.tweetzy.markets.api.market.core.Market;
 import ca.tweetzy.markets.api.market.core.MarketItem;
 import ca.tweetzy.markets.gui.MarketsBaseGUI;
 import ca.tweetzy.markets.gui.shared.view.content.MarketCategoryViewGUI;
+import ca.tweetzy.markets.model.PurchaseLimits;
 import ca.tweetzy.markets.model.Taxer;
 import ca.tweetzy.markets.model.shipping.ShippingBreakdown;
 import ca.tweetzy.markets.model.shipping.ShippingCalculator;
@@ -31,8 +32,9 @@ public final class MarketItemPurchaseGUI extends MarketsBaseGUI {
 		this.market = market;
 		this.marketItem = marketItem;
 
+		final int maxPurchaseQty = PurchaseLimits.getMaxPurchaseQuantity(this.marketItem.getItem());
 		if (this.marketItem.isPriceForAll() || this.marketItem.getStock() == 1)
-			this.purchaseQty = this.marketItem.getStock();
+			this.purchaseQty = this.marketItem.isInfinite() ? maxPurchaseQty : Math.min(this.marketItem.getStock(), maxPurchaseQty);
 		else
 			this.purchaseQty = 1;
 
@@ -57,7 +59,7 @@ public final class MarketItemPurchaseGUI extends MarketsBaseGUI {
 		drawPriceBreakdown(totals);
 		drawHighAmountWarning(totals);
 
-		if (this.marketItem.isInfinite() || this.marketItem.getStock() != 1 && !this.marketItem.isPriceForAll()) {
+		if (this.marketItem.isInfinite() || this.marketItem.getStock() != 1) {
 			drawDecrementButtons();
 			drawIncrementButtons();
 		}
@@ -183,7 +185,13 @@ public final class MarketItemPurchaseGUI extends MarketsBaseGUI {
 	}
 
 	private CheckoutTotals calculateCheckoutTotals() {
-		final double subtotal = this.marketItem.isPriceForAll() ? this.marketItem.getPrice() : this.marketItem.getPrice() * this.purchaseQty;
+		final double subtotal = PurchaseLimits.resolvePurchaseSubtotal(
+				this.marketItem.isPriceForAll(),
+				this.marketItem.isInfinite(),
+				this.marketItem.getPrice(),
+				this.purchaseQty,
+				this.marketItem.getStock()
+		);
 		final double purchaseTotal = Taxer.getTaxedTotal(subtotal);
 		double grandTotal = purchaseTotal;
 
@@ -234,9 +242,12 @@ public final class MarketItemPurchaseGUI extends MarketsBaseGUI {
 	private void adjustPurchaseQty(@NonNull final AdjustmentType adjustmentType, final int amount) {
 		if (adjustmentType == AdjustmentType.INCREASE) {
 			int newAmt = this.purchaseQty + amount;
+			final int maxPurchaseQty = PurchaseLimits.getMaxPurchaseQuantity(this.marketItem.getItem());
 
 			if (!this.marketItem.isInfinite() && newAmt > this.marketItem.getStock())
 				newAmt = this.marketItem.getStock();
+			if (newAmt > maxPurchaseQty)
+				newAmt = maxPurchaseQty;
 
 			this.purchaseQty = newAmt;
 		}

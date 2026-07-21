@@ -13,6 +13,7 @@ import ca.tweetzy.markets.api.market.TransactionType;
 import ca.tweetzy.markets.api.market.core.Market;
 import ca.tweetzy.markets.api.market.core.MarketItem;
 import ca.tweetzy.markets.model.DupeDetector;
+import ca.tweetzy.markets.model.PurchaseLimits;
 import ca.tweetzy.markets.model.Taxer;
 import ca.tweetzy.markets.model.shipping.ShippingBreakdown;
 import ca.tweetzy.markets.model.shipping.ShippingCalculator;
@@ -281,11 +282,19 @@ public final class CategoryItem implements MarketItem {
 				return;
 			}
 
+		quantity = Math.min(quantity, PurchaseLimits.getMaxPurchaseQuantity(this.item));
 		final int newPurchaseAmount = this.infinite ? quantity : Math.min(quantity, stock);
 
-		final double subtotal = this.priceIsForAll ? this.price : this.price * newPurchaseAmount;
+		final double subtotal = PurchaseLimits.resolvePurchaseSubtotal(
+				this.priceIsForAll,
+				this.infinite,
+				this.price,
+				newPurchaseAmount,
+				this.stock
+		);
 		final double total = subtotal;
 		final double itemTotalWithTax = Taxer.getTaxedTotal(total);
+		final int itemCurrencyCharge = this.isCurrencyOfItem() ? PurchaseLimits.resolveItemCurrencyCharge(itemTotalWithTax) : 0;
 
 		final String currencyPlugin = this.currency.split("/")[0];
 		final String currencyName = this.currency.split("/")[1];
@@ -294,7 +303,7 @@ public final class CategoryItem implements MarketItem {
 		final double shippingTotal = shippingBreakdown.getTotalAsDouble();
 
 		final boolean hasEnoughMoney = this.isCurrencyOfItem()
-				? Markets.getCurrencyManager().has(buyer, this.currencyItem, (int) itemTotalWithTax)
+				? Markets.getCurrencyManager().has(buyer, this.currencyItem, itemCurrencyCharge)
 				: Markets.getCurrencyManager().has(buyer, currencyPlugin, currencyName, itemTotalWithTax);
 
 		if (!hasEnoughMoney) {
@@ -329,7 +338,7 @@ public final class CategoryItem implements MarketItem {
 		}
 
 		final boolean withdrawResult = this.isCurrencyOfItem()
-				? Markets.getCurrencyManager().withdraw(buyer, this.currencyItem, (int) itemTotalWithTax)
+				? Markets.getCurrencyManager().withdraw(buyer, this.currencyItem, itemCurrencyCharge)
 				: Markets.getCurrencyManager().withdraw(buyer, currencyPlugin, currencyName, itemTotalWithTax);
 		final double tax = this.isCurrencyOfItem() ? (int) Taxer.calculateTaxAmount(total) : Taxer.calculateTaxAmount(total);
 
@@ -420,13 +429,14 @@ public final class CategoryItem implements MarketItem {
 
 			if (!market.isServerMarket()) {
 				if (isCurrencyOfItem()) {
+					final int sellerDeposit = PurchaseLimits.resolveItemCurrencyCharge(total);
 					if (seller.isOnline() && seller.getPlayer() != null)
-						Markets.getCurrencyManager().deposit(seller.getPlayer(), this.currencyItem, (int) total);
+						Markets.getCurrencyManager().deposit(seller.getPlayer(), this.currencyItem, sellerDeposit);
 					else
 						Markets.getOfflineItemPaymentManager().create(
 								seller.getUniqueId(),
 								this.currencyItem,
-								(int) total,
+								sellerDeposit,
 								TranslationManager.string(seller.getPlayer(), Translations.MARKET_ITEM_BOUGHT_SELLER,
 										"purchase_price", isCurrencyOfItem() ? total : (int) total,
 										"purchase_quantity", newPurchaseAmount,
@@ -485,7 +495,7 @@ public final class CategoryItem implements MarketItem {
 
 	private void refundItemPayment(@NonNull final Player buyer, @NonNull final String currencyPlugin, @NonNull final String currencyName, final double amount) {
 		if (isCurrencyOfItem())
-			Markets.getCurrencyManager().deposit(buyer, this.currencyItem, (int) amount);
+			Markets.getCurrencyManager().deposit(buyer, this.currencyItem, PurchaseLimits.resolveItemCurrencyCharge(amount));
 		else
 			Markets.getCurrencyManager().deposit(buyer, currencyPlugin, currencyName, amount);
 	}
