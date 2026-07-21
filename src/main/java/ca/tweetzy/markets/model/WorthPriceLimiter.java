@@ -15,6 +15,28 @@ import java.util.List;
 @UtilityClass
 public final class WorthPriceLimiter {
 
+	private static final int PURCHASE_STACK_MULTIPLIER = 36;
+	private static final double MIN_PURCHASE_TOTAL = 0.01;
+
+	public int getMaxPurchaseQuantity(@NonNull final ItemStack item) {
+		return item.getMaxStackSize() * PURCHASE_STACK_MULTIPLIER;
+	}
+
+	public double resolvePurchaseSubtotal(final boolean wholesale, final boolean infinite, final double listingPrice,
+										  final int purchaseQty, final int currentStock) {
+		if (!wholesale)
+			return listingPrice * purchaseQty;
+
+		if (infinite || currentStock <= 0 || purchaseQty >= currentStock)
+			return Math.max(MIN_PURCHASE_TOTAL, listingPrice);
+
+		return Math.max(MIN_PURCHASE_TOTAL, listingPrice * ((double) purchaseQty / (double) currentStock));
+	}
+
+	public int resolveItemCurrencyCharge(final double amount) {
+		return Math.max(1, (int) Math.ceil(amount));
+	}
+
 	public boolean isVaultCurrency(final String currency) {
 		if (currency == null || currency.isEmpty())
 			return false;

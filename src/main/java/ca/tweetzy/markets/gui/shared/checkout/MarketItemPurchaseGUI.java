@@ -8,8 +8,8 @@ import ca.tweetzy.markets.api.market.core.Market;
 import ca.tweetzy.markets.api.market.core.MarketItem;
 import ca.tweetzy.markets.gui.MarketsBaseGUI;
 import ca.tweetzy.markets.gui.shared.view.content.MarketCategoryViewGUI;
-import ca.tweetzy.markets.model.PurchaseLimits;
 import ca.tweetzy.markets.model.Taxer;
+import ca.tweetzy.markets.model.WorthPriceLimiter;
 import ca.tweetzy.markets.model.shipping.ShippingBreakdown;
 import ca.tweetzy.markets.model.shipping.ShippingCalculator;
 import ca.tweetzy.markets.model.shipping.ShippingMoney;
@@ -32,7 +32,7 @@ public final class MarketItemPurchaseGUI extends MarketsBaseGUI {
 		this.market = market;
 		this.marketItem = marketItem;
 
-		final int maxPurchaseQty = PurchaseLimits.getMaxPurchaseQuantity(this.marketItem.getItem());
+		final int maxPurchaseQty = WorthPriceLimiter.getMaxPurchaseQuantity(this.marketItem.getItem());
 		if (this.marketItem.isPriceForAll() || this.marketItem.getStock() == 1)
 			this.purchaseQty = this.marketItem.isInfinite() ? maxPurchaseQty : Math.min(this.marketItem.getStock(), maxPurchaseQty);
 		else
@@ -185,7 +185,7 @@ public final class MarketItemPurchaseGUI extends MarketsBaseGUI {
 	}
 
 	private CheckoutTotals calculateCheckoutTotals() {
-		final double subtotal = PurchaseLimits.resolvePurchaseSubtotal(
+		final double subtotal = WorthPriceLimiter.resolvePurchaseSubtotal(
 				this.marketItem.isPriceForAll(),
 				this.marketItem.isInfinite(),
 				this.marketItem.getPrice(),
@@ -242,7 +242,7 @@ public final class MarketItemPurchaseGUI extends MarketsBaseGUI {
 	private void adjustPurchaseQty(@NonNull final AdjustmentType adjustmentType, final int amount) {
 		if (adjustmentType == AdjustmentType.INCREASE) {
 			int newAmt = this.purchaseQty + amount;
-			final int maxPurchaseQty = PurchaseLimits.getMaxPurchaseQuantity(this.marketItem.getItem());
+			final int maxPurchaseQty = WorthPriceLimiter.getMaxPurchaseQuantity(this.marketItem.getItem());
 
 			if (!this.marketItem.isInfinite() && newAmt > this.marketItem.getStock())
 				newAmt = this.marketItem.getStock();

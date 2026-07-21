@@ -13,8 +13,8 @@ import ca.tweetzy.markets.api.market.TransactionType;
 import ca.tweetzy.markets.api.market.core.Market;
 import ca.tweetzy.markets.api.market.core.MarketItem;
 import ca.tweetzy.markets.model.DupeDetector;
-import ca.tweetzy.markets.model.PurchaseLimits;
 import ca.tweetzy.markets.model.Taxer;
+import ca.tweetzy.markets.model.WorthPriceLimiter;
 import ca.tweetzy.markets.model.shipping.ShippingBreakdown;
 import ca.tweetzy.markets.model.shipping.ShippingCalculator;
 import ca.tweetzy.markets.model.shipping.ShippingMoney;
@@ -282,10 +282,10 @@ public final class CategoryItem implements MarketItem {
 				return;
 			}
 
-		quantity = Math.min(quantity, PurchaseLimits.getMaxPurchaseQuantity(this.item));
+		quantity = Math.min(quantity, WorthPriceLimiter.getMaxPurchaseQuantity(this.item));
 		final int newPurchaseAmount = this.infinite ? quantity : Math.min(quantity, stock);
 
-		final double subtotal = PurchaseLimits.resolvePurchaseSubtotal(
+		final double subtotal = WorthPriceLimiter.resolvePurchaseSubtotal(
 				this.priceIsForAll,
 				this.infinite,
 				this.price,
@@ -294,7 +294,7 @@ public final class CategoryItem implements MarketItem {
 		);
 		final double total = subtotal;
 		final double itemTotalWithTax = Taxer.getTaxedTotal(total);
-		final int itemCurrencyCharge = this.isCurrencyOfItem() ? PurchaseLimits.resolveItemCurrencyCharge(itemTotalWithTax) : 0;
+		final int itemCurrencyCharge = this.isCurrencyOfItem() ? WorthPriceLimiter.resolveItemCurrencyCharge(itemTotalWithTax) : 0;
 
 		final String currencyPlugin = this.currency.split("/")[0];
 		final String currencyName = this.currency.split("/")[1];
@@ -429,7 +429,7 @@ public final class CategoryItem implements MarketItem {
 
 			if (!market.isServerMarket()) {
 				if (isCurrencyOfItem()) {
-					final int sellerDeposit = PurchaseLimits.resolveItemCurrencyCharge(total);
+					final int sellerDeposit = WorthPriceLimiter.resolveItemCurrencyCharge(total);
 					if (seller.isOnline() && seller.getPlayer() != null)
 						Markets.getCurrencyManager().deposit(seller.getPlayer(), this.currencyItem, sellerDeposit);
 					else
@@ -495,7 +495,7 @@ public final class CategoryItem implements MarketItem {
 
 	private void refundItemPayment(@NonNull final Player buyer, @NonNull final String currencyPlugin, @NonNull final String currencyName, final double amount) {
 		if (isCurrencyOfItem())
-			Markets.getCurrencyManager().deposit(buyer, this.currencyItem, PurchaseLimits.resolveItemCurrencyCharge(amount));
+			Markets.getCurrencyManager().deposit(buyer, this.currencyItem, WorthPriceLimiter.resolveItemCurrencyCharge(amount));
 		else
 			Markets.getCurrencyManager().deposit(buyer, currencyPlugin, currencyName, amount);
 	}
