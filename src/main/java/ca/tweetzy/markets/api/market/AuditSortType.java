@@ -12,7 +12,9 @@ public enum AuditSortType implements Navigable<AuditSortType> {
 	HIGHEST_PRICE(true),
 	HIGHEST_RATIO(true),
 	LOWEST_PRICE(true),
-	LOWEST_RATIO(true);
+	LOWEST_RATIO(true),
+	HIGHEST_QTY(true),
+	LOWEST_QTY(true);
 
 	@Getter
 	private final boolean enabled;
@@ -60,6 +62,8 @@ public enum AuditSortType implements Navigable<AuditSortType> {
 			case HIGHEST_RATIO -> TranslationManager.string(Translations.AUDIT_SORT_HIGHEST_RATIO);
 			case LOWEST_PRICE -> TranslationManager.string(Translations.AUDIT_SORT_LOWEST_PRICE);
 			case LOWEST_RATIO -> TranslationManager.string(Translations.AUDIT_SORT_LOWEST_RATIO);
+			case HIGHEST_QTY -> TranslationManager.string(Translations.AUDIT_SORT_HIGHEST_QTY);
+			case LOWEST_QTY -> TranslationManager.string(Translations.AUDIT_SORT_LOWEST_QTY);
 		};
 	}
 }

@@ -64,7 +64,14 @@ public final class WorthAuditGUI extends MarketsPagedGUI<AuditEntry> {
 			case HIGHEST_RATIO -> this.items.sort(Comparator.comparingDouble(AuditEntry::getRatioPercent).reversed());
 			case LOWEST_PRICE -> this.items.sort(Comparator.comparingDouble(AuditEntry::getUnitPrice));
 			case LOWEST_RATIO -> this.items.sort(Comparator.comparingDouble(AuditEntry::getRatioPercent));
+			case HIGHEST_QTY -> this.items.sort(Comparator.comparingInt(WorthAuditGUI::resolveStockQty).reversed());
+			case LOWEST_QTY -> this.items.sort(Comparator.comparingInt(WorthAuditGUI::resolveStockQty));
 		}
+	}
+
+	private static int resolveStockQty(AuditEntry entry) {
+		final MarketItem marketItem = entry.getMarketItem();
+		return marketItem.isInfinite() ? Integer.MAX_VALUE : Math.max(0, marketItem.getStock());
 	}
 
 	@Override

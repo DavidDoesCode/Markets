@@ -5,6 +5,7 @@ import ca.tweetzy.flight.settings.TranslationManager;
 import ca.tweetzy.flight.utils.Common;
 import ca.tweetzy.markets.Markets;
 import ca.tweetzy.markets.api.market.AuditSortType;
+import ca.tweetzy.markets.api.market.core.MarketItem;
 import ca.tweetzy.markets.gui.admin.WorthAuditGUI;
 import ca.tweetzy.markets.model.AuditEntry;
 import ca.tweetzy.markets.model.AuditScanner;
@@ -12,11 +13,15 @@ import ca.tweetzy.markets.model.EssentialsWorthHook;
 import ca.tweetzy.markets.settings.Translations;
 import lombok.experimental.UtilityClass;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
+import java.util.stream.Collectors;
 
 @UtilityClass
 public final class AuditAdminCommand {
@@ -45,13 +50,24 @@ public final class AuditAdminCommand {
 			return ReturnType.FAIL;
 		}
 
+		final Material materialFilter;
+		if (args.length >= 3) {
+			materialFilter = Material.matchMaterial(args[2]);
+			if (materialFilter == null || !materialFilter.isItem()) {
+				Common.tell(sender, TranslationManager.string(Translations.WORTH_AUDIT_INVALID));
+				return ReturnType.FAIL;
+			}
+		} else {
+			materialFilter = null;
+		}
+
 		Common.tell(sender, TranslationManager.string(Translations.WORTH_AUDIT_STARTED,
 				"percent", String.format("%,.0f", percent)));
 
 		final boolean overpricedMode = AuditScanner.isOverpricedMode(percent);
 
 		Bukkit.getScheduler().runTaskAsynchronously(Markets.getInstance(), () -> {
-			final List<AuditEntry> matches = AuditScanner.findMatches(percent);
+			final List<AuditEntry> matches = AuditScanner.findMatches(percent, materialFilter);
 
 			Bukkit.getScheduler().runTask(Markets.getInstance(), () -> {
 				if (matches.isEmpty()) {
@@ -105,7 +121,14 @@ public final class AuditAdminCommand {
 			case HIGHEST_RATIO -> matches.sort(Comparator.comparingDouble(AuditEntry::getRatioPercent).reversed());
 			case LOWEST_PRICE -> matches.sort(Comparator.comparingDouble(AuditEntry::getUnitPrice));
 			case LOWEST_RATIO -> matches.sort(Comparator.comparingDouble(AuditEntry::getRatioPercent));
+			case HIGHEST_QTY -> matches.sort(Comparator.comparingInt(AuditAdminCommand::resolveStockQty).reversed());
+			case LOWEST_QTY -> matches.sort(Comparator.comparingInt(AuditAdminCommand::resolveStockQty));
 		}
+	}
+
+	private int resolveStockQty(AuditEntry entry) {
+		final MarketItem marketItem = entry.getMarketItem();
+		return marketItem.isInfinite() ? Integer.MAX_VALUE : Math.max(0, marketItem.getStock());
 	}
 
 	private Double parseDouble(String value) {
@@ -119,6 +142,16 @@ public final class AuditAdminCommand {
 	public List<String> tab(String... args) {
 		if (args.length == 1 || args.length == 2)
 			return List.of("50", "100", "500", "1000", "2500");
+
+		if (args.length == 3) {
+			final String prefix = args[2].toLowerCase(Locale.ROOT);
+			return Arrays.stream(Material.values())
+					.filter(Material::isItem)
+					.map(material -> material.name().toLowerCase(Locale.ROOT))
+					.filter(name -> name.startsWith(prefix))
+					.collect(Collectors.toList());
+		}
+
 		return null;
 	}
 }

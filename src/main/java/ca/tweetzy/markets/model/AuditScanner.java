@@ -7,6 +7,7 @@ import ca.tweetzy.markets.api.market.core.Market;
 import ca.tweetzy.markets.api.market.core.MarketItem;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
+import org.bukkit.Material;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,12 +17,19 @@ import java.util.UUID;
 public final class AuditScanner {
 
 	public List<AuditEntry> findMatches(final double percent) {
+		return findMatches(percent, null);
+	}
+
+	public List<AuditEntry> findMatches(final double percent, final Material materialFilter) {
 		final boolean overpricedMode = percent >= 100;
 		final double multiplier = percent / 100.0;
 		final List<MarketItem> snapshot = new ArrayList<>(Markets.getCategoryItemManager().getManagerContent());
 		final List<AuditEntry> matches = new ArrayList<>();
 
 		for (final MarketItem marketItem : snapshot) {
+			if (materialFilter != null && marketItem.getItem().getType() != materialFilter)
+				continue;
+
 			if (!WorthPriceLimiter.isVaultCurrency(marketItem.getCurrency()))
 				continue;
 

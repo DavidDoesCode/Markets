@@ -1183,6 +1183,8 @@ public final class Translations extends TranslationManager {
 	public static TranslationEntry AUDIT_SORT_HIGHEST_RATIO = create("info.audit sort type.highest ratio", "&eHighest Ratio");
 	public static TranslationEntry AUDIT_SORT_LOWEST_PRICE = create("info.audit sort type.lowest price", "&eLowest Price");
 	public static TranslationEntry AUDIT_SORT_LOWEST_RATIO = create("info.audit sort type.lowest ratio", "&eLowest Ratio");
+	public static TranslationEntry AUDIT_SORT_HIGHEST_QTY = create("info.audit sort type.highest qty", "&eHighest Qty");
+	public static TranslationEntry AUDIT_SORT_LOWEST_QTY = create("info.audit sort type.lowest qty", "&eLowest Qty");
 
 	public static TranslationEntry WORTH_AUDIT_UNAVAILABLE = create("error.worth.audit.unavailable", "&cEssentials worth is not available. Cannot run an audit.");
 	public static TranslationEntry WORTH_AUDIT_INVALID = create("error.worth.audit.invalid", "&cPlease provide a valid positive percent value.");
