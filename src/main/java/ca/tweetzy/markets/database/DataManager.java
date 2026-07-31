@@ -568,6 +568,26 @@ public final class DataManager extends DataManagerAbstract {
 		}));
 	}
 
+	public void updateOfflineItemPayment(@NonNull final Payment payment, final Callback<Boolean> callback) {
+		this.runAsync(() -> this.databaseConnector.connect(connection -> {
+			final String query = "UPDATE " + this.getTablePrefix() + "offline_payment SET amount = ? WHERE id = ?";
+
+			try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+				preparedStatement.setDouble(1, payment.getAmount());
+				preparedStatement.setString(2, payment.getId().toString());
+
+				int result = preparedStatement.executeUpdate();
+
+				if (callback != null)
+					callback.accept(null, result > 0);
+
+			} catch (Exception e) {
+				e.printStackTrace();
+				resolveCallback(callback, e);
+			}
+		}));
+	}
+
 	public void createOffer(@NonNull final Offer offer, final Callback<Offer> callback) {
 		this.runAsync(() -> this.databaseConnector.connect(connection -> {
 

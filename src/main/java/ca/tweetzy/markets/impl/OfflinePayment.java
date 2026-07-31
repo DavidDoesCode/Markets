@@ -17,7 +17,7 @@ public final class OfflinePayment implements Payment {
 	private final UUID uuid;
 	private final UUID paymentFor;
 	private final ItemStack currency;
-	private final double amount;
+	private double amount;
 	private final String reason;
 	private final long receivedAt;
 
@@ -39,6 +39,11 @@ public final class OfflinePayment implements Payment {
 	@Override
 	public double getAmount() {
 		return this.amount;
+	}
+
+	@Override
+	public void setAmount(double amount) {
+		this.amount = amount;
 	}
 
 	@Override
@@ -71,6 +76,14 @@ public final class OfflinePayment implements Payment {
 				Markets.getOfflineItemPaymentManager().remove(this.uuid);
 			}
 
+			if (syncResult != null)
+				syncResult.accept(error == null ? updateStatus ? SynchronizeResult.SUCCESS : SynchronizeResult.FAILURE : SynchronizeResult.FAILURE);
+		});
+	}
+
+	@Override
+	public void sync(@Nullable Consumer<SynchronizeResult> syncResult) {
+		Markets.getDataManager().updateOfflineItemPayment(this, (error, updateStatus) -> {
 			if (syncResult != null)
 				syncResult.accept(error == null ? updateStatus ? SynchronizeResult.SUCCESS : SynchronizeResult.FAILURE : SynchronizeResult.FAILURE);
 		});

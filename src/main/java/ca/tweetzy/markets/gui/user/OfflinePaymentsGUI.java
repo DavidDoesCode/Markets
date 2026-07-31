@@ -4,12 +4,14 @@ import ca.tweetzy.flight.gui.Gui;
 import ca.tweetzy.flight.gui.events.GuiClickEvent;
 import ca.tweetzy.flight.gui.helper.InventoryBorder;
 import ca.tweetzy.flight.settings.TranslationManager;
+import ca.tweetzy.flight.utils.Common;
 import ca.tweetzy.flight.utils.QuickItem;
 import ca.tweetzy.flight.utils.TimeUtil;
 import ca.tweetzy.markets.Markets;
 import ca.tweetzy.markets.api.SynchronizeResult;
 import ca.tweetzy.markets.api.currency.Payment;
 import ca.tweetzy.markets.gui.MarketsPagedGUI;
+import ca.tweetzy.markets.model.WorthPriceLimiter;
 import ca.tweetzy.markets.settings.Settings;
 import ca.tweetzy.markets.settings.Translations;
 import lombok.NonNull;
@@ -62,10 +64,32 @@ public final class OfflinePaymentsGUI extends MarketsPagedGUI<Payment> {
 
 	@Override
 	protected void onClick(Payment payment, GuiClickEvent click) {
+		final int total = (int) payment.getAmount();
+		final int maxCollect = WorthPriceLimiter.getMaxPurchaseQuantity(payment.getCurrency());
+		final int collectQty = Math.min(total, maxCollect);
+		final boolean partial = collectQty < total;
+
+		if (partial) {
+			final double previousAmount = payment.getAmount();
+			payment.setAmount(total - collectQty);
+			payment.sync(result -> {
+				if (result == SynchronizeResult.FAILURE) {
+					payment.setAmount(previousAmount);
+					return;
+				}
+				Markets.getCurrencyManager().deposit(click.player, payment.getCurrency(), collectQty);
+				Common.tell(click.player, TranslationManager.string(click.player, Translations.PAYMENT_COLLECTED_PARTIAL,
+						"collected_amount", collectQty,
+						"remaining_amount", total - collectQty));
+				click.gui.exit();
+			});
+			return;
+		}
+
 		payment.unStore(result -> {
 			if (result == SynchronizeResult.FAILURE) return;
+			Markets.getCurrencyManager().deposit(click.player, payment.getCurrency(), collectQty);
 			click.manager.showGUI(click.player, new OfflinePaymentsGUI(this.parent, click.player, this.targetUuid, this.targetName));
-			Markets.getCurrencyManager().deposit(click.player, payment.getCurrency(), (int) payment.getAmount());
 		});
 	}
 

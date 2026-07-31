@@ -85,6 +85,8 @@ public final class Translations extends TranslationManager {
 	public static TranslationEntry OFFER_ACCEPTED = create("info.offer.accepted", "&b%owner_name% &eaccepted your offer on &e%market_item_name%");
 	public static TranslationEntry OFFER_ACCEPTED_PAYMENT = create("info.offer.accepted payment", "&eThe offer request was accepted");
 	public static TranslationEntry REQUEST_PAYMENT = create("info.request.payment", "&eA request was completed");
+	public static TranslationEntry PAYMENT_COLLECTED_PARTIAL = create("info.payment.collected partial",
+			"&eCollected &fx&a%collected_amount%&e. &7&fx&a%remaining_amount% &7remain — put items away, then collect again.");
 	public static TranslationEntry REQUEST_FULFILLED = create("info.request.fulfilled", "&b%fulfill_name% &efulfilled your request for &e%request_item_name%");
 	public static TranslationEntry REQUEST_FULFILLED_FILLER = create("info.request.filler fulfilled", "&aSuccessfully fulfilled &b%fulfill_name%&a's request for &e%request_item_name%");
 
@@ -1225,7 +1227,8 @@ public final class Translations extends TranslationManager {
 			"&d&lReceived On",
 			"&e%payment_date%",
 			"",
-			"&e&l%left_click% &7to collect payment"
+			"&e&l%left_click% &7to collect payment",
+			"&7Large amounts are collected in parts"
 	);
 
 	public static TranslationEntry GUI_OFFER_CREATE_TITLE = create("gui.offer creation.title", "&eMarkets &f- &7Send an Offer");
