@@ -126,7 +126,8 @@ public final class Translations extends TranslationManager {
 	public static TranslationEntry PROMPT_NEW_CATEGORY_SUBTITLE = create("prompts.new category.subtitle", "&fEnter new category id into chat");
 
 	public static TranslationEntry PROMPT_ITEM_PRICE_TITLE = create("prompts.item price.title", "<GRADIENT:65B1B4>&LItem Price</GRADIENT:2B6F8A>");
-	public static TranslationEntry PROMPT_ITEM_PRICE_SUBTITLE = create("prompts.item price.subtitle", "&fEnter item price into chat");
+	public static TranslationEntry PROMPT_ITEM_PRICE_SUBTITLE = create("prompts.item price.subtitle", "&fEnter price, or cancel / 0 / /market to go back");
+	public static TranslationEntry LISTING_DRAFT_RETURNED = create("info.listing draft returned", "&eCancelled listing draft");
 
 	public static TranslationEntry PROMPT_MARKET_NAME_TITLE = create("prompts.market name.title", "<GRADIENT:65B1B4>&LMarket Name</GRADIENT:2B6F8A>");
 	public static TranslationEntry PROMPT_MARKET_NAME_SUBTITLE = create("prompts.market name.subtitle", "&fEnter new market name into chat");

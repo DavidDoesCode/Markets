@@ -27,7 +27,15 @@ import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+
 public final class CategoryNewItemGUI extends MarketsBaseGUI {
+
+	private static final Map<UUID, AwaitingPrice> AWAITING_PRICE = new ConcurrentHashMap<>();
 
 	private final Player player;
 	private final Market market;
@@ -37,6 +45,19 @@ public final class CategoryNewItemGUI extends MarketsBaseGUI {
 	private Boolean clickLock = false;
 	private ItemStack pendingItem = null;
 	private boolean suppressItemReturn = false;
+
+	private static final class AwaitingPrice {
+		private final Market market;
+		private final Category category;
+		private final MarketItem marketItem;
+		private TitleInput input;
+
+		private AwaitingPrice(@NonNull final Market market, @NonNull final Category category, @NonNull final MarketItem marketItem) {
+			this.market = market;
+			this.category = category;
+			this.marketItem = marketItem;
+		}
+	}
 
 	public CategoryNewItemGUI(@NonNull final Player player, @NonNull final Market market, @NonNull final Category category, final MarketItem marketItem) {
 		super(new MarketCategoryEditGUI(player, market, category), player, TranslationManager.string(Translations.GUI_CATEGORY_ADD_ITEM_TITLE, "category_name", category.getName()), 6);
@@ -121,6 +142,96 @@ public final class CategoryNewItemGUI extends MarketsBaseGUI {
 		manager.showGUI(player, new CategoryNewItemGUI(this.player, this.market, this.category, this.marketItem));
 	}
 
+	/**
+	 * Reopen add-item GUI using the in-memory draft (slot is empty after TitleInput exit).
+	 * New GUI instance starts with suppressItemReturn=false so closing returns the item.
+	 */
+	private void reopenKeepingDraft(@NonNull final Player player, @NonNull final GuiManager manager) {
+		clearAwaitingPrice(player.getUniqueId());
+		this.suppressItemReturn = true;
+		manager.showGUI(player, new CategoryNewItemGUI(this.player, this.market, this.category, this.marketItem));
+	}
+
+	public static boolean isAwaitingPrice(@NonNull final UUID playerId) {
+		return AWAITING_PRICE.containsKey(playerId);
+	}
+
+	public static void clearAwaitingPrice(@NonNull final UUID playerId) {
+		AWAITING_PRICE.remove(playerId);
+	}
+
+	/**
+	 * Close price TitleInput and reopen add GUI without changing price (e.g. /market).
+	 */
+	public static void cancelPriceInputToGui(@NonNull final Player player) {
+		final AwaitingPrice awaiting = AWAITING_PRICE.get(player.getUniqueId());
+		if (awaiting == null)
+			return;
+
+		if (awaiting.input != null) {
+			awaiting.input.close(false);
+			return;
+		}
+
+		AWAITING_PRICE.remove(player.getUniqueId());
+		if (player.isOnline()) {
+			Markets.getGuiManager().showGUI(player, new CategoryNewItemGUI(player, awaiting.market, awaiting.category, awaiting.marketItem));
+		} else {
+			createPaymentFromDraft(player.getUniqueId(), awaiting);
+		}
+	}
+
+	/**
+	 * Move draft item into Collect Payments. Safe to call multiple times (first wins).
+	 */
+	public static void recoverDraftToPayments(@NonNull final UUID playerId) {
+		final AwaitingPrice awaiting = AWAITING_PRICE.remove(playerId);
+		if (awaiting == null)
+			return;
+
+		createPaymentFromDraft(playerId, awaiting);
+	}
+
+	private static void createPaymentFromDraft(@NonNull final UUID playerId, @NonNull final AwaitingPrice awaiting) {
+		final ItemStack draftItem = awaiting.marketItem.getItem();
+		if (draftItem == null || draftItem.getType() == CompMaterial.AIR.get())
+			return;
+
+		final int quantity = Math.max(1, draftItem.getAmount());
+		final ItemStack template = QuickItem.of(draftItem.clone()).amount(1).make();
+		awaiting.marketItem.setItem(CompMaterial.AIR.parseItem());
+
+		Markets.getOfflineItemPaymentManager().create(
+				playerId,
+				template,
+				quantity,
+				TranslationManager.string(Translations.LISTING_DRAFT_RETURNED),
+				success -> {
+					if (!success)
+						Common.log("&cFailed to recover cancelled listing draft for player&f: &e" + playerId);
+				}
+		);
+	}
+
+	private static boolean isPriceCancelToken(@NonNull final String input) {
+		final String value = input.trim().toLowerCase(Locale.ROOT);
+		if (value.equals("cancel") || value.equals("0"))
+			return true;
+
+		String command = value.startsWith("/") ? value.substring(1) : value;
+		if (command.contains(" "))
+			command = command.split("\\s+")[0];
+
+		final List<String> aliases = Settings.CMD_ALIAS_MAIN.getStringList();
+		if (aliases != null) {
+			for (final String alias : aliases) {
+				if (alias != null && alias.equalsIgnoreCase(command))
+					return true;
+			}
+		}
+		return command.equals("market") || command.equals("markets");
+	}
+
 	@Override
 	protected void draw() {
 
@@ -147,17 +258,39 @@ public final class CategoryNewItemGUI extends MarketsBaseGUI {
 
 			click.gui.exit();
 
-			new TitleInput(Markets.getInstance(), click.player, TranslationManager.string(click.player, Translations.PROMPT_ITEM_PRICE_TITLE), TranslationManager.string(click.player, Translations.PROMPT_ITEM_PRICE_SUBTITLE)) {
+			final AwaitingPrice awaiting = new AwaitingPrice(CategoryNewItemGUI.this.market, CategoryNewItemGUI.this.category, CategoryNewItemGUI.this.marketItem);
+
+			final TitleInput priceInput = new TitleInput(Markets.getInstance(), click.player, TranslationManager.string(click.player, Translations.PROMPT_ITEM_PRICE_TITLE), TranslationManager.string(click.player, Translations.PROMPT_ITEM_PRICE_SUBTITLE)) {
 
 				@Override
 				public void onExit(Player player) {
+					// Quit listener may have already recovered the draft (PlayerQuitEvent runs while still "online")
+					final AwaitingPrice awaiting = AWAITING_PRICE.remove(player.getUniqueId());
+					if (awaiting == null)
+						return;
+
+					if (!player.isOnline()) {
+						createPaymentFromDraft(player.getUniqueId(), awaiting);
+						return;
+					}
+
 					CategoryNewItemGUI.this.suppressItemReturn = true;
-					click.manager.showGUI(click.player, CategoryNewItemGUI.this);
+					click.manager.showGUI(click.player, new CategoryNewItemGUI(
+							CategoryNewItemGUI.this.player,
+							awaiting.market,
+							awaiting.category,
+							awaiting.marketItem
+					));
 				}
 
 				@Override
 				public boolean onResult(String string) {
 					string = ChatColor.stripColor(string);
+
+					if (isPriceCancelToken(string)) {
+						CategoryNewItemGUI.this.reopenKeepingDraft(click.player, click.manager);
+						return true;
+					}
 
 					if (!NumberUtils.isNumber(string)) {
 						Common.tell(click.player, TranslationManager.string(click.player, Translations.NOT_A_NUMBER, "value", string));
@@ -176,10 +309,13 @@ public final class CategoryNewItemGUI extends MarketsBaseGUI {
 
 					CategoryNewItemGUI.this.marketItem.setPrice(price);
 
-					CategoryNewItemGUI.this.reopen(click.player, click.manager);
+					CategoryNewItemGUI.this.reopenKeepingDraft(click.player, click.manager);
 					return true;
 				}
 			};
+
+			awaiting.input = priceInput;
+			AWAITING_PRICE.put(click.player.getUniqueId(), awaiting);
 		});
 
 		drawPriceForAllButton();

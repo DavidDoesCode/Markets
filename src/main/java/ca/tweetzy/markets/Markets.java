@@ -14,6 +14,7 @@ import ca.tweetzy.markets.database.DataManager;
 import ca.tweetzy.markets.database.migrations.*;
 import ca.tweetzy.markets.impl.MarketsAPIImpl;
 import ca.tweetzy.markets.listeners.MarketTransactionListener;
+import ca.tweetzy.markets.listeners.NewItemPriceInputListener;
 import ca.tweetzy.markets.listeners.PlayerJoinListener;
 import ca.tweetzy.markets.model.DatabaseBackupTask;
 import ca.tweetzy.markets.model.manager.*;
@@ -122,6 +123,7 @@ public final class Markets extends FlightPlugin {
 		// listeners
 		getServer().getPluginManager().registerEvents(new PlayerJoinListener(), this);
 		getServer().getPluginManager().registerEvents(new MarketTransactionListener(), this);
+		getServer().getPluginManager().registerEvents(new NewItemPriceInputListener(), this);
 		this.marketManager.registerLiteBansListeners();
 
 		// setup commands
