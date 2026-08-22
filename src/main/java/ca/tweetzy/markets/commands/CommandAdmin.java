@@ -59,6 +59,8 @@ public final class CommandAdmin extends Command {
 					return BannedShopsAdminCommand.execute(sender, args);
 				case "closedshops":
 					return ClosedShopsAdminCommand.execute(sender, args);
+				case "searchorder":
+					return SearchOrderAdminCommand.execute(sender, args);
 			}
 			return ReturnType.SUCCESS;
 		}
@@ -77,6 +79,9 @@ public final class CommandAdmin extends Command {
 
 		if (args.length >= 2 && args[0].equalsIgnoreCase("auditclear"))
 			return AuditClearAdminCommand.execute(sender, args);
+
+		if (args.length >= 2 && args[0].equalsIgnoreCase("searchorder"))
+			return SearchOrderAdminCommand.execute(sender, args);
 
 		if (args.length >= 2) {
 			final Player target = Bukkit.getPlayerExact(args[0]);
@@ -123,7 +128,7 @@ public final class CommandAdmin extends Command {
 	@Override
 	protected List<String> tab(CommandSender sender, String... args) {
 		if (args.length == 1) {
-			final List<String> options = new ArrayList<>(List.of("collecttax", "shipping", "worth", "minbalance", "audit", "auditclear", "lockedshops", "bannedshops", "closedshops"));
+			final List<String> options = new ArrayList<>(List.of("collecttax", "shipping", "worth", "minbalance", "audit", "auditclear", "lockedshops", "bannedshops", "closedshops", "searchorder"));
 			options.addAll(Bukkit.getOnlinePlayers().stream().map(OfflinePlayer::getName).collect(Collectors.toList()));
 			return options;
 		}
@@ -156,6 +161,12 @@ public final class CommandAdmin extends Command {
 			final List<String> auditClearTab = AuditClearAdminCommand.tab(args);
 			if (auditClearTab != null)
 				return auditClearTab;
+		}
+
+		if (args[0].equalsIgnoreCase("searchorder")) {
+			final List<String> searchOrderTab = SearchOrderAdminCommand.tab(args);
+			if (searchOrderTab != null)
+				return searchOrderTab;
 		}
 
 		if (args.length == 2)

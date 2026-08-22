@@ -82,6 +82,7 @@ public final class Settings extends FlightSettings {
 	public static ConfigEntry AUTO_REMOVE_ITEM_WHEN_OUT_OF_STOCK = create("settings.remove market item when out of stock", false).withComment("If true, then when an item's stock count hits zero, it will be removed from the market.");
 	public static ConfigEntry MIN_PURCHASES_BEFORE_REVIEW = create("settings.minimum purchases before review", 1).withComment("How many items must a player buy from a market before they can leave a review?");
 	public static ConfigEntry ENABLE_SEARCH_IN_MARKETS = create("settings.enable search in markets", true).withComment("If true, the search button will be shown in the market content view/search");
+	public static ConfigEntry SEARCH_RESULT_ORDER = create("settings.search result order", "DEFAULT").withComment("How global search results are ordered. DEFAULT = oldest shops first (current). SHUFFLE = shuffle player shops once per plugin uptime. SHUFFLE_ROUND_ROBIN = shuffle shops then interleave one matching item per shop.");
 	public static ConfigEntry ITEMS_ARE_WHOLESALE_BY_DEFAULT = create("settings.default new items to wholesale", false).withComment("If true, any new items added to a market will be set as a wholesale item.");
 	public static ConfigEntry DISABLE_REVIEWS = create("settings.disable reviews", false).withComment("If true, ratings/reviews will be disabled");
 	public static ConfigEntry DISABLE_OFFERS = create("settings.disable offers", false).withComment("If true, offers will be disabled");

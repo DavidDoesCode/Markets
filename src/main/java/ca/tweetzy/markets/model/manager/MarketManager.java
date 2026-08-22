@@ -5,6 +5,7 @@ import ca.tweetzy.flight.utils.Common;
 import ca.tweetzy.flight.utils.Filterer;
 import ca.tweetzy.markets.Markets;
 import ca.tweetzy.markets.api.manager.ListManager;
+import ca.tweetzy.markets.api.market.SearchResultOrder;
 import ca.tweetzy.markets.api.market.core.AbstractMarket;
 import ca.tweetzy.markets.api.market.core.Category;
 import ca.tweetzy.markets.api.market.core.Market;
@@ -32,6 +33,8 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.profile.PlayerProfile;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -39,6 +42,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -54,6 +58,7 @@ public final class MarketManager extends ListManager<Market> {
 	private final AtomicBoolean liteBansRefreshInFlight = new AtomicBoolean(false);
 	private long bannedCacheLastRefresh = 0L;
 	private boolean liteBansListenersRegistered = false;
+	private final List<UUID> searchMarketOrder = Collections.synchronizedList(new ArrayList<>());
 
 	public MarketManager() {
 		super("Market");
@@ -281,12 +286,22 @@ public final class MarketManager extends ListManager<Market> {
 	}
 
 	public List<MarketItem> getSearchResults(@NonNull final Player searcher, @NonNull final String keywords) {
-		final List<MarketItem> marketItems = new ArrayList<>();
-		final List<Market> possibleSearchMarkets = getOpenMarketsExclusive(searcher).stream().filter(market -> !market.getBannedUsers().contains(searcher.getUniqueId())).toList();
-//		final List<Market> possibleSearchMarkets = getOpenMarketsInclusive();
+		ensureSearchMarketOrder();
 
-		// populate items into search list
-		possibleSearchMarkets.forEach(market -> market.getCategories().forEach(category -> marketItems.addAll(category.getInStockItems())));
+		final List<Market> possibleSearchMarkets = getOpenMarketsExclusive(searcher).stream()
+				.filter(market -> !market.getBannedUsers().contains(searcher.getUniqueId()))
+				.collect(Collectors.toList());
+
+		final SearchResultOrder order = SearchResultOrder.fromConfig();
+		final List<Market> orderedMarkets = order.shufflesShops()
+				? sortBySearchMarketOrder(possibleSearchMarkets)
+				: possibleSearchMarkets;
+
+		if (order.isRoundRobin())
+			return collectSearchResultsRoundRobin(orderedMarkets, keywords);
+
+		final List<MarketItem> marketItems = new ArrayList<>();
+		orderedMarkets.forEach(market -> market.getCategories().forEach(category -> marketItems.addAll(category.getInStockItems())));
 		return marketItems.stream().filter(marketItem -> matchesSearch(keywords, marketItem.getItem())).collect(Collectors.toList());
 	}
 
@@ -446,5 +461,141 @@ public final class MarketManager extends ListManager<Market> {
 	public boolean isOwnerServerBannedAdmin(@NonNull final Market market) {
 		refreshBanCacheIfStale();
 		return this.bannedOwnerUUIDs.contains(market.getOwnerUUID()) || this.bannedOwnerNames.contains(market.getOwnerName().toLowerCase());
+	}
+
+	@Override
+	public void add(@NonNull final Market market) {
+		super.add(market);
+		insertIntoSearchOrder(market);
+	}
+
+	@Override
+	public void remove(@NonNull final Market market) {
+		super.remove(market);
+		this.searchMarketOrder.remove(market.getId());
+	}
+
+	@Override
+	public void clear() {
+		super.clear();
+		this.searchMarketOrder.clear();
+	}
+
+	/**
+	 * Rebuilds the stable search shop order from the current in-memory markets.
+	 * Shuffle modes permute player shops once (server market stays first). DEFAULT keeps manager load order.
+	 */
+	public void rebuildSearchMarketOrder() {
+		final List<Market> markets = getManagerContent();
+		final SearchResultOrder order = SearchResultOrder.fromConfig();
+
+		UUID serverId = null;
+		final List<UUID> playerIds = new ArrayList<>();
+		for (Market market : markets) {
+			if (market.isServerMarket()) {
+				if (serverId == null)
+					serverId = market.getId();
+				continue;
+			}
+			playerIds.add(market.getId());
+		}
+
+		final List<UUID> rebuilt;
+		if (order.shufflesShops()) {
+			Collections.shuffle(playerIds);
+			rebuilt = new ArrayList<>(markets.size());
+			if (serverId != null)
+				rebuilt.add(serverId);
+			rebuilt.addAll(playerIds);
+		} else {
+			rebuilt = new ArrayList<>(markets.size());
+			for (Market market : markets)
+				rebuilt.add(market.getId());
+		}
+
+		synchronized (this.searchMarketOrder) {
+			this.searchMarketOrder.clear();
+			this.searchMarketOrder.addAll(rebuilt);
+		}
+	}
+
+	private void ensureSearchMarketOrder() {
+		if (this.searchMarketOrder.isEmpty() && !getManagerContent().isEmpty())
+			rebuildSearchMarketOrder();
+	}
+
+	private void insertIntoSearchOrder(@NonNull final Market market) {
+		final UUID id = market.getId();
+		final UUID serverId = findServerMarketId();
+
+		synchronized (this.searchMarketOrder) {
+			if (this.searchMarketOrder.contains(id))
+				return;
+
+			final SearchResultOrder order = SearchResultOrder.fromConfig();
+			if (!order.shufflesShops()) {
+				this.searchMarketOrder.add(id);
+				return;
+			}
+
+			if (market.isServerMarket()) {
+				this.searchMarketOrder.add(0, id);
+				return;
+			}
+
+			int from = 0;
+			if (serverId != null && !this.searchMarketOrder.isEmpty() && this.searchMarketOrder.get(0).equals(serverId))
+				from = 1;
+
+			final int bound = this.searchMarketOrder.size() + 1;
+			final int index = from >= bound ? this.searchMarketOrder.size() : ThreadLocalRandom.current().nextInt(from, bound);
+			this.searchMarketOrder.add(index, id);
+		}
+	}
+
+	private UUID findServerMarketId() {
+		for (Market existing : getManagerContent()) {
+			if (existing.isServerMarket())
+				return existing.getId();
+		}
+		return null;
+	}
+
+	private List<Market> sortBySearchMarketOrder(@NonNull final List<Market> markets) {
+		final Map<UUID, Integer> index = new HashMap<>();
+		synchronized (this.searchMarketOrder) {
+			for (int i = 0; i < this.searchMarketOrder.size(); i++)
+				index.put(this.searchMarketOrder.get(i), i);
+		}
+
+		final List<Market> sorted = new ArrayList<>(markets);
+		sorted.sort(Comparator.comparingInt(market -> index.getOrDefault(market.getId(), Integer.MAX_VALUE)));
+		return sorted;
+	}
+
+	private List<MarketItem> collectSearchResultsRoundRobin(@NonNull final List<Market> markets, @NonNull final String keywords) {
+		final List<List<MarketItem>> perShop = new ArrayList<>();
+		int max = 0;
+
+		for (Market market : markets) {
+			final List<MarketItem> matches = new ArrayList<>();
+			for (Category category : market.getCategories()) {
+				for (MarketItem item : category.getInStockItems()) {
+					if (matchesSearch(keywords, item.getItem()))
+						matches.add(item);
+				}
+			}
+			perShop.add(matches);
+			max = Math.max(max, matches.size());
+		}
+
+		final List<MarketItem> result = new ArrayList<>();
+		for (int i = 0; i < max; i++) {
+			for (List<MarketItem> shopItems : perShop) {
+				if (i < shopItems.size())
+					result.add(shopItems.get(i));
+			}
+		}
+		return result;
 	}
 }

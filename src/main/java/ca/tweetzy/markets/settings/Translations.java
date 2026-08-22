@@ -1182,6 +1182,11 @@ public final class Translations extends TranslationManager {
 	public static TranslationEntry WORTH_ADMIN_EXCLUDE_EXISTS = create("error.worth.admin.exclude.exists", "&c&e%material% &cis already on the exclude list.");
 	public static TranslationEntry WORTH_ADMIN_EXCLUDE_MISSING = create("error.worth.admin.exclude.missing", "&c&e%material% &cis not on the exclude list.");
 
+	public static TranslationEntry SEARCH_ORDER_ADMIN_USAGE = create("error.search order.admin.usage", "&cUsage: /markets admin searchorder [default|shuffle|shuffle_round_robin]");
+	public static TranslationEntry SEARCH_ORDER_ADMIN_INVALID = create("error.search order.admin.invalid", "&cInvalid search order. Use DEFAULT, SHUFFLE, or SHUFFLE_ROUND_ROBIN.");
+	public static TranslationEntry SEARCH_ORDER_ADMIN_INFO = create("info.search order.admin.info", "&7Search result order&f: &e%search_order%");
+	public static TranslationEntry SEARCH_ORDER_ADMIN_UPDATED = create("info.search order.admin.updated", "&aSearch result order set to &e%search_order%&a.");
+
 	public static TranslationEntry AUDIT_SORT_HIGHEST_PRICE = create("info.audit sort type.highest price", "&eHighest Priced");
 	public static TranslationEntry AUDIT_SORT_HIGHEST_RATIO = create("info.audit sort type.highest ratio", "&eHighest Ratio");
 	public static TranslationEntry AUDIT_SORT_LOWEST_PRICE = create("info.audit sort type.lowest price", "&eLowest Price");

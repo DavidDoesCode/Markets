@@ -4,6 +4,7 @@ import ca.tweetzy.flight.command.AllowedExecutor;
 import ca.tweetzy.flight.command.Command;
 import ca.tweetzy.flight.command.ReturnType;
 import ca.tweetzy.flight.utils.Common;
+import ca.tweetzy.markets.Markets;
 import ca.tweetzy.markets.settings.Settings;
 import ca.tweetzy.markets.settings.Translations;
 import org.bukkit.command.CommandSender;
@@ -21,6 +22,7 @@ public final class CommandReload extends Command {
 		Settings.init();
 		Translations.init();
 		Common.setPrefix(Settings.PREFIX.getStringOr("&8[&EMarkets&8]"));
+		Markets.getMarketManager().rebuildSearchMarketOrder();
 		return ReturnType.SUCCESS;
 	}
 
