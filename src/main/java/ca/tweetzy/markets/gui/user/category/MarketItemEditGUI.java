@@ -141,6 +141,68 @@ public final class MarketItemEditGUI extends MarketsBaseGUI {
 				"max_stock", Markets.getPlayerManager().getMaxStockPerListing(player)));
 	}
 
+	private int matchingCursorAmount(@NonNull final Player player, @NonNull final ItemStack expected) {
+		final ItemStack cursor = player.getItemOnCursor();
+		if (cursor == null || cursor.getType() == CompMaterial.AIR.get() || !cursor.isSimilar(expected))
+			return 0;
+		return cursor.getAmount();
+	}
+
+	/**
+	 * Removes up to {@code amount} of {@code expected} from the real cursor after the click has settled.
+	 * Returns 0 when the cursor does not have that stack, and restores the cursor if the removal does not stick.
+	 */
+	private int takeMatchingFromCursor(@NonNull final Player player, @NonNull final ItemStack expected, final int amount) {
+		final int before = matchingCursorAmount(player, expected);
+		if (before <= 0 || amount <= 0)
+			return 0;
+
+		final int taken = Math.min(amount, before);
+		final ItemStack cursor = player.getItemOnCursor();
+		final ItemStack snapshot = cursor.clone();
+		if (cursor.getAmount() == taken)
+			player.setItemOnCursor(CompMaterial.AIR.parseItem());
+		else {
+			final ItemStack leftovers = cursor.clone();
+			leftovers.setAmount(cursor.getAmount() - taken);
+			player.setItemOnCursor(leftovers);
+		}
+
+		if (before - matchingCursorAmount(player, expected) < taken) {
+			player.setItemOnCursor(snapshot);
+			return 0;
+		}
+		return taken;
+	}
+
+	private boolean stillHoldsDeposit(@NonNull final Player player, @NonNull final ItemStack expected, final int amount) {
+		if (amount <= 0)
+			return false;
+		final int held = PlayerUtil.getItemCountInPlayerInventory(player, expected) + matchingCursorAmount(player, expected);
+		return held >= amount;
+	}
+
+	private void creditTakenDeposit(@NonNull final Player player, @NonNull final ItemStack expected, final int taken) {
+		final int previousStock = this.marketItem.getStock();
+		this.marketItem.setStock(previousStock + taken);
+		this.marketItem.sync(result -> Bukkit.getScheduler().runTask(Markets.getInstance(), () -> {
+			if (result != SynchronizeResult.SUCCESS) {
+				this.marketItem.setStock(previousStock);
+				if (player.isOnline())
+					giveWithdrawItems(player, expected, taken);
+				this.playerLock = false;
+				return;
+			}
+
+			if (player.isOnline()) {
+				drawItemDisplay();
+				drawAddOneButton();
+				drawStockButton();
+			}
+			this.playerLock = false;
+		}));
+	}
+
 	private void giveWithdrawItems(@NonNull final Player player, @NonNull final ItemStack template, final int qty) {
 		int remaining = qty;
 		final int maxStack = Math.max(1, template.getMaxStackSize());
@@ -239,26 +301,35 @@ public final class MarketItemEditGUI extends MarketsBaseGUI {
 						return;
 					}
 
-					final ItemStack toDeposit = cursor.clone();
-					toDeposit.setAmount(toAdd);
+					final Player player = click.player;
+					final boolean bedrock = FloodGateCheck.isBedrock(player);
+					final ItemStack expected = cursor.clone();
+					final int wouldCredit = toAdd;
 
-					this.marketItem.addStock(toDeposit, result -> {
-						if (result == SynchronizeResult.FAILURE) {
+					Bukkit.getScheduler().runTask(Markets.getInstance(), () -> {
+						if (!player.isOnline()) {
 							playerLock = false;
 							return;
 						}
 
-						final int remainingOnCursor = cursor.getAmount() - toAdd;
-						if (remainingOnCursor > 0) {
-							final ItemStack leftovers = cursor.clone();
-							leftovers.setAmount(remainingOnCursor);
-							click.player.setItemOnCursor(leftovers);
-						} else {
-							click.player.setItemOnCursor(CompMaterial.AIR.parseItem());
+						final int taken = takeMatchingFromCursor(player, expected, wouldCredit);
+						if (taken > 0) {
+							creditTakenDeposit(player, expected, taken);
+							return;
 						}
-						drawItemDisplay();
-						drawAddOneButton();
-						drawStockButton();
+
+						if (bedrock && stillHoldsDeposit(player, expected, wouldCredit)) {
+							DupeDetector.logPreventedAttempt(
+									"BEDROCK_DEPOSIT_DUPE",
+									player,
+									null,
+									this.marketItem.getItem(),
+									wouldCredit,
+									this.market,
+									this.marketItem,
+									null
+							);
+						}
 						playerLock = false;
 					});
 				} else
