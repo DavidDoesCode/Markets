@@ -113,7 +113,7 @@ public final class CommandAdd extends Command {
 				marketItem.setIsAcceptingOffers(false);
 
 			Markets.getCategoryItemManager().create(category, marketItem.getItem(), marketItem.getCurrency(), marketItem.getCurrencyItem(), marketItem.getPrice(), marketItem.isPriceForAll(), marketItem.isAcceptingOffers(), infinite, created -> {
-				if (created) {
+				if (created != null) {
 					PlayerUtil.removeSpecificItemQuantityFromPlayer(player, toSell, stockAmount);
 
 					tell(player, TranslationManager.string(player, Translations.MARKET_ITEM_ADDED_TO_CATEGORY, "item_quantity", marketItem.getStock(), "item_name", ItemUtil.getItemName(toSell), "category_display_name", category.getDisplayName()));

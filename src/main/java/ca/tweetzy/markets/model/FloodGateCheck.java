@@ -30,8 +30,9 @@ public final class FloodGateCheck {
 	}
 
 	public static boolean isBedrock(@NonNull final Player player) {
-		if(player.getName().startsWith("."))
+		if (isFloodGateUser(player))
 			return true;
-		return false;
+		final String name = player.getName();
+		return name != null && name.startsWith(".");
 	}
 }

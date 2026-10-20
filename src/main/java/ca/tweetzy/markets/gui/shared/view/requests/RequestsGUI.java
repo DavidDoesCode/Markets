@@ -19,6 +19,7 @@ import ca.tweetzy.markets.gui.MarketsPagedGUI;
 import ca.tweetzy.markets.gui.shared.selector.ConfirmGUI;
 import ca.tweetzy.markets.impl.MarketRequest;
 import ca.tweetzy.markets.model.AdminActionLogger;
+import ca.tweetzy.markets.model.DupeDetector;
 import ca.tweetzy.markets.settings.Settings;
 import ca.tweetzy.markets.settings.Translations;
 import lombok.NonNull;
@@ -29,8 +30,13 @@ import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public final class RequestsGUI extends MarketsPagedGUI<Request> {
+
+	private static final Set<UUID> FULFILLING = ConcurrentHashMap.newKeySet();
 
 	private final boolean viewOwnRequests;
 	private boolean clickLock = false;
@@ -99,8 +105,19 @@ public final class RequestsGUI extends MarketsPagedGUI<Request> {
 		// Handle admin deletion with Q key (DROP click type)
 		if (click.clickType == ClickType.DROP) {
 			if (click.player.isOp() || click.player.hasPermission("markets.admin.requests")) {
+				if (FULFILLING.contains(request.getId())) {
+					Common.tell(click.player, TranslationManager.string(click.player, Translations.REQUEST_IN_PROGRESS));
+					return;
+				}
+
 				click.manager.showGUI(click.player, new ConfirmGUI(this, click.player, confirmed -> {
 					if (confirmed) {
+						if (FULFILLING.contains(request.getId())) {
+							Common.tell(click.player, TranslationManager.string(click.player, Translations.REQUEST_IN_PROGRESS));
+							click.manager.showGUI(click.player, new RequestsGUI(this.parent, click.player, this.viewOwnRequests));
+							return;
+						}
+
 						// Log admin action
 						AdminActionLogger.log(click.player.getName(), "Removed request" +
 							"Request Owner: " + request.getOwnerName() + " (" + request.getOwner() + ")" +
@@ -131,6 +148,11 @@ public final class RequestsGUI extends MarketsPagedGUI<Request> {
 
 		// Handle player cancelling their own request
 		if (request.getOwner().equals(click.player.getUniqueId())) {
+			if (FULFILLING.contains(request.getId())) {
+				Common.tell(click.player, TranslationManager.string(click.player, Translations.REQUEST_IN_PROGRESS));
+				return;
+			}
+
 			request.unStore(result -> {
 				if (result == SynchronizeResult.FAILURE) return;
 				click.manager.showGUI(click.player, new RequestsGUI(this.parent, click.player, this.viewOwnRequests));
@@ -139,117 +161,217 @@ public final class RequestsGUI extends MarketsPagedGUI<Request> {
 			return;
 		}
 
-		if(clickLock) {
-			Bukkit.getLogger().severe(click.player.getName() + " sending duplicate request fulfillment.");
+		if (clickLock || !FULFILLING.add(request.getId())) {
+			DupeDetector.logPreventedAttempt(
+					"REQUEST_DOUBLE_FULFILL",
+					click.player,
+					Bukkit.getPlayer(request.getOwner()),
+					request.getRequestItem(),
+					request.getRequestedAmount(),
+					null,
+					null,
+					"request=" + request.getId()
+			);
 			return;
-		} else
-			clickLock = true;
-
-		// ================================== FULFILL THE REQUEST ================================== //
+		}
+		clickLock = true;
 
 		final Player fulfiller = click.player;
-
-		// do they even have enough items
-		if (PlayerUtil.getItemCountInPlayerInventory(fulfiller, request.getRequestItem()) < request.getRequestedAmount()) {
+		if (!hasRequestItems(fulfiller, request)) {
 			Common.tell(fulfiller, TranslationManager.string(fulfiller, Translations.NOT_ENOUGH_ITEMS));
-			clickLock = false;
+			releaseFulfill(request);
 			return;
 		}
 
-		final String currencyPlugin = request.getCurrency().split("/")[0];
-		final String currencyName = request.getCurrency().split("/")[1];
+		final String[] parts = request.getCurrency().split("/");
+		if (parts.length < 2) {
+			releaseFulfill(request);
+			return;
+		}
 
-		// Load OfflinePlayer asynchronously to avoid blocking main thread
+		final String currencyPlugin = parts[0];
+		final String currencyName = parts[1];
+
+		// Load OfflinePlayer asynchronously to avoid blocking main thread. Balance is re-checked on the main thread.
 		Bukkit.getScheduler().runTaskAsynchronously(Markets.getInstance(), () -> {
 			final OfflinePlayer requestedOwner = Bukkit.getOfflinePlayer(request.getOwner());
-
-			// Check if requester has enough money (async)
-			final boolean hasEnoughMoney = request.isCurrencyOfItem() ?
-					Markets.getBankManager().getEntryCountByPlayer(request.getOwner(), request.getCurrencyItem()) >= (int) request.getPrice() :
-					Markets.getCurrencyManager().has(requestedOwner, currencyPlugin, currencyName, request.getPrice());
-
-			// Continue on main thread
-			Bukkit.getScheduler().runTask(Markets.getInstance(), () -> {
-				fulfillRequestMainThread(click, request, fulfiller, requestedOwner, hasEnoughMoney, currencyPlugin, currencyName);
-			});
+			Bukkit.getScheduler().runTask(Markets.getInstance(), () ->
+					fulfillRequestMainThread(click, request, fulfiller, requestedOwner, currencyPlugin, currencyName));
 		});
 	}
 
-	private void fulfillRequestMainThread(GuiClickEvent click, Request request, Player fulfiller, OfflinePlayer requestedOwner, boolean hasEnoughMoney, String currencyPlugin, String currencyName) {
-
-		if (!hasEnoughMoney) {
-			Common.tell(fulfiller, TranslationManager.string(fulfiller, Translations.REQUESTER_CANT_PAY, "requester_name", request.getOwnerName()));
-			clickLock = false;
+	private void fulfillRequestMainThread(GuiClickEvent click, Request request, Player fulfiller, OfflinePlayer requestedOwner, String currencyPlugin, String currencyName) {
+		if (!fulfiller.isOnline() || !hasRequestItems(fulfiller, request)) {
+			if (fulfiller.isOnline())
+				Common.tell(fulfiller, TranslationManager.string(fulfiller, Translations.NOT_ENOUGH_ITEMS));
+			releaseFulfill(request);
 			return;
 		}
 
 		if (request.isCurrencyOfItem()) {
-			final BankEntry entry = Markets.getBankManager().getEntryByPlayer(request.getOwner(), request.getCurrencyItem());
-			final int newTotal = entry.getQuantity() - (int) request.getPrice();
-
-			// remove or update the custom item from the requester bank
-			if (newTotal <= 0) {
-				entry.unStore(entryResult -> {
-					if (entryResult == SynchronizeResult.FAILURE) return;
+			final int charge = (int) request.getPrice();
+			if (charge <= 0) {
+				if (!removeRequestItems(fulfiller, request)) {
+					Common.tell(fulfiller, TranslationManager.string(fulfiller, Translations.NOT_ENOUGH_ITEMS));
+					releaseFulfill(request);
+					return;
+				}
+				deleteRequestThenPay(click, request, fulfiller, requestedOwner, () -> {
+				}, () -> {
 				});
-			} else {
-				entry.setQuantity(newTotal);
-				entry.sync(entryResult -> {
-					if (entryResult == SynchronizeResult.FAILURE) return;
-				});
+				return;
 			}
 
-			// give the fulfilling user their items
+			final BankEntry entry = Markets.getBankManager().getEntryByPlayer(request.getOwner(), request.getCurrencyItem());
+			if (entry == null || entry.getQuantity() < charge) {
+				Common.tell(fulfiller, TranslationManager.string(fulfiller, Translations.REQUESTER_CANT_PAY, "requester_name", request.getOwnerName()));
+				releaseFulfill(request);
+				return;
+			}
+
+			final int previous = entry.getQuantity();
+			entry.setQuantity(previous - charge);
+			entry.sync(bankResult -> Bukkit.getScheduler().runTask(Markets.getInstance(), () -> {
+				if (bankResult != SynchronizeResult.SUCCESS || !fulfiller.isOnline()) {
+					entry.setQuantity(previous);
+					entry.sync(null);
+					releaseFulfill(request);
+					return;
+				}
+
+				if (!removeRequestItems(fulfiller, request)) {
+					entry.setQuantity(previous);
+					entry.sync(null);
+					Common.tell(fulfiller, TranslationManager.string(fulfiller, Translations.NOT_ENOUGH_ITEMS));
+					releaseFulfill(request);
+					return;
+				}
+
+				deleteRequestThenPay(click, request, fulfiller, requestedOwner, () -> {
+					entry.setQuantity(previous);
+					entry.sync(null);
+				}, () -> {
+					if (entry.getQuantity() <= 0)
+						entry.unStore(null);
+
+					Markets.getOfflineItemPaymentManager().create(
+							fulfiller.getUniqueId(),
+							QuickItem.of(request.getCurrencyItem()).amount(1).make(),
+							charge,
+							TranslationManager.string(Translations.REQUEST_PAYMENT), success -> {
+							});
+				});
+			}));
+			return;
+		}
+
+		if (!Markets.getCurrencyManager().has(requestedOwner, currencyPlugin, currencyName, request.getPrice())) {
+			Common.tell(fulfiller, TranslationManager.string(fulfiller, Translations.REQUESTER_CANT_PAY, "requester_name", request.getOwnerName()));
+			releaseFulfill(request);
+			return;
+		}
+
+		if (!Markets.getCurrencyManager().withdraw(requestedOwner, currencyPlugin, currencyName, request.getPrice())) {
+			Common.tell(fulfiller, TranslationManager.string(fulfiller, Translations.REQUESTER_CANT_PAY, "requester_name", request.getOwnerName()));
+			releaseFulfill(request);
+			return;
+		}
+
+		if (!removeRequestItems(fulfiller, request)) {
+			Markets.getCurrencyManager().deposit(requestedOwner, currencyPlugin, currencyName, request.getPrice());
+			Common.tell(fulfiller, TranslationManager.string(fulfiller, Translations.NOT_ENOUGH_ITEMS));
+			releaseFulfill(request);
+			return;
+		}
+
+		deleteRequestThenPay(click, request, fulfiller, requestedOwner, () ->
+				Markets.getCurrencyManager().deposit(requestedOwner, currencyPlugin, currencyName, request.getPrice()), () ->
+				Markets.getCurrencyManager().deposit(fulfiller, currencyPlugin, currencyName, request.getPrice()));
+	}
+
+	private void deleteRequestThenPay(GuiClickEvent click, Request request, Player fulfiller, OfflinePlayer requestedOwner, Runnable refund, Runnable payFulfiller) {
+		request.unStore(deleteResult -> Bukkit.getScheduler().runTask(Markets.getInstance(), () -> {
+			if (deleteResult != SynchronizeResult.SUCCESS) {
+				giveItems(fulfiller, request.getRequestItem(), request.getRequestedAmount());
+				refund.run();
+				releaseFulfill(request);
+				return;
+			}
+
+			payFulfiller.run();
 			Markets.getOfflineItemPaymentManager().create(
-					fulfiller.getUniqueId(),
-					QuickItem.of(request.getCurrencyItem()).amount(1).make(),
-					(int) request.getPrice(),
+					request.getOwner(),
+					QuickItem.of(request.getRequestItem()).amount(1).make(),
+					request.getRequestedAmount(),
 					TranslationManager.string(Translations.REQUEST_PAYMENT), success -> {
 					});
 
-		} else {
-			Markets.getCurrencyManager().deposit(fulfiller, currencyPlugin, currencyName, request.getPrice());
-			Markets.getCurrencyManager().withdraw(requestedOwner, currencyPlugin, currencyName, request.getPrice());
+			final Player requestOwnerPlayer = Bukkit.getPlayer(request.getOwner());
+			if (requestOwnerPlayer != null) {
+				Common.tell(requestOwnerPlayer, TranslationManager.string(requestOwnerPlayer, Translations.REQUEST_FULFILLED, "fulfill_name", fulfiller.getName(), "request_item_name", ItemUtil.getItemName(request.getRequestItem())));
+			}
+
+			Common.tell(click.player, TranslationManager.string(Translations.REQUEST_FULFILLED_FILLER,
+					"request_item_name", ItemUtil.getItemName(request.getRequestItem()),
+					"fulfill_name", request.getOwnerName()
+			));
+
+			Bukkit.getServer().getPluginManager().callEvent(new MarketTransactionEvent(
+					fulfiller,
+					requestedOwner,
+					TransactionType.REQUEST_FULFILLMENT,
+					QuickItem.of(request.getCurrencyItem()).amount(1).make(),
+					request.getCurrencyDisplayName(),
+					request.getRequestedAmount(),
+					request.isCurrencyOfItem() ? request.getPrice() : (int) request.getPrice()
+			));
+
+			FULFILLING.remove(request.getId());
+			clickLock = false;
+			if (click.player.isOnline())
+				click.manager.showGUI(click.player, new RequestsGUI(this.parent, click.player, this.viewOwnRequests));
+		}));
+	}
+
+	private void releaseFulfill(@NonNull final Request request) {
+		FULFILLING.remove(request.getId());
+		this.clickLock = false;
+	}
+
+	private boolean hasRequestItems(@NonNull final Player player, @NonNull final Request request) {
+		return player.isOnline() && PlayerUtil.getItemCountInPlayerInventory(player, request.getRequestItem()) >= request.getRequestedAmount();
+	}
+
+	private boolean removeRequestItems(@NonNull final Player player, @NonNull final Request request) {
+		final ItemStack item = request.getRequestItem();
+		final int amount = request.getRequestedAmount();
+		final int before = PlayerUtil.getItemCountInPlayerInventory(player, item);
+		if (before < amount)
+			return false;
+
+		PlayerUtil.removeSpecificItemQuantityFromPlayer(player, item, amount);
+		final int removed = before - PlayerUtil.getItemCountInPlayerInventory(player, item);
+		if (removed < amount) {
+			if (removed > 0)
+				giveItems(player, item, removed);
+			return false;
 		}
+		return true;
+	}
 
-		// take items from the fulfilling user
-		PlayerUtil.removeSpecificItemQuantityFromPlayer(fulfiller, request.getRequestItem(), request.getRequestedAmount());
+	private void giveItems(@NonNull final Player player, @NonNull final ItemStack template, final int qty) {
+		if (!player.isOnline() || qty <= 0)
+			return;
 
-		// give the requester their items
-		Markets.getOfflineItemPaymentManager().create(
-				request.getOwner(),
-				QuickItem.of(request.getRequestItem()).amount(1).make(),
-				request.getRequestedAmount(),
-				TranslationManager.string(Translations.REQUEST_PAYMENT), success -> {
-				});
-
-		// Use getPlayer() instead of isOnline() to avoid blocking
-		final Player requestOwnerPlayer = Bukkit.getPlayer(request.getOwner());
-		if (requestOwnerPlayer != null) {
-			Common.tell(requestOwnerPlayer, TranslationManager.string(requestOwnerPlayer, Translations.REQUEST_FULFILLED, "fulfill_name", fulfiller.getName(), "request_item_name", ItemUtil.getItemName(request.getRequestItem())));
+		int remaining = qty;
+		final int maxStack = Math.max(1, template.getMaxStackSize());
+		while (remaining > 0) {
+			final int stackSize = Math.min(remaining, maxStack);
+			final ItemStack stack = template.clone();
+			stack.setAmount(stackSize);
+			PlayerUtil.giveItem(player, stack);
+			remaining -= stackSize;
 		}
-
-		// Use cached name from request instead of getName()
-		Common.tell(click.player, TranslationManager.string(Translations.REQUEST_FULFILLED_FILLER,
-				"request_item_name", ItemUtil.getItemName(request.getRequestItem()),
-				"fulfill_name", request.getOwnerName()
-		));
-
-		// call transaction event
-		Bukkit.getServer().getPluginManager().callEvent(new MarketTransactionEvent(
-				fulfiller,
-				requestedOwner,
-				TransactionType.REQUEST_FULFILLMENT,
-				QuickItem.of(request.getCurrencyItem()).amount(1).make(),
-				request.getCurrencyDisplayName(),
-				request.getRequestedAmount(),
-				request.isCurrencyOfItem() ? request.getPrice() : (int) request.getPrice()
-		));
-
-		request.unStore(result -> {
-			if (result == SynchronizeResult.FAILURE) return;
-			click.manager.showGUI(click.player, new RequestsGUI(this.parent, click.player, this.viewOwnRequests));
-		});
 	}
 
 	@Override

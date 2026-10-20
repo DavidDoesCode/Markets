@@ -15,6 +15,7 @@ import ca.tweetzy.markets.model.DupeDetector;
 import ca.tweetzy.markets.settings.Settings;
 import ca.tweetzy.markets.settings.Translations;
 import lombok.NonNull;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
@@ -28,6 +29,7 @@ public final class BankGUI extends MarketsPagedGUI<BankEntry> {
 
 	private final Player player;
 	private final boolean taxCollection;
+	private boolean depositing;
 
 	public BankGUI(Gui parent, @NonNull final Player player, boolean taxCollection) {
 		super(
@@ -59,30 +61,68 @@ public final class BankGUI extends MarketsPagedGUI<BankEntry> {
 	protected void drawFixed() {
 		if (!this.taxCollection)
 			setButton(getRows() - 1, 4, QuickItem.of(Settings.GUI_BANK_ITEMS_ADD.getItemStack()).name(TranslationManager.string(this.player, Translations.GUI_BANK_ITEMS_ADD_NAME)).lore(TranslationManager.list(this.player, Translations.GUI_BANK_ITEMS_ADD_LORE, "left_click", TranslationManager.string(this.player, Translations.MOUSE_LEFT_CLICK))).make(), click -> {
+				if (this.depositing) {
+					DupeDetector.logPreventedAttempt(
+							"BANK_DOUBLE_DEPOSIT",
+							click.player,
+							null,
+							click.cursor,
+							click.cursor == null ? 0 : click.cursor.getAmount(),
+							null,
+							null,
+							null
+					);
+					return;
+				}
 
-				final ItemStack cursor = click.cursor;
-				if (cursor != null && cursor.getType() != CompMaterial.AIR.get()) {
+				final ItemStack cursor = click.player.getItemOnCursor();
+				if (cursor == null || cursor.getType() == CompMaterial.AIR.get())
+					return;
 
-					final ItemStack currency = cursor.clone();
-					final BankEntry locatedEntry = Markets.getBankManager().getEntryByPlayer(click.player.getUniqueId(), currency);
+				this.depositing = true;
+				final ItemStack currency = cursor.clone();
+				click.player.setItemOnCursor(CompMaterial.AIR.parseItem());
 
-					if (locatedEntry != null) {
-						locatedEntry.setQuantity(locatedEntry.getQuantity() + currency.getAmount());
-						locatedEntry.sync(result -> {
-							if (result == SynchronizeResult.SUCCESS) {
-								click.player.setItemOnCursor(CompMaterial.AIR.parseItem());
-								updateAndRedraw();
-							}
-						});
+				final ItemStack stillHeld = click.player.getItemOnCursor();
+				if (stillHeld != null && stillHeld.getType() != CompMaterial.AIR.get() && stillHeld.isSimilar(currency)) {
+					this.depositing = false;
+					DupeDetector.logPreventedAttempt(
+							"BANK_CURSOR_CLEAR_FAILED",
+							click.player,
+							null,
+							currency,
+							currency.getAmount(),
+							null,
+							null,
+							null
+					);
+					return;
+				}
 
+				final BankEntry locatedEntry = Markets.getBankManager().getEntryByPlayer(click.player.getUniqueId(), currency);
+				if (locatedEntry != null) {
+					final int previous = locatedEntry.getQuantity();
+					locatedEntry.setQuantity(previous + currency.getAmount());
+					locatedEntry.sync(result -> Bukkit.getScheduler().runTask(Markets.getInstance(), () -> {
+						this.depositing = false;
+						if (result != SynchronizeResult.SUCCESS) {
+							locatedEntry.setQuantity(previous);
+							restoreCursor(click.player, currency);
+							return;
+						}
+						updateAndRedraw();
+					}));
+					return;
+				}
+
+				Markets.getBankManager().create(click.player, currency, currency.getAmount(), wasCreated -> Bukkit.getScheduler().runTask(Markets.getInstance(), () -> {
+					this.depositing = false;
+					if (!wasCreated) {
+						restoreCursor(click.player, currency);
 						return;
 					}
-
-					Markets.getBankManager().create(click.player, currency, currency.getAmount(), wasCreated -> {
-						click.player.setItemOnCursor(CompMaterial.AIR.parseItem());
-						updateAndRedraw();
-					});
-				}
+					updateAndRedraw();
+				}));
 			});
 	}
 
@@ -183,6 +223,17 @@ public final class BankGUI extends MarketsPagedGUI<BankEntry> {
 						return true;
 					}
 				};
+	}
+
+	private void restoreCursor(@NonNull final Player player, @NonNull final ItemStack stack) {
+		if (!player.isOnline())
+			return;
+
+		final ItemStack current = player.getItemOnCursor();
+		if (current == null || current.getType() == CompMaterial.AIR.get())
+			player.setItemOnCursor(stack.clone());
+		else
+			PlayerUtil.giveItem(player, stack.clone());
 	}
 
 	private void givePlayerItems(Player player, ItemStack itemToGive) {

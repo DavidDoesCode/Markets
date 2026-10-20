@@ -182,6 +182,38 @@ public final class CategoryItem implements MarketItem {
 		return this.beingEdited;
 	}
 
+	public enum StockReserveResult {
+		RESERVED,
+		BUSY,
+		INSUFFICIENT
+	}
+
+	/**
+	 * Claims stock for an offer accept and holds {@code beingEdited} until {@link #finishStockReservation}.
+	 * Infinite listings are locked without changing stock.
+	 */
+	public StockReserveResult reserveStock(final int amount) {
+		synchronized (this.editLock) {
+			if (this.beingEdited)
+				return StockReserveResult.BUSY;
+			if (amount <= 0 || (!this.infinite && this.stock < amount))
+				return StockReserveResult.INSUFFICIENT;
+
+			this.beingEdited = true;
+			if (!this.infinite)
+				this.stock -= amount;
+			return StockReserveResult.RESERVED;
+		}
+	}
+
+	public void finishStockReservation(final int amount, final boolean restore) {
+		synchronized (this.editLock) {
+			if (restore && !this.infinite && amount > 0)
+				this.stock += amount;
+			this.beingEdited = false;
+		}
+	}
+
 	@Override
 	public void store(@NonNull Consumer<MarketItem> stored) {
 		Markets.getDataManager().createMarketItem(this, (error, created) -> {

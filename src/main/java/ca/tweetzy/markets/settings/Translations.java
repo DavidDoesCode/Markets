@@ -93,6 +93,7 @@ public final class Translations extends TranslationManager {
 			"&aDeleted payment of &fx&e%payment_total% &afor &e%target_name%&a.");
 	public static TranslationEntry PAYMENT_DELETE_FAILED = create("error.payment.delete failed",
 			"&cCould not delete that payment.");
+	public static TranslationEntry REQUEST_IN_PROGRESS = create("info.request.in progress", "&cThat request is already being fulfilled.");
 	public static TranslationEntry REQUEST_FULFILLED = create("info.request.fulfilled", "&b%fulfill_name% &efulfilled your request for &e%request_item_name%");
 	public static TranslationEntry REQUEST_FULFILLED_FILLER = create("info.request.filler fulfilled", "&aSuccessfully fulfilled &b%fulfill_name%&a's request for &e%request_item_name%");
 

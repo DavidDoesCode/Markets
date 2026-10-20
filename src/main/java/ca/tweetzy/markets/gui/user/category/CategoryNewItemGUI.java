@@ -45,6 +45,9 @@ public final class CategoryNewItemGUI extends MarketsBaseGUI {
 	private Boolean clickLock = false;
 	private ItemStack pendingItem = null;
 	private boolean suppressItemReturn = false;
+	private final Object draftLock = new Object();
+	private boolean draftReturned = false;
+	private boolean listingCommitted = false;
 
 	private static final class AwaitingPrice {
 		private final Market market;
@@ -77,24 +80,32 @@ public final class CategoryNewItemGUI extends MarketsBaseGUI {
 		// Fixed: Use direct inventory access to prevent item loss on disconnect
 		// See BankGUI.java:167-176 for similar pattern
 		setOnClose(close -> {
-			if (this.suppressItemReturn) return;
+			final ItemStack itemToReturn;
+			synchronized (this.draftLock) {
+				if (this.suppressItemReturn || this.listingCommitted)
+					return;
 
-			final ItemStack itemToReturn = this.pendingItem != null ? this.pendingItem : getItem(1, 4);
-			if (itemToReturn != null && itemToReturn.getType() != CompMaterial.AIR.get()) {
-				try {
-					// Direct inventory access works even during disconnect
-					final java.util.HashMap<Integer, ItemStack> leftover = close.player.getInventory().addItem(itemToReturn);
+				itemToReturn = this.pendingItem != null ? this.pendingItem : getItem(1, 4);
+				if (itemToReturn == null || itemToReturn.getType() == CompMaterial.AIR.get())
+					return;
 
-					// Drop overflow at player location
-					if (!leftover.isEmpty()) {
-						for (ItemStack item : leftover.values()) {
-							close.player.getWorld().dropItemNaturally(close.player.getLocation(), item);
-						}
+				this.draftReturned = true;
+				this.pendingItem = null;
+			}
+
+			try {
+				// Direct inventory access works even during disconnect
+				final java.util.HashMap<Integer, ItemStack> leftover = close.player.getInventory().addItem(itemToReturn);
+
+				// Drop overflow at player location
+				if (!leftover.isEmpty()) {
+					for (ItemStack item : leftover.values()) {
+						close.player.getWorld().dropItemNaturally(close.player.getLocation(), item);
 					}
-				} catch (Exception e) {
-					// Last resort: drop at location even if fully disconnected
-					close.player.getWorld().dropItemNaturally(close.player.getLocation(), itemToReturn);
 				}
+			} catch (Exception e) {
+				// Last resort: drop at location even if fully disconnected
+				close.player.getWorld().dropItemNaturally(close.player.getLocation(), itemToReturn);
 			}
 		});
 
@@ -404,12 +415,6 @@ public final class CategoryNewItemGUI extends MarketsBaseGUI {
 			final ItemStack listingItem = placedItem.clone();
 			listingItem.setAmount(stockAmount);
 
-			if (stockAmount < placedItem.getAmount()) {
-				final ItemStack overflow = placedItem.clone();
-				overflow.setAmount(placedItem.getAmount() - stockAmount);
-				PlayerUtil.giveItem(click.player, overflow);
-			}
-
 			this.marketItem.setItem(listingItem);
 			this.marketItem.setStock(stockAmount);
 			if (this.marketItem.getPrice() <= 0) {
@@ -422,17 +427,29 @@ public final class CategoryNewItemGUI extends MarketsBaseGUI {
 				return;
 			}
 
+			if (stockAmount < placedItem.getAmount()) {
+				final ItemStack overflow = placedItem.clone();
+				overflow.setAmount(placedItem.getAmount() - stockAmount);
+				PlayerUtil.giveItem(click.player, overflow);
+			}
+
 			if (this.market.isServerMarket()) {
 				this.marketItem.setIsAcceptingOffers(false);
 			}
 
 			// Store item before clearing slot - allows recovery if player disconnects
-			this.pendingItem = listingItem.clone();
+			synchronized (this.draftLock) {
+				this.pendingItem = listingItem.clone();
+			}
 			setItem(1, 4, CompMaterial.AIR.parseItem());
 
 			// create the item
 			Bukkit.getScheduler().runTaskLaterAsynchronously(Markets.getInstance(), () -> {
-				if (!click.gui.isOpen()) {
+				final boolean aborted;
+				synchronized (this.draftLock) {
+					aborted = this.draftReturned || !click.gui.isOpen();
+				}
+				if (aborted) {
 					DupeDetector.logPreventedAttempt(
 							"ADD_ITEM_GUI_CLOSED_EARLY",
 							click.player,
@@ -443,15 +460,41 @@ public final class CategoryNewItemGUI extends MarketsBaseGUI {
 							null,
 							"gui_closed_before_async_create"
 					);
+					clickLock = false;
 					return;
 				}
 
 				Markets.getCategoryItemManager().create(this.category, this.marketItem.getItem(), this.marketItem.getCurrency(), this.marketItem.getCurrencyItem(), this.marketItem.getPrice(), this.marketItem.isPriceForAll(), this.marketItem.isAcceptingOffers(), this.marketItem.isInfinite(), created -> {
-					if (created) {
-						// Clear pending item on success - prevents duplicate returns
-						this.pendingItem = null;
-						click.manager.showGUI(click.player, new MarketCategoryEditGUI(this.player, this.market, this.category));
+					final boolean returned;
+					synchronized (this.draftLock) {
+						returned = this.draftReturned || !click.gui.isOpen();
+						if (created != null && !returned) {
+							this.listingCommitted = true;
+							this.pendingItem = null;
+						}
 					}
+
+					if (created != null && returned) {
+						this.category.getItems().removeIf(item -> item.getId().equals(created.getId()));
+						Markets.getCategoryItemManager().remove(created);
+						created.unStore(result -> {
+						});
+						DupeDetector.logPreventedAttempt(
+								"ADD_ITEM_GUI_CLOSED_EARLY",
+								click.player,
+								null,
+								created.getItem(),
+								created.getStock(),
+								this.market,
+								created,
+								"returned_during_create"
+						);
+						clickLock = false;
+						return;
+					}
+
+					if (created != null)
+						click.manager.showGUI(click.player, new MarketCategoryEditGUI(this.player, this.market, this.category));
 					clickLock = false;
 				});
 			}, Settings.INTERNAL_ADD_ITEM_DELAY.getInt());

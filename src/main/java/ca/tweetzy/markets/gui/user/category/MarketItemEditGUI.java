@@ -278,64 +278,6 @@ public final class MarketItemEditGUI extends MarketsBaseGUI {
 				))
 				.make(), click -> {
 
-			if (click.clickType == ClickType.LEFT || FloodGateCheck.isBedrock(this.player)) {
-				synchronized (this) {
-					if (playerLock) {
-						logMarketItemDupeAttempt(click.player, "STOCK_DOUBLE_DEPOSIT", null);
-						return;
-					} else
-						playerLock = true;
-				}
-
-				final ItemStack cursor = click.cursor;
-				if (cursor != null && cursor.getType() != CompMaterial.AIR.get()) {
-					if (!this.marketItem.getItem().isSimilar(cursor)) {
-						playerLock = false;
-						return;
-					}
-
-					final int toAdd = getAddableStock(click.player, cursor.getAmount());
-					if (toAdd <= 0) {
-						tellStockLimitReached(click.player);
-						playerLock = false;
-						return;
-					}
-
-					final Player player = click.player;
-					final boolean bedrock = FloodGateCheck.isBedrock(player);
-					final ItemStack expected = cursor.clone();
-					final int wouldCredit = toAdd;
-
-					Bukkit.getScheduler().runTask(Markets.getInstance(), () -> {
-						if (!player.isOnline()) {
-							playerLock = false;
-							return;
-						}
-
-						final int taken = takeMatchingFromCursor(player, expected, wouldCredit);
-						if (taken > 0) {
-							creditTakenDeposit(player, expected, taken);
-							return;
-						}
-
-						if (bedrock && stillHoldsDeposit(player, expected, wouldCredit)) {
-							DupeDetector.logPreventedAttempt(
-									"BEDROCK_DEPOSIT_DUPE",
-									player,
-									null,
-									this.marketItem.getItem(),
-									wouldCredit,
-									this.market,
-									this.marketItem,
-									null
-							);
-						}
-						playerLock = false;
-					});
-				} else
-					playerLock = false;
-			}
-
 			if (click.clickType == ClickType.SHIFT_LEFT) {
 				synchronized (this) {
 					if (playerLock) {
@@ -368,9 +310,7 @@ public final class MarketItemEditGUI extends MarketsBaseGUI {
 					drawStockButton();
 					playerLock = false;
 				});
-			}
-
-			if (click.clickType == ClickType.RIGHT || click.clickType == ClickType.DROP) {
+			} else if (click.clickType == ClickType.RIGHT || click.clickType == ClickType.DROP) {
 				// Dupe prevention: Check if item is being purchased
 				if (marketItem.isBeingEdited()) {
 					Common.tell(click.player, TranslationManager.list(click.player, Translations.ITEM_BEING_EDITED));
@@ -454,6 +394,62 @@ public final class MarketItemEditGUI extends MarketsBaseGUI {
 						return true;
 					}
 				};
+			} else if (click.clickType == ClickType.LEFT || FloodGateCheck.isBedrock(this.player)) {
+				synchronized (this) {
+					if (playerLock) {
+						logMarketItemDupeAttempt(click.player, "STOCK_DOUBLE_DEPOSIT", null);
+						return;
+					} else
+						playerLock = true;
+				}
+
+				final ItemStack cursor = click.cursor;
+				if (cursor != null && cursor.getType() != CompMaterial.AIR.get()) {
+					if (!this.marketItem.getItem().isSimilar(cursor)) {
+						playerLock = false;
+						return;
+					}
+
+					final int toAdd = getAddableStock(click.player, cursor.getAmount());
+					if (toAdd <= 0) {
+						tellStockLimitReached(click.player);
+						playerLock = false;
+						return;
+					}
+
+					final Player player = click.player;
+					final boolean bedrock = FloodGateCheck.isBedrock(player);
+					final ItemStack expected = cursor.clone();
+					final int wouldCredit = toAdd;
+
+					Bukkit.getScheduler().runTask(Markets.getInstance(), () -> {
+						if (!player.isOnline()) {
+							playerLock = false;
+							return;
+						}
+
+						final int taken = takeMatchingFromCursor(player, expected, wouldCredit);
+						if (taken > 0) {
+							creditTakenDeposit(player, expected, taken);
+							return;
+						}
+
+						if (bedrock && stillHoldsDeposit(player, expected, wouldCredit)) {
+							DupeDetector.logPreventedAttempt(
+									"BEDROCK_DEPOSIT_DUPE",
+									player,
+									null,
+									this.marketItem.getItem(),
+									wouldCredit,
+									this.market,
+									this.marketItem,
+									null
+							);
+						}
+						playerLock = false;
+					});
+				} else
+					playerLock = false;
 			}
 		});
 	}
