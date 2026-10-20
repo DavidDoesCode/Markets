@@ -559,11 +559,11 @@ public final class DataManager extends DataManagerAbstract {
 				statement.setString(1, payment.getId().toString());
 
 				int result = statement.executeUpdate();
-				callback.accept(null, result > 0);
+				finishCallback(callback, null, result > 0);
 
 			} catch (Exception e) {
-				resolveCallback(callback, e);
 				e.printStackTrace();
+				finishCallback(callback, e, false);
 			}
 		}));
 	}
@@ -577,13 +577,11 @@ public final class DataManager extends DataManagerAbstract {
 				preparedStatement.setString(2, payment.getId().toString());
 
 				int result = preparedStatement.executeUpdate();
-
-				if (callback != null)
-					callback.accept(null, result > 0);
+				finishCallback(callback, null, result > 0);
 
 			} catch (Exception e) {
 				e.printStackTrace();
-				resolveCallback(callback, e);
+				finishCallback(callback, e, false);
 			}
 		}));
 	}
@@ -1154,6 +1152,17 @@ public final class DataManager extends DataManagerAbstract {
 			callback.accept(ex);
 		} else if (ex != null) {
 			ex.printStackTrace();
+		}
+	}
+
+	private void finishCallback(@Nullable final Callback<Boolean> callback, @Nullable final Exception error, final boolean success) {
+		if (callback == null)
+			return;
+
+		try {
+			callback.accept(error, success);
+		} catch (Exception callbackError) {
+			callbackError.printStackTrace();
 		}
 	}
 

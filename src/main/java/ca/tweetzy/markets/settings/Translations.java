@@ -87,6 +87,12 @@ public final class Translations extends TranslationManager {
 	public static TranslationEntry REQUEST_PAYMENT = create("info.request.payment", "&eA request was completed");
 	public static TranslationEntry PAYMENT_COLLECTED_PARTIAL = create("info.payment.collected partial",
 			"&eCollected &fx&a%collected_amount%&e. &7&fx&a%remaining_amount% &7remain — put items away, then collect again.");
+	public static TranslationEntry PAYMENT_COLLECT_INVENTORY_FULL = create("info.payment.collect inventory full",
+			"&cYour inventory is full. Put items away, then collect again.");
+	public static TranslationEntry PAYMENT_DELETED = create("info.payment.deleted",
+			"&aDeleted payment of &fx&e%payment_total% &afor &e%target_name%&a.");
+	public static TranslationEntry PAYMENT_DELETE_FAILED = create("error.payment.delete failed",
+			"&cCould not delete that payment.");
 	public static TranslationEntry REQUEST_FULFILLED = create("info.request.fulfilled", "&b%fulfill_name% &efulfilled your request for &e%request_item_name%");
 	public static TranslationEntry REQUEST_FULFILLED_FILLER = create("info.request.filler fulfilled", "&aSuccessfully fulfilled &b%fulfill_name%&a's request for &e%request_item_name%");
 
@@ -1233,6 +1239,20 @@ public final class Translations extends TranslationManager {
 			"&e%payment_date%",
 			"",
 			"&e&l%left_click% &7to collect payment",
+			"&7Large amounts are collected in parts"
+	);
+	public static TranslationEntry GUI_OFFLINE_PAYMENTS_ITEMS_PROFILE_LORE_ADMIN = create("gui.offline payments.items.payment.lore admin",
+			"",
+			"&7Quantity Received&f: &a%payment_total%",
+			"",
+			"&b&lReason",
+			"%payment_reason%",
+			"",
+			"&d&lReceived On",
+			"&e%payment_date%",
+			"",
+			"&e&l%left_click% &7to collect payment",
+			"&c&l%drop_key% &7to delete payment",
 			"&7Large amounts are collected in parts"
 	);
 
