@@ -5,6 +5,7 @@ import ca.tweetzy.flight.settings.TranslationManager;
 import ca.tweetzy.flight.utils.Common;
 import ca.tweetzy.markets.Markets;
 import ca.tweetzy.markets.api.market.AuditSortType;
+import ca.tweetzy.markets.api.market.AuditStockFilter;
 import ca.tweetzy.markets.api.market.core.MarketItem;
 import ca.tweetzy.markets.gui.admin.WorthAuditGUI;
 import ca.tweetzy.markets.model.AuditEntry;
@@ -83,7 +84,7 @@ public final class AuditAdminCommand {
 				if (sender instanceof final Player player) {
 					Common.tell(player, TranslationManager.string(Translations.WORTH_AUDIT_OPENED,
 							"count", String.valueOf(matches.size())));
-					Markets.getGuiManager().showGUI(player, new WorthAuditGUI(null, player, matches, modeLabel, defaultSort));
+					Markets.getGuiManager().showGUI(player, new WorthAuditGUI(null, player, matches, modeLabel, defaultSort, AuditStockFilter.ALL));
 					return;
 				}
 

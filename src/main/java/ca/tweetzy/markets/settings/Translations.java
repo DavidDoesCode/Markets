@@ -1200,6 +1200,9 @@ public final class Translations extends TranslationManager {
 	public static TranslationEntry AUDIT_SORT_LOWEST_RATIO = create("info.audit sort type.lowest ratio", "&eLowest Ratio");
 	public static TranslationEntry AUDIT_SORT_HIGHEST_QTY = create("info.audit sort type.highest qty", "&eHighest Qty");
 	public static TranslationEntry AUDIT_SORT_LOWEST_QTY = create("info.audit sort type.lowest qty", "&eLowest Qty");
+	public static TranslationEntry AUDIT_STOCK_ALL = create("info.audit stock filter.all", "&eAll Stock");
+	public static TranslationEntry AUDIT_STOCK_IN_STOCK = create("info.audit stock filter.in stock", "&eIn Stock");
+	public static TranslationEntry AUDIT_STOCK_NO_STOCK = create("info.audit stock filter.no stock", "&eNo Stock");
 
 	public static TranslationEntry WORTH_AUDIT_UNAVAILABLE = create("error.worth.audit.unavailable", "&cEssentials worth is not available. Cannot run an audit.");
 	public static TranslationEntry WORTH_AUDIT_INVALID = create("error.worth.audit.invalid", "&cPlease provide a valid positive percent value.");
@@ -1603,6 +1606,7 @@ public final class Translations extends TranslationManager {
 	public static TranslationEntry GUI_WORTH_AUDIT_ITEMS_ENTRY_NAME = create("gui.worth audit.items.entry.name", "<GRADIENT:65B1B4>&l%owner%</GRADIENT:2B6F8A>");
 	public static TranslationEntry GUI_WORTH_AUDIT_ITEMS_ENTRY_LORE = create("gui.worth audit.items.entry.lore",
 			"",
+			"&7Owner&f: &e%owner%",
 			"&7Item&f: &e%item%",
 			"&7Unit Price&f: &a%unit_price%",
 			"&7Worth&f: &a%worth%",
@@ -1616,6 +1620,12 @@ public final class Translations extends TranslationManager {
 	public static TranslationEntry GUI_WORTH_AUDIT_ITEMS_FILTER_NAME = create("gui.worth audit.items.filter.name", "<GRADIENT:65B1B4>&lFilter</GRADIENT:2B6F8A>");
 	public static TranslationEntry GUI_WORTH_AUDIT_ITEMS_FILTER_LORE = create("gui.worth audit.items.filter.lore",
 			"&7Current&f: &e%audit_sort_type%",
+			"",
+			"&e&lClick &7to cycle filters"
+	);
+	public static TranslationEntry GUI_WORTH_AUDIT_ITEMS_STOCK_FILTER_NAME = create("gui.worth audit.items.stock filter.name", "<GRADIENT:65B1B4>&lStock</GRADIENT:2B6F8A>");
+	public static TranslationEntry GUI_WORTH_AUDIT_ITEMS_STOCK_FILTER_LORE = create("gui.worth audit.items.stock filter.lore",
+			"&7Current&f: &e%audit_stock_filter%",
 			"",
 			"&e&lClick &7to cycle filters"
 	);

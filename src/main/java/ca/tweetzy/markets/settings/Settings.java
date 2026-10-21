@@ -319,6 +319,7 @@ public final class Settings extends FlightSettings {
 	public static ConfigEntry GUI_ALL_REVIEWS_ITEMS_FILTER_ITEM = create("gui.all reviews.items.filter.item", CompMaterial.REPEATER.name());
 	public static ConfigEntry GUI_WORTH_AUDIT_BACKGROUND = create("gui.worth audit.items.background", CompMaterial.BLACK_STAINED_GLASS_PANE.name());
 	public static ConfigEntry GUI_WORTH_AUDIT_ITEMS_FILTER_ITEM = create("gui.worth audit.items.filter.item", CompMaterial.REPEATER.name());
+	public static ConfigEntry GUI_WORTH_AUDIT_ITEMS_STOCK_FILTER_ITEM = create("gui.worth audit.items.stock filter.item", CompMaterial.HOPPER.name());
 	public static ConfigEntry GUI_REQUEST_BACKGROUND = create("gui.request.items.background", CompMaterial.BLACK_STAINED_GLASS_PANE.name());
 	public static ConfigEntry GUI_REQUEST_ITEMS_TOGGLE_ITEM = create("gui.request.items.toggle.item", CompMaterial.LEVER.name());
 	public static ConfigEntry GUI_REQUEST_ITEMS_CREATE_ITEM = create("gui.request.items.create.item", CompMaterial.LIME_DYE.name());
